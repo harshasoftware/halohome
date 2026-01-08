@@ -64,6 +64,8 @@ const VirtualListContainer = React.forwardRef<
       minHeight: totalHeight,
       ...style,
     }}
+    // Data attribute for CSS performance optimizations on mobile
+    data-virtual-list="true"
     {...props}
   >
     <div className={cn("absolute inset-0", innerClassName)}>
