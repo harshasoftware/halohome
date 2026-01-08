@@ -208,20 +208,19 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('favorite_cities')
-        .update({ notes, updated_at: new Date().toISOString() })
-        .eq('id', id);
+    const { error } = await supabase
+      .from('favorite_cities')
+      .update({ notes, updated_at: new Date().toISOString() })
+      .eq('id', id);
 
-      if (error) throw error;
-
-      setFavorites(prev =>
-        prev.map(f => f.id === id ? { ...f, notes, updated_at: new Date().toISOString() } : f)
-      );
-    } catch (error) {
-      console.error('Failed to update favorite notes:', error);
+    if (error) {
+      // Re-throw to allow calling code to handle the error
+      throw new Error(`Failed to save notes: ${error.message}`);
     }
+
+    setFavorites(prev =>
+      prev.map(f => f.id === id ? { ...f, notes, updated_at: new Date().toISOString() } : f)
+    );
   }, [isGuest, favorites, saveGuestFavorites]);
 
   // Toggle favorite (add or remove)

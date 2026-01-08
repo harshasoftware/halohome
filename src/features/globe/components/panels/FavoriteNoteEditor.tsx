@@ -3,6 +3,12 @@
  *
  * Shows notes as text by default, switches to editable textarea on click.
  * Uses useAutoSaveNote for debounced auto-saving.
+ *
+ * Edge cases handled:
+ * - Long notes: maxLength={500} and max-h-[200px] prevent layout issues
+ * - Rapid typing: useAutoSaveNote debounces to single save after delay
+ * - Network errors: Proper error state with user-friendly message
+ * - Memory leaks: Cleanup all timeouts on unmount
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -10,6 +16,9 @@ import { Pencil, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutoSaveNote } from '@/hooks/useAutoSaveNote';
 import { cn } from '@/lib/utils';
+
+// Maximum character limit for notes to prevent layout issues
+const MAX_NOTES_LENGTH = 500;
 
 interface FavoriteNoteEditorProps {
   /** Unique identifier for the favorite */
@@ -29,6 +38,20 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
   const [showSaved, setShowSaved] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const showSavedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Track mounted state for cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Clean up showSaved timeout on unmount to prevent memory leaks
+      if (showSavedTimeoutRef.current) {
+        clearTimeout(showSavedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Use the auto-save hook with debounced saving
   const { value, setValue, isSaving, hasUnsavedChanges, error } = useAutoSaveNote({
@@ -36,8 +59,18 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
     saveFn: async (notes: string) => {
       await onSave(id, notes);
       // Show saved indicator briefly after successful save
-      setShowSaved(true);
-      setTimeout(() => setShowSaved(false), 1500);
+      if (isMountedRef.current) {
+        setShowSaved(true);
+        // Clear any existing timeout before setting new one
+        if (showSavedTimeoutRef.current) {
+          clearTimeout(showSavedTimeoutRef.current);
+        }
+        showSavedTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            setShowSaved(false);
+          }
+        }, 1500);
+      }
     },
     delay: 1500,
   });
@@ -147,9 +180,9 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
         <div
           className={cn(
             'flex items-center gap-1 text-red-500 dark:text-red-400',
-            'animate-in fade-in duration-150'
+            'animate-in fade-in duration-150 cursor-help'
           )}
-          title="Error saving notes"
+          title="Failed to save. Changes will retry automatically when you continue typing."
         >
           <AlertCircle className="w-3 h-3" />
         </div>
@@ -175,8 +208,9 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               placeholder="Add notes..."
+              maxLength={MAX_NOTES_LENGTH}
               className={cn(
-                'min-h-[60px] text-sm resize-none pr-6',
+                'min-h-[60px] max-h-[200px] text-sm resize-none pr-6',
                 'bg-white dark:bg-slate-800',
                 'border-slate-200 dark:border-slate-700',
                 'focus:ring-blue-500 focus:border-blue-500',
