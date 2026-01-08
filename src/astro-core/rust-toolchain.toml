@@ -1,0 +1,8 @@
+# Rust toolchain configuration for astro-core
+# Nightly is required for wasm-bindgen-rayon parallel processing
+# (build-std feature requires nightly)
+
+[toolchain]
+channel = "nightly"
+components = ["rust-src"]
+targets = ["wasm32-unknown-unknown"]

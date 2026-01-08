@@ -1,0 +1,8 @@
+# Ignore all WASM build artifacts except the ones needed for Rayon workers
+# The static files here are required for wasm-bindgen-rayon nested workers
+
+# Ignore TypeScript definitions
+*.d.ts
+
+# Ignore package.json (not needed at runtime)
+package.json

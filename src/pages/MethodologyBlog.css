@@ -1,0 +1,751 @@
+/**
+ * MethodologyBlog.css - Styles for the methodology page
+ *
+ * Extends ScoutAlgorithmBlog.css with methodology-specific components.
+ */
+
+/* ============================================================================
+   Hero Overrides
+   ============================================================================ */
+.methodology-hero {
+  text-align: center;
+  padding-top: 160px;
+}
+
+.methodology-page .blog-title {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+}
+
+/* ============================================================================
+   Section Titles
+   ============================================================================ */
+.methodology-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: 'Cinzel', serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.methodology-section-title svg {
+  color: rgba(168, 85, 247, 0.8);
+  flex-shrink: 0;
+}
+
+.methodology-intro {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+  max-width: 700px;
+}
+
+/* ============================================================================
+   Ephemeris Grid (Refined Cards)
+   ============================================================================ */
+.ephemeris-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.ephemeris-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .ephemeris-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.ephemeris-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .ephemeris-icon-wrap {
+    margin: 0 auto;
+  }
+}
+
+.ephemeris-content {
+  flex: 1;
+}
+
+.ephemeris-value {
+  font-family: 'Cinzel', serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.ephemeris-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.ephemeris-desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Legacy Stats Grid (keeping for backwards compatibility) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  padding: 2rem;
+  text-align: center;
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  color: rgba(168, 85, 247, 0.9);
+}
+
+.stat-value {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.stat-desc {
+  font-size: 0.75rem;
+  color: rgba(168, 85, 247, 0.7);
+}
+
+/* ============================================================================
+   Accuracy Grid
+   ============================================================================ */
+.accuracy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .accuracy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.accuracy-card {
+  /* background/border handled by SpotlightCard */
+  padding: 1.5rem;
+}
+
+.accuracy-card:hover {
+  /* handled by SpotlightCard */
+}
+
+.accuracy-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.accuracy-header svg {
+  color: rgba(168, 85, 247, 0.8);
+}
+
+.accuracy-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.accuracy-card p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.accuracy-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 2rem;
+  font-size: 0.7rem;
+  color: rgba(168, 85, 247, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================================
+   Zodiac Comparison
+   ============================================================================ */
+.zodiac-comparison {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .zodiac-comparison {
+    flex-direction: column;
+  }
+}
+
+.zodiac-card {
+  flex: 1;
+  /* background/border handled by SpotlightCard */
+  padding: 2rem;
+}
+
+.zodiac-card:hover {
+  /* handled by SpotlightCard */
+}
+
+.zodiac-card.tropical:hover {
+  border-color: rgba(251, 191, 36, 0.4) !important;
+}
+
+.zodiac-card.sidereal:hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+.zodiac-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.zodiac-card h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.zodiac-card p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.zodiac-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.zodiac-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.zodiac-features li::before {
+  content: '✓';
+  color: rgba(168, 85, 247, 0.7);
+}
+
+.zodiac-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.zodiac-divider span {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 768px) {
+  .zodiac-divider {
+    padding: 1rem 0;
+  }
+}
+
+/* ============================================================================
+   House Systems Grid
+   ============================================================================ */
+.house-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .house-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .house-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.house-card {
+  position: relative;
+  /* background/border handled by SpotlightCard */
+  padding: 1.25rem;
+}
+
+.house-card:hover {
+  /* handled by SpotlightCard */
+}
+
+.house-number {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 85, 247, 0.15);
+  border-radius: 50%;
+  font-size: 0.7rem;
+  color: rgba(168, 85, 247, 0.8);
+  font-weight: 600;
+}
+
+.house-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.house-card p {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ============================================================================
+   Cardinal Angles Grid
+   ============================================================================ */
+.angles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .angles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .angles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.angle-card {
+  /* background/border handled by SpotlightCard */
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.angle-card:hover {
+  /* handled by SpotlightCard */
+  border-color: var(--angle-color, rgba(168, 85, 247, 0.4)) !important;
+}
+
+.angle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.angle-name {
+  font-family: 'Cinzel', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.angle-fullname {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+}
+
+.angle-desc {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.angles-math {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 0.75rem;
+}
+
+.math-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.math-equation {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.math-equation strong {
+  color: rgba(168, 85, 247, 0.9);
+}
+
+/* ============================================================================
+   Orb of Influence Chart
+   ============================================================================ */
+.orb-chart-container {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+.orb-chart-svg {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+}
+
+.orb-curve {
+  transition: stroke-width 0.2s ease;
+}
+
+.orb-marker {
+  transition: r 0.2s ease;
+}
+
+.orb-tooltip {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+}
+
+.orb-tooltip-distance {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.orb-tooltip-intensity {
+  font-size: 0.8rem;
+  color: rgba(168, 85, 247, 0.9);
+}
+
+.orb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.orb-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.orb-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.orb-explanation {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.orb-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.orb-point-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(34, 197, 94, 0.15);
+  border-radius: 50%;
+  color: rgb(34, 197, 94);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.orb-point strong {
+  color: white;
+}
+
+/* ============================================================================
+   Celestial Bodies List (Inline Layout)
+   ============================================================================ */
+.bodies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.body-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+}
+
+.body-row:last-child {
+  border-bottom: none;
+}
+
+.body-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.body-row .body-symbol {
+  font-size: 1.25rem;
+  line-height: 1;
+  width: 28px;
+  text-align: center;
+}
+
+.body-row .body-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: white;
+  flex: 1;
+}
+
+.body-row .body-type {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2rem;
+}
+
+/* ============================================================================
+   Scout Preview Section
+   ============================================================================ */
+.scout-preview {
+  /* background/border handled by SpotlightCard */
+  padding: 2.5rem;
+  margin-top: 3rem;
+}
+
+.scout-dimensions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.scout-dimension {
+  display: grid;
+  grid-template-columns: 80px 1fr 200px;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .scout-dimension {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.scout-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scout-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 4px;
+  animation: fillBar 1.5s ease-out forwards;
+}
+
+.scout-bar.benefit::after {
+  width: 78%;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.scout-bar.intensity::after {
+  width: 65%;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.scout-bar.stability::after {
+  width: 92%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+@keyframes fillBar {
+  from {
+    width: 0;
+  }
+}
+
+.scout-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+}
+
+.scout-desc {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.scout-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 2rem;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.scout-link:hover {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.5);
+  transform: translateX(4px);
+}

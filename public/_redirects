@@ -1,0 +1,8 @@
+# Static files - serve directly (must come before catch-all)
+/wasm/*         /wasm/:splat         200
+/sqlite-wasm/*  /sqlite-wasm/:splat  200
+/data/*         /data/:splat         200
+/assets/*       /assets/:splat       200
+
+# SPA fallback - all other routes go to index.html
+/*    /index.html   200

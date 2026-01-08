@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Astrocarto</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+    <meta name="description" content="Discover your cosmic geography. Explore where the stars align for you on an interactive 3D globe." />
+
+    <meta property="og:title" content="Astrocarto" />
+    <meta property="og:description" content="Discover your cosmic geography. Explore where the stars align for you on an interactive 3D globe." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="1200" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/twitter-large.png" />
+    <meta property="og:url" content="https://astrocartography.world/" />
+    <meta property="og:site_name" content="Astrocarto" />
+    <meta property="og:locale" content="en_US" />
+    <link rel="canonical" href="https://astrocartography.world/" />
+    <!-- Theme color - always dark to match app -->
+    <meta name="theme-color" content="#050505" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/ios/152.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/images/ios/167.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Astrocarto" />
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="/images/ios/1024.png" />
+    <style>
+      /* Dark theme to match app - prevents white flash */
+      html, body {
+        background-color: #050505;
+        margin: 0;
+        padding: 0;
+      }
+      /* Initial loader - shown until React mounts */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #050505;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.3s ease-out;
+      }
+      #initial-loader.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .loader-content {
+        text-align: center;
+        color: #a1a1aa;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .loader-logo {
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #ffffff;
+        margin-bottom: 1rem;
+      }
+      .loader-spinner {
+        width: 24px;
+        height: 24px;
+        border: 2px solid rgba(255,255,255,0.1);
+        border-top-color: rgba(255,255,255,0.6);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+    <meta name="twitter:site" content="@astrocarto_app" />
+    <meta name="twitter:title" content="Astrocarto" />
+    <meta name="twitter:description" content="Discover your cosmic geography. Explore where the stars align for you on an interactive 3D globe." />
+    <link rel="preconnect" href="https://maps.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://framerusercontent.com" crossorigin />
+    <!-- Google Ads tracking is loaded via React (see src/lib/gtag.ts) -->
+  </head>
+
+  <body>
+    <!-- Initial loader - fades out when React mounts -->
+    <div id="initial-loader">
+      <div class="loader-content">
+        <div class="loader-logo">Astrocarto</div>
+        <div class="loader-spinner"></div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <!-- Handle module import failures (stale chunks after deploy) -->
+    <script>
+      window.addEventListener('error', function(e) {
+        // Check if it's a module loading error
+        if (e.message && (
+          e.message.includes('Failed to fetch dynamically imported module') ||
+          e.message.includes('Importing a module script failed') ||
+          e.message.includes('error loading dynamically imported module')
+        )) {
+          console.log('[Recovery] Module import failed, clearing caches and reloading...');
+          // Clear service worker caches
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              names.forEach(function(name) { caches.delete(name); });
+            });
+          }
+          // Unregister service workers
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              registrations.forEach(function(r) { r.unregister(); });
+            });
+          }
+          // Prevent infinite reload loop
+          var reloadKey = 'chunk_reload_' + Date.now().toString().slice(0, -4);
+          if (!sessionStorage.getItem(reloadKey)) {
+            sessionStorage.setItem(reloadKey, '1');
+            setTimeout(function() { window.location.reload(); }, 100);
+          }
+        }
+      }, true);
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- 100% privacy-first analytics -->
+    <script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt="" referrerpolicy="no-referrer-when-downgrade"/></noscript>
+  </body>
+</html>

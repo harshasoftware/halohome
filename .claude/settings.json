@@ -1,0 +1,55 @@
+{
+    "mcpServers": {
+        "supabase": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@supabase/mcp-server",
+                "--project-ref",
+                "eypsystctqwvphvcrmxb"
+            ]
+        }
+    },
+    "permissions": {
+        "allow": [
+            "Bash(find:*)",
+            "Bash(npm run build:*)",
+            "WebSearch",
+            "WebFetch(domain:github.com)",
+            "Bash(npm install:*)",
+            "Bash(rustc:*)",
+            "Bash(wasm-pack:*)",
+            "Bash(npx tsc:*)",
+            "Bash(cargo test:*)",
+            "mcp__trigger__search_docs",
+            "Bash(cargo build:*)",
+            "Bash(git -C /Users/itsnappyboy/Documents/GitHub/themodernfamily log --oneline)",
+            "Bash(brew upgrade:*)",
+            "Bash(ls:*)",
+            "Bash(cat:*)",
+            "Bash(git -C /Users/itsnappyboy/Documents/GitHub/themodernfamily status src/astro-core/)",
+            "Bash(git -C /Users/itsnappyboy/Documents/GitHub/themodernfamily ls-files:*)",
+            "Bash(git -C /Users/itsnappyboy/Documents/GitHub/themodernfamily status --short)",
+            "Bash(git -C /Users/itsnappyboy/Documents/GitHub/themodernfamily status --short src/astro-core/)",
+            "Bash(git rm:*)",
+            "Bash(git add:*)",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/FamilyTreeCanvas.helpers.tsx )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/FamilyTreeCanvas.utils.ts )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/UnionNode.tsx )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/FamilyEdge.tsx )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/EdgeContextMenu.tsx )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/RelationshipTypeModal.tsx )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/data/familyData.ts )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/hooks/family-tree-parts/useTreeLayout.ts )",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/lib/utils/normalizeFamilyEdges.ts)",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/MobileControls.tsx)",
+            "Bash(/Users/itsnappyboy/Documents/GitHub/themodernfamily/src/components/PersonNode)",
+            "Bash(node generate-favicon.js)",
+            "Bash(identify:*)",
+            "Bash(sips:*)",
+            "Bash(mkdir:*)"
+        ],
+        "deny": [],
+        "ask": []
+    }
+}

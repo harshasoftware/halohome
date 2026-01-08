@@ -1,0 +1,19 @@
+{
+  "name": "astro-core",
+  "type": "module",
+  "collaborators": [
+    "AstroCart Team"
+  ],
+  "description": "High-performance astrocartography calculations in Rust/WebAssembly",
+  "version": "0.1.0",
+  "files": [
+    "astro_core_bg.wasm",
+    "astro_core.js",
+    "astro_core.d.ts"
+  ],
+  "main": "astro_core.js",
+  "types": "astro_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

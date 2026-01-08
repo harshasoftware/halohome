@@ -1,0 +1,8 @@
+- [x] Epic 1 – Globe Foundation
+- [x] Epic 2 – Political Geography Layer
+- [x] Epic 3 – Avatar Markers
+- [x] Epic 4 – Detail Cards
+- [x] Epic 5 – Clustering & Performance
+- [x] Epic 6 – Migration Arcs & Timeline
+- [x] Epic 7 – Filters & Interactions
+- [x] Epic 8 – Polish & Launch

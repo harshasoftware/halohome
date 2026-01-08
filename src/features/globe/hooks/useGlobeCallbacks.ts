@@ -1,0 +1,293 @@
+/**
+ * useGlobeCallbacks - Hook for globe event handlers and callbacks
+ *
+ * Consolidates globe-related callbacks from GlobePage for cleaner code.
+ * Handles person clicks, line clicks, city clicks, and location analysis.
+ */
+
+import { useCallback, useRef } from 'react';
+import { toast } from 'sonner';
+import type { Node } from '@stubs/xyflow';
+import type { PersonData } from '@/types/familyTree';
+import type { PersonLocation } from '../types/migration.d';
+import type { GlobePath, PanelItem } from '@/stores/globeInteractionStore';
+import type { PlanetaryLine, AspectLine, ZenithPoint } from '@/lib/astro-types';
+import type { LocationAnalysis } from '@/lib/location-line-utils';
+import { analyzeLocation } from '@/lib/location-line-utils';
+
+interface NavigationMethods {
+  flyTo: (lat: number, lng: number, altitude?: number, duration?: number) => void;
+}
+
+interface UseGlobeCallbacksOptions {
+  navigation: NavigationMethods;
+  nodes: Node<PersonData>[];
+  isMobile: boolean;
+
+  // Astro data for analysis
+  planetaryLines: PlanetaryLine[];
+  aspectLines: AspectLine[];
+  zenithPoints: ZenithPoint[];
+  hasBirthData: boolean;
+
+  // Mode state
+  isLocalSpace: boolean;
+  setLocalSpaceOrigin: (lat: number, lng: number, name: string) => void;
+
+  // Panel stack
+  panelStack: {
+    push: (panel: Omit<PanelItem, 'id'>) => void;
+  };
+
+  // Selection setters
+  setSelectedPerson: (person: PersonData | null) => void;
+  setSelectedLine: (line: GlobePath | null) => void;
+  setLocationAnalysis: (analysis: LocationAnalysis | null) => void;
+  setSelectedCityForInfo: (city: { lat: number; lng: number; name: string } | null) => void;
+  setCityLocation: (city: { lat: number; lng: number; name: string } | null) => void;
+
+  // Other callbacks
+  handleCloseExportPanel: () => void;
+}
+
+interface UseGlobeCallbacksReturn {
+  handlePersonClick: (person: PersonLocation) => void;
+  handleLineClick: (line: GlobePath) => void;
+  handleCityClick: (lat: number, lng: number, cityName: string) => void;
+  handleLocationAnalyze: (lat: number, lng: number) => void;
+  handleCloseCard: () => void;
+  handleCloseLineInfo: () => void;
+  handleCloseCityInfo: () => void;
+  handleCloseLocationAnalysis: () => void;
+}
+
+export function useGlobeCallbacks({
+  navigation,
+  nodes,
+  isMobile,
+  planetaryLines,
+  aspectLines,
+  zenithPoints,
+  hasBirthData,
+  isLocalSpace,
+  setLocalSpaceOrigin,
+  panelStack,
+  setSelectedPerson,
+  setSelectedLine,
+  setLocationAnalysis,
+  setSelectedCityForInfo,
+  setCityLocation,
+  handleCloseExportPanel,
+}: UseGlobeCallbacksOptions): UseGlobeCallbacksReturn {
+  // Ref to track when a line was just clicked (prevents race condition on first local space click)
+  const lineClickGuardRef = useRef<number>(0);
+  const LINE_CLICK_GUARD_DURATION = 500; // ms to prevent clearing after click
+
+  // Handle person marker click
+  const handlePersonClick = useCallback(
+    (person: PersonLocation) => {
+      const fullPersonData = nodes.find((n) => n.id === person.id)?.data;
+      if (fullPersonData) {
+        if (!isMobile) {
+          // Desktop: push to unified panel stack
+          panelStack.push({
+            type: 'person',
+            title: fullPersonData.name || 'Person',
+            data: fullPersonData,
+          });
+        } else {
+          // Mobile: uses dialog
+          setSelectedPerson(fullPersonData);
+        }
+      }
+    },
+    [nodes, isMobile, panelStack, setSelectedPerson]
+  );
+
+  // Handle line click
+  const handleLineClick = useCallback(
+    (line: GlobePath) => {
+      // Set guard to prevent race conditions (especially on first local space click)
+      lineClickGuardRef.current = Date.now();
+
+      // Clone the line data to avoid mutation issues with globe.gl's internal tracking
+      // Globe.gl adds __threeObjPath to path objects; passing the same reference causes errors
+      const lineData: GlobePath = {
+        ...line,
+        coords: line.coords ? [...line.coords] : [],
+      };
+
+      if (!isMobile) {
+        // Desktop: push to unified panel stack
+        panelStack.push({
+          type: 'line',
+          title: `${line.planet} ${line.lineType}`,
+          data: lineData,
+        });
+      } else {
+        // Mobile: uses bottom sheet
+        setSelectedLine(lineData);
+      }
+      // Close other panels
+      setSelectedPerson(null);
+      setLocationAnalysis(null);
+      setCityLocation(null);
+      handleCloseExportPanel();
+    },
+    [
+      isMobile,
+      panelStack,
+      setSelectedLine,
+      setSelectedPerson,
+      setLocationAnalysis,
+      setCityLocation,
+      handleCloseExportPanel,
+    ]
+  );
+
+  // Handle city click (from search) - shows CityInfoPanel which has AstrologyTab
+  const handleCityClick = useCallback(
+    (lat: number, lng: number, cityName: string) => {
+      // Set city location for pin marker
+      setCityLocation({ lat, lng, name: cityName });
+      // Zoom to the city
+      navigation.flyTo(lat, lng, 0.4, 1500);
+
+      if (isLocalSpace) {
+        setLocalSpaceOrigin(lat, lng, cityName);
+        toast.success(`Local Space lines from ${cityName}`);
+      } else {
+        toast.success(`Zooming to ${cityName}`);
+      }
+
+      // If birth data exists, compute analysis for the AstrologyTab in CityInfoPanel
+      if (hasBirthData) {
+        const analysis = analyzeLocation(lat, lng, planetaryLines, aspectLines, zenithPoints);
+        setLocationAnalysis(analysis);
+      } else {
+        setLocationAnalysis(null);
+      }
+
+      // Always show CityInfoPanel (which includes AstrologyTab if birth data exists)
+      if (!isMobile) {
+        panelStack.push({
+          type: 'city',
+          title: cityName,
+          data: { lat, lng, name: cityName },
+        });
+      } else {
+        setSelectedCityForInfo({ lat, lng, name: cityName });
+      }
+
+      // Close other panels (but respect line click guard to prevent race condition)
+      if (Date.now() - lineClickGuardRef.current > LINE_CLICK_GUARD_DURATION) {
+        setSelectedLine(null);
+      }
+      setSelectedPerson(null);
+      handleCloseExportPanel();
+    },
+    [
+      navigation,
+      isLocalSpace,
+      setLocalSpaceOrigin,
+      isMobile,
+      panelStack,
+      setCityLocation,
+      setSelectedCityForInfo,
+      setSelectedLine,
+      setLocationAnalysis,
+      hasBirthData,
+      planetaryLines,
+      aspectLines,
+      zenithPoints,
+      setSelectedPerson,
+      handleCloseExportPanel,
+    ]
+  );
+
+  // Handle double-click location analysis
+  const handleLocationAnalyze = useCallback(
+    (lat: number, lng: number) => {
+      if (!hasBirthData) {
+        toast.info('Set birth data to analyze planetary influences at this location');
+        return;
+      }
+
+      // If in local space mode, update the origin
+      if (isLocalSpace) {
+        const locationName = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+        setLocalSpaceOrigin(lat, lng, locationName);
+        toast.success(`Local Space lines from ${locationName}`);
+      }
+
+      const analysis = analyzeLocation(lat, lng, planetaryLines, aspectLines, zenithPoints);
+
+      // Always set location analysis for the marker to show
+      setLocationAnalysis(analysis);
+
+      if (!isMobile) {
+        // Desktop: push to unified panel stack
+        panelStack.push({
+          type: 'analysis',
+          title: `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`,
+          data: analysis,
+        });
+      }
+      // Close other panels (but respect line click guard to prevent race condition)
+      if (Date.now() - lineClickGuardRef.current > LINE_CLICK_GUARD_DURATION) {
+        setSelectedLine(null);
+      }
+      setSelectedPerson(null);
+      handleCloseExportPanel();
+
+      // Zoom to the analyzed location
+      navigation.flyTo(lat, lng, isMobile ? 1.5 : 1.2, 1000);
+    },
+    [
+      hasBirthData,
+      isLocalSpace,
+      setLocalSpaceOrigin,
+      planetaryLines,
+      aspectLines,
+      zenithPoints,
+      isMobile,
+      panelStack,
+      setLocationAnalysis,
+      setSelectedLine,
+      setSelectedPerson,
+      handleCloseExportPanel,
+      navigation,
+    ]
+  );
+
+  // Close handlers
+  const handleCloseCard = useCallback(() => {
+    setSelectedPerson(null);
+  }, [setSelectedPerson]);
+
+  const handleCloseLineInfo = useCallback(() => {
+    setSelectedLine(null);
+    setCityLocation(null);
+  }, [setSelectedLine, setCityLocation]);
+
+  const handleCloseCityInfo = useCallback(() => {
+    setSelectedCityForInfo(null);
+  }, [setSelectedCityForInfo]);
+
+  const handleCloseLocationAnalysis = useCallback(() => {
+    setLocationAnalysis(null);
+  }, [setLocationAnalysis]);
+
+  return {
+    handlePersonClick,
+    handleLineClick,
+    handleCityClick,
+    handleLocationAnalyze,
+    handleCloseCard,
+    handleCloseLineInfo,
+    handleCloseCityInfo,
+    handleCloseLocationAnalysis,
+  };
+}
+
+export default useGlobeCallbacks;

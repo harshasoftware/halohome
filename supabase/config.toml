@@ -1,0 +1,39 @@
+# All edge functions require JWT (anonymous auth provides JWT for non-logged-in users)
+[functions.create-astro-report-payment]
+verify_jwt = true
+
+[functions.verify-astro-payment]
+verify_jwt = true
+
+[functions.check-astro-premium]
+verify_jwt = true
+
+[functions.city-info]
+verify_jwt = true
+
+[functions.ai-subscription]
+verify_jwt = true
+
+[functions.astro-ai-chat]
+verify_jwt = true
+
+[functions.copilot-runtime]
+verify_jwt = true
+
+[functions.search-flights]
+verify_jwt = true
+
+[functions.generate-embedding]
+verify_jwt = true
+
+[functions.send-report-email]
+verify_jwt = true
+
+[functions.reconcile-payments]
+verify_jwt = true
+
+[functions.create-share-link]
+verify_jwt = true
+
+[functions.get-share-data]
+verify_jwt = true

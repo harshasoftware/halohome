@@ -1,0 +1,11 @@
+framework module app_badge_plus {
+  umbrella header "app_badge_plus-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module app_badge_plus.Swift {
+  header "app_badge_plus-Swift.h"
+  requires objc
+}

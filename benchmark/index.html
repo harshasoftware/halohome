@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scout Algorithm Benchmark</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #111118;
+      --border: #1f1f2e;
+      --text: #e4e4e7;
+      --text-muted: #71717a;
+      --amber: #f59e0b;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+      --red: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card h3 {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .card .value {
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .card .unit {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-left: 0.25rem;
+    }
+
+    .card.wasm-parallel .value { color: var(--green); }
+    .card.wasm .value { color: var(--blue); }
+    .card.typescript .value { color: var(--purple); }
+    .card.speedup .value { color: var(--amber); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .status.available {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--green);
+    }
+
+    .status.unavailable {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--red);
+    }
+
+    .status.pending {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--amber);
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: var(--amber);
+      color: #000;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    select {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .chart-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 300px;
+    }
+
+    .log {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.8125rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-entry .time {
+      color: var(--text-muted);
+      margin-right: 0.5rem;
+    }
+
+    .log-entry.success { color: var(--green); }
+    .log-entry.error { color: var(--red); }
+    .log-entry.info { color: var(--blue); }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-bar .fill {
+      height: 100%;
+      background: var(--amber);
+      transition: width 0.3s;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-table th {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .results-table td {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge.fastest {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Scout Algorithm Benchmark</h1>
+    <p class="subtitle">Compare WASM Parallel (Rayon), WASM Single-threaded, and TypeScript implementations</p>
+
+    <!-- Environment Status -->
+    <div class="grid">
+      <div class="card">
+        <h3>Cross-Origin Isolated</h3>
+        <span id="coi-status" class="status pending">Checking...</span>
+      </div>
+      <div class="card">
+        <h3>SharedArrayBuffer</h3>
+        <span id="sab-status" class="status pending">Checking...</span>
+      </div>
+      <div class="card">
+        <h3>Hardware Threads</h3>
+        <div class="value" id="threads-count">-</div>
+      </div>
+      <div class="card">
+        <h3>WASM Parallel</h3>
+        <span id="parallel-status" class="status pending">Not loaded</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button id="run-btn" disabled>Run Benchmark</button>
+      <select id="iterations">
+        <option value="1">1 iteration</option>
+        <option value="3" selected>3 iterations</option>
+        <option value="5">5 iterations</option>
+        <option value="10">10 iterations</option>
+      </select>
+      <select id="city-count">
+        <option value="100">100 cities</option>
+        <option value="500">500 cities</option>
+        <option value="1000" selected>1000 cities</option>
+        <option value="2000">2000 cities</option>
+      </select>
+    </div>
+
+    <!-- Progress -->
+    <div class="card" id="progress-card" style="display: none;">
+      <h3>Progress</h3>
+      <div id="progress-text">Initializing...</div>
+      <div class="progress-bar">
+        <div class="fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Results Cards -->
+    <div class="grid" id="results-cards" style="display: none;">
+      <div class="card wasm-parallel">
+        <h3>WASM Parallel (Rayon)</h3>
+        <div class="value"><span id="result-parallel">-</span><span class="unit">ms</span></div>
+      </div>
+      <div class="card wasm">
+        <h3>WASM Single-threaded</h3>
+        <div class="value"><span id="result-wasm">-</span><span class="unit">ms</span></div>
+      </div>
+      <div class="card typescript">
+        <h3>TypeScript</h3>
+        <div class="value"><span id="result-ts">-</span><span class="unit">ms</span></div>
+      </div>
+      <div class="card speedup">
+        <h3>Parallel Speedup</h3>
+        <div class="value"><span id="result-speedup">-</span><span class="unit">x</span></div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-container" id="chart-container" style="display: none;">
+      <div class="chart-title">Execution Time by Category</div>
+      <div class="chart-wrapper">
+        <canvas id="category-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-container" id="comparison-container" style="display: none;">
+      <div class="chart-title">Implementation Comparison</div>
+      <div class="chart-wrapper">
+        <canvas id="comparison-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Detailed Results -->
+    <div class="card" id="detailed-results" style="display: none;">
+      <h3>Detailed Results</h3>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>WASM Parallel</th>
+            <th>WASM Single</th>
+            <th>TypeScript</th>
+            <th>Speedup</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Log -->
+    <div class="card" style="margin-top: 2rem;">
+      <h3>Log</h3>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ============================================================================
+    // Logging
+    // ============================================================================
+
+    const logEl = document.getElementById('log');
+
+    function log(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerHTML = `<span class="time">[${time}]</span> ${message}`;
+      logEl.appendChild(entry);
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(`[${type}] ${message}`);
+    }
+
+    // ============================================================================
+    // Environment Detection
+    // ============================================================================
+
+    function checkEnvironment() {
+      // Cross-Origin Isolation
+      const coiStatus = document.getElementById('coi-status');
+      const isCOI = self.crossOriginIsolated === true;
+      coiStatus.className = `status ${isCOI ? 'available' : 'unavailable'}`;
+      coiStatus.textContent = isCOI ? 'Enabled' : 'Disabled';
+
+      // SharedArrayBuffer
+      const sabStatus = document.getElementById('sab-status');
+      let hasSAB = false;
+      try {
+        new SharedArrayBuffer(1);
+        hasSAB = true;
+      } catch {}
+      sabStatus.className = `status ${hasSAB ? 'available' : 'unavailable'}`;
+      sabStatus.textContent = hasSAB ? 'Available' : 'Unavailable';
+
+      // Hardware threads
+      document.getElementById('threads-count').textContent = navigator.hardwareConcurrency || 'Unknown';
+
+      if (!isCOI) {
+        log('Cross-Origin Isolation not enabled. Parallel WASM will not work.', 'error');
+        log('Run with: npx vite --host --cors', 'info');
+      }
+
+      return { isCOI, hasSAB };
+    }
+
+    // ============================================================================
+    // WASM Module Loading
+    // ============================================================================
+
+    let wasmModule = null;
+    let isParallelAvailable = false;
+
+    async function loadWasm() {
+      const parallelStatus = document.getElementById('parallel-status');
+
+      try {
+        log('Loading WASM module...');
+
+        // Import the WASM module
+        const wasm = await import('../src/astro-core/pkg/astro_core.js');
+
+        // Initialize
+        if (typeof wasm.default === 'function') {
+          await wasm.default();
+        }
+
+        wasmModule = wasm;
+        log('WASM module loaded successfully', 'success');
+
+        // Check parallel availability
+        if (typeof wasm.is_parallel_available === 'function') {
+          isParallelAvailable = wasm.is_parallel_available();
+
+          if (isParallelAvailable && typeof wasm.initThreadPool === 'function') {
+            const threads = navigator.hardwareConcurrency || 4;
+            log(`Initializing rayon thread pool with ${threads} threads...`);
+            await wasm.initThreadPool(threads);
+            log(`Rayon parallel processing enabled with ${threads} threads`, 'success');
+            parallelStatus.className = 'status available';
+            parallelStatus.textContent = `${threads} threads`;
+          } else {
+            parallelStatus.className = 'status unavailable';
+            parallelStatus.textContent = 'Not available';
+            log('Parallel WASM not available', 'error');
+          }
+        }
+
+        document.getElementById('run-btn').disabled = false;
+        return true;
+      } catch (error) {
+        log(`Failed to load WASM: ${error.message}`, 'error');
+        parallelStatus.className = 'status unavailable';
+        parallelStatus.textContent = 'Load failed';
+        return false;
+      }
+    }
+
+    // ============================================================================
+    // Test Data Generation
+    // ============================================================================
+
+    function generateTestCities(count) {
+      const cities = [];
+      for (let i = 0; i < count; i++) {
+        cities.push({
+          name: `City_${i}`,
+          country: `Country_${i % 50}`,
+          lat: (Math.random() * 180) - 90,
+          lon: (Math.random() * 360) - 180,
+        });
+      }
+      return cities;
+    }
+
+    function generateTestLines(count) {
+      const planets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+      const angles = ['MC', 'ASC', 'DSC', 'IC'];
+      const lines = [];
+
+      for (let i = 0; i < count; i++) {
+        const planet = planets[i % planets.length];
+        const angle = angles[i % angles.length];
+
+        // Generate line points (latitude sweep)
+        const points = [];
+        for (let lat = -80; lat <= 80; lat += 5) {
+          const lng = (Math.random() * 360) - 180;
+          points.push([lat, lng]);
+        }
+
+        lines.push({
+          planet,
+          angle,
+          rating: Math.floor(Math.random() * 5) + 1,
+          aspect: null,
+          points,
+        });
+      }
+
+      return lines;
+    }
+
+    // ============================================================================
+    // Benchmark Functions
+    // ============================================================================
+
+    const CATEGORIES = ['career', 'love', 'health', 'home', 'wellbeing', 'wealth'];
+    const CATEGORY_ENUM = { career: 0, love: 1, health: 2, home: 3, wellbeing: 4, wealth: 5 };
+
+    async function benchmarkParallelWasm(cities, lines, category) {
+      if (!wasmModule || !isParallelAvailable) return null;
+
+      const config = { kernel_type: 1, kernel_parameter: 150, max_distance_km: 500 };
+      const start = performance.now();
+
+      try {
+        wasmModule.scout_cities_for_category_parallel(
+          cities,
+          lines,
+          CATEGORY_ENUM[category],
+          2, // BalancedBenefit
+          config
+        );
+        return performance.now() - start;
+      } catch (error) {
+        log(`Parallel WASM error: ${error.message}`, 'error');
+        return null;
+      }
+    }
+
+    async function benchmarkSingleWasm(cities, lines, category) {
+      if (!wasmModule) return null;
+
+      const config = { kernel_type: 1, kernel_parameter: 150, max_distance_km: 500 };
+      const start = performance.now();
+
+      try {
+        wasmModule.scout_cities_for_category(
+          cities,
+          lines,
+          CATEGORY_ENUM[category],
+          2, // BalancedBenefit
+          config
+        );
+        return performance.now() - start;
+      } catch (error) {
+        log(`Single WASM error: ${error.message}`, 'error');
+        return null;
+      }
+    }
+
+    function benchmarkTypeScript(cities, lines, category) {
+      // Simplified TypeScript implementation for benchmarking
+      const start = performance.now();
+
+      const results = [];
+      for (const city of cities) {
+        let score = 0;
+        let influences = 0;
+
+        for (const line of lines) {
+          // Find closest point on line
+          let minDist = Infinity;
+          for (const [lat, lng] of line.points) {
+            const dist = haversineDistance(city.lat, city.lon, lat, lng);
+            if (dist < minDist) minDist = dist;
+          }
+
+          if (minDist < 500) { // Within influence range
+            const influence = (500 - minDist) / 500 * line.rating;
+            score += influence;
+            influences++;
+          }
+        }
+
+        results.push({
+          city: city.name,
+          score,
+          influences,
+        });
+      }
+
+      // Sort by score
+      results.sort((a, b) => b.score - a.score);
+
+      return performance.now() - start;
+    }
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // ============================================================================
+    // Run Benchmark
+    // ============================================================================
+
+    let categoryChart = null;
+    let comparisonChart = null;
+
+    async function runBenchmark() {
+      const iterations = parseInt(document.getElementById('iterations').value);
+      const cityCount = parseInt(document.getElementById('city-count').value);
+
+      const runBtn = document.getElementById('run-btn');
+      runBtn.disabled = true;
+
+      const progressCard = document.getElementById('progress-card');
+      const progressText = document.getElementById('progress-text');
+      const progressFill = document.getElementById('progress-fill');
+      progressCard.style.display = 'block';
+
+      log(`Starting benchmark: ${iterations} iterations, ${cityCount} cities`);
+
+      // Generate test data
+      progressText.textContent = 'Generating test data...';
+      const cities = generateTestCities(cityCount);
+      const lines = generateTestLines(28); // 7 planets * 4 angles
+      log(`Generated ${cities.length} cities and ${lines.length} lines`);
+
+      const results = {
+        parallel: {},
+        wasm: {},
+        typescript: {},
+      };
+
+      const totalSteps = CATEGORIES.length * iterations * 3;
+      let currentStep = 0;
+
+      for (const category of CATEGORIES) {
+        results.parallel[category] = [];
+        results.wasm[category] = [];
+        results.typescript[category] = [];
+
+        for (let i = 0; i < iterations; i++) {
+          // Parallel WASM
+          progressText.textContent = `${category} - Parallel WASM (${i + 1}/${iterations})`;
+          progressFill.style.width = `${(++currentStep / totalSteps) * 100}%`;
+          await new Promise(r => setTimeout(r, 10)); // Allow UI update
+
+          const parallelTime = await benchmarkParallelWasm(cities, lines, category);
+          if (parallelTime !== null) {
+            results.parallel[category].push(parallelTime);
+          }
+
+          // Single WASM
+          progressText.textContent = `${category} - Single WASM (${i + 1}/${iterations})`;
+          progressFill.style.width = `${(++currentStep / totalSteps) * 100}%`;
+          await new Promise(r => setTimeout(r, 10));
+
+          const wasmTime = await benchmarkSingleWasm(cities, lines, category);
+          if (wasmTime !== null) {
+            results.wasm[category].push(wasmTime);
+          }
+
+          // TypeScript
+          progressText.textContent = `${category} - TypeScript (${i + 1}/${iterations})`;
+          progressFill.style.width = `${(++currentStep / totalSteps) * 100}%`;
+          await new Promise(r => setTimeout(r, 10));
+
+          const tsTime = benchmarkTypeScript(cities, lines, category);
+          results.typescript[category].push(tsTime);
+        }
+      }
+
+      progressCard.style.display = 'none';
+      log('Benchmark complete!', 'success');
+
+      // Calculate averages
+      const averages = {
+        parallel: {},
+        wasm: {},
+        typescript: {},
+      };
+
+      let totalParallel = 0;
+      let totalWasm = 0;
+      let totalTs = 0;
+
+      for (const category of CATEGORIES) {
+        const avgParallel = results.parallel[category].length > 0
+          ? results.parallel[category].reduce((a, b) => a + b, 0) / results.parallel[category].length
+          : null;
+        const avgWasm = results.wasm[category].length > 0
+          ? results.wasm[category].reduce((a, b) => a + b, 0) / results.wasm[category].length
+          : null;
+        const avgTs = results.typescript[category].reduce((a, b) => a + b, 0) / results.typescript[category].length;
+
+        averages.parallel[category] = avgParallel;
+        averages.wasm[category] = avgWasm;
+        averages.typescript[category] = avgTs;
+
+        if (avgParallel) totalParallel += avgParallel;
+        if (avgWasm) totalWasm += avgWasm;
+        totalTs += avgTs;
+      }
+
+      // Display results
+      displayResults(averages, totalParallel, totalWasm, totalTs);
+
+      runBtn.disabled = false;
+    }
+
+    function displayResults(averages, totalParallel, totalWasm, totalTs) {
+      // Summary cards
+      document.getElementById('results-cards').style.display = 'grid';
+      document.getElementById('result-parallel').textContent = totalParallel ? totalParallel.toFixed(1) : 'N/A';
+      document.getElementById('result-wasm').textContent = totalWasm ? totalWasm.toFixed(1) : 'N/A';
+      document.getElementById('result-ts').textContent = totalTs.toFixed(1);
+
+      const speedup = totalParallel && totalWasm ? (totalWasm / totalParallel).toFixed(2) : 'N/A';
+      document.getElementById('result-speedup').textContent = speedup;
+
+      log(`Total times - Parallel: ${totalParallel?.toFixed(1) || 'N/A'}ms, WASM: ${totalWasm?.toFixed(1) || 'N/A'}ms, TS: ${totalTs.toFixed(1)}ms`);
+      if (speedup !== 'N/A') {
+        log(`Parallel speedup over single-threaded: ${speedup}x`, 'success');
+      }
+
+      // Detailed results table
+      document.getElementById('detailed-results').style.display = 'block';
+      const tbody = document.getElementById('results-tbody');
+      tbody.innerHTML = '';
+
+      for (const category of CATEGORIES) {
+        const parallel = averages.parallel[category];
+        const wasm = averages.wasm[category];
+        const ts = averages.typescript[category];
+
+        const times = [
+          { name: 'parallel', time: parallel },
+          { name: 'wasm', time: wasm },
+          { name: 'ts', time: ts },
+        ].filter(t => t.time !== null);
+
+        const fastest = times.reduce((a, b) => (a.time < b.time ? a : b), times[0]);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${category.charAt(0).toUpperCase() + category.slice(1)}</td>
+          <td>${parallel ? parallel.toFixed(2) + 'ms' : 'N/A'} ${fastest.name === 'parallel' ? '<span class="badge fastest">Fastest</span>' : ''}</td>
+          <td>${wasm ? wasm.toFixed(2) + 'ms' : 'N/A'} ${fastest.name === 'wasm' ? '<span class="badge fastest">Fastest</span>' : ''}</td>
+          <td>${ts.toFixed(2)}ms ${fastest.name === 'ts' ? '<span class="badge fastest">Fastest</span>' : ''}</td>
+          <td>${parallel && wasm ? (wasm / parallel).toFixed(2) + 'x' : 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      // Charts
+      renderCharts(averages);
+    }
+
+    function renderCharts(averages) {
+      document.getElementById('chart-container').style.display = 'block';
+      document.getElementById('comparison-container').style.display = 'block';
+
+      const labels = CATEGORIES.map(c => c.charAt(0).toUpperCase() + c.slice(1));
+
+      // Category chart
+      const categoryCtx = document.getElementById('category-chart').getContext('2d');
+
+      if (categoryChart) categoryChart.destroy();
+
+      categoryChart = new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'WASM Parallel',
+              data: CATEGORIES.map(c => averages.parallel[c] || 0),
+              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+              borderColor: 'rgb(34, 197, 94)',
+              borderWidth: 1,
+            },
+            {
+              label: 'WASM Single',
+              data: CATEGORIES.map(c => averages.wasm[c] || 0),
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+              borderColor: 'rgb(59, 130, 246)',
+              borderWidth: 1,
+            },
+            {
+              label: 'TypeScript',
+              data: CATEGORIES.map(c => averages.typescript[c] || 0),
+              backgroundColor: 'rgba(168, 85, 247, 0.8)',
+              borderColor: 'rgb(168, 85, 247)',
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#e4e4e7' },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: '#71717a' },
+              grid: { color: '#1f1f2e' },
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Time (ms)',
+                color: '#71717a',
+              },
+              ticks: { color: '#71717a' },
+              grid: { color: '#1f1f2e' },
+            },
+          },
+        },
+      });
+
+      // Comparison chart (totals)
+      const comparisonCtx = document.getElementById('comparison-chart').getContext('2d');
+
+      if (comparisonChart) comparisonChart.destroy();
+
+      const totalParallel = CATEGORIES.reduce((sum, c) => sum + (averages.parallel[c] || 0), 0);
+      const totalWasm = CATEGORIES.reduce((sum, c) => sum + (averages.wasm[c] || 0), 0);
+      const totalTs = CATEGORIES.reduce((sum, c) => sum + averages.typescript[c], 0);
+
+      comparisonChart = new Chart(comparisonCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['WASM Parallel', 'WASM Single', 'TypeScript'],
+          datasets: [{
+            data: [totalParallel || 1, totalWasm || 1, totalTs],
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.8)',
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(168, 85, 247, 0.8)',
+            ],
+            borderColor: [
+              'rgb(34, 197, 94)',
+              'rgb(59, 130, 246)',
+              'rgb(168, 85, 247)',
+            ],
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: '#e4e4e7' },
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const value = context.raw;
+                  return `${context.label}: ${value.toFixed(1)}ms`;
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // ============================================================================
+    // Initialize
+    // ============================================================================
+
+    async function init() {
+      log('Initializing benchmark...');
+      checkEnvironment();
+      await loadWasm();
+    }
+
+    document.getElementById('run-btn').addEventListener('click', runBenchmark);
+
+    init();
+  </script>
+</body>
+</html>

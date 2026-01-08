@@ -1,0 +1,273 @@
+# =============================================================================
+# Netlify Configuration - The Modern Family (Astrocarto)
+# =============================================================================
+#
+# OPTIMIZATIONS OVERVIEW:
+#
+# 1. BUILD CONFIGURATION
+#    - 4GB Node.js heap for large WASM/bundle builds
+#    - Secrets scanning configured for public API keys (domain-locked)
+#
+# 2. SPA ROUTING
+#    - All routes redirect to index.html for client-side routing
+#
+# 3. CACHE STRATEGY (Prevents stale content after deploys)
+#    ┌─────────────────┬───────────────────────────────────────────────┐
+#    │ Resource        │ Strategy                                      │
+#    ├─────────────────┼───────────────────────────────────────────────┤
+#    │ index.html      │ no-cache (always fetch fresh)                 │
+#    │ sw.js           │ no-cache (service worker must be current)     │
+#    │ manifest.json   │ no-cache (PWA manifest must be current)       │
+#    │ /assets/*       │ immutable, 1 year (hashed filenames)          │
+#    └─────────────────┴───────────────────────────────────────────────┘
+#
+# 4. COOP/COEP HEADERS (Cross-Origin Isolation for WASM)
+#    Required for SharedArrayBuffer which enables Rayon parallelism in Rust WASM.
+#    Only applied to WASM-heavy routes to avoid breaking third-party resources.
+#
+#    ┌─────────────────┬───────────────────────────────────────────────┐
+#    │ Route           │ Purpose                                       │
+#    ├─────────────────┼───────────────────────────────────────────────┤
+#    │ /guest          │ Guest workspace (natal chart WASM)            │
+#    │ /project/*      │ Project workspace & astrocartography map      │
+#    └─────────────────┴───────────────────────────────────────────────┘
+#
+#    Headers applied:
+#    - Cross-Origin-Opener-Policy: same-origin
+#    - Cross-Origin-Embedder-Policy: credentialless (allows cross-origin without CORP)
+#
+#    Why "credentialless" instead of "require-corp":
+#    - Allows loading cross-origin resources (maps, fonts, images) without CORP headers
+#    - Still enables SharedArrayBuffer for WASM parallelism
+#    - More compatible with third-party services (Google Maps, fonts, etc.)
+#
+#    PERFORMANCE EXPECTATIONS:
+#    ┌─────────────────────────┬─────────────────┬─────────────────────────────┐
+#    │ Mode                    │ Threading       │ Performance                 │
+#    ├─────────────────────────┼─────────────────┼─────────────────────────────┤
+#    │ With COOP/COEP          │ Multi-threaded  │ ~4-8x faster (Rayon)        │
+#    │ (SharedArrayBuffer ON)  │ (Web Workers)   │ Parallel planetary calcs    │
+#    ├─────────────────────────┼─────────────────┼─────────────────────────────┤
+#    │ Without COOP/COEP       │ Single-threaded │ Baseline performance        │
+#    │ (SharedArrayBuffer OFF) │ (Main thread)   │ Sequential calculations     │
+#    └─────────────────────────┴─────────────────┴─────────────────────────────┘
+#
+#    Typical calculation times (natal chart with aspects):
+#    - Multi-threaded: ~50-150ms
+#    - Single-threaded: ~400-800ms
+#
+#    Astrocartography line rendering:
+#    - Multi-threaded: Real-time updates, smooth globe interaction
+#    - Single-threaded: Noticeable lag on complex calculations
+#
+# 5. SECURITY HEADERS (Applied globally)
+#    - X-Content-Type-Options: nosniff (prevent MIME sniffing)
+#    - X-Frame-Options: SAMEORIGIN (clickjacking protection)
+#    - X-XSS-Protection: 1; mode=block (legacy XSS filter)
+#    - Referrer-Policy: strict-origin-when-cross-origin
+#    - Permissions-Policy: restricts geolocation to self, blocks camera/mic
+#
+# =============================================================================
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Static files must be served directly (not caught by SPA fallback)
+# These rules must come BEFORE the /* catch-all
+[[redirects]]
+  from = "/wasm/*"
+  to = "/wasm/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/sqlite-wasm/*"
+  to = "/sqlite-wasm/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/data/*"
+  to = "/data/:splat"
+  status = 200
+
+# SPA fallback - catch-all for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  # Increase Node.js heap size for large builds (WASM compilation needs memory)
+  NODE_OPTIONS = "--max-old-space-size=4096"
+  # Allow public API keys (domain-locked and safe to expose)
+  SECRETS_SCAN_OMIT_KEYS = "VITE_GOOGLE_MAPS_API_KEY,VITE_GOOGLE_MAPR_KEY,VITE_GOOGLE_AI_KEY"
+  # Disable smart detection for API keys that are meant to be public
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
+# =============================================================================
+# CACHE CONTROL HEADERS
+# =============================================================================
+
+# Critical files - always revalidate to ensure fresh content after deploys
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Hashed assets - immutable caching (filename changes on content change)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# SQLite WASM files - moderate caching (not hashed, but rarely change)
+[[headers]]
+  for = "/sqlite-wasm/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# =============================================================================
+# RAYON WASM WORKERS - Static files for parallel WASM thread pool
+# These files have stable names (not hashed) to support nested worker loading
+# Rayon spawns Web Workers that need to import these files at known paths
+# =============================================================================
+
+# WASM files in /wasm/ directory
+[[headers]]
+  for = "/wasm/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+    Cache-Control = "public, max-age=86400"
+    # CORS for worker fetches
+    Access-Control-Allow-Origin = "*"
+
+# JavaScript files in /wasm/ - Rayon workers need COOP/COEP for SharedArrayBuffer
+[[headers]]
+  for = "/wasm/*.js"
+  [headers.values]
+    Content-Type = "text/javascript"
+    Cache-Control = "public, max-age=86400"
+    # Required for SharedArrayBuffer access in Rayon thread workers
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+    # CORS for dynamic imports
+    Access-Control-Allow-Origin = "*"
+
+# Cities data - long caching (3MB file, rarely changes, loaded once per session)
+# Netlify automatically compresses with Brotli/gzip
+[[headers]]
+  for = "/data/geonames-cities.json"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+    # Allow CORS for worker fetch
+    Access-Control-Allow-Origin = "*"
+
+# =============================================================================
+# WASM FILES - Correct MIME type is CRITICAL for streaming compilation
+# Without this, browsers fall back to slow ArrayBuffer instantiation
+# =============================================================================
+
+# WASM files in /assets/ (Vite bundles with hashes here)
+[[headers]]
+  for = "/assets/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Root-level WASM files (fallback)
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+# SQLite WASM files
+[[headers]]
+  for = "/sqlite-wasm/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+# =============================================================================
+# WORKER FILES - Must match parent page COEP for SharedArrayBuffer to work
+# Using 'credentialless' to match parent pages (allows cross-origin resources)
+# =============================================================================
+
+# Scout workers and other bundled workers
+[[headers]]
+  for = "/assets/*.worker-*.js"
+  [headers.values]
+    Content-Type = "text/javascript"
+    Cache-Control = "public, max-age=31536000, immutable"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# Rayon thread pool workers (wasm-bindgen-rayon spawns these)
+# These are loaded from the snippets directory within assets
+[[headers]]
+  for = "/assets/snippets/*"
+  [headers.values]
+    Content-Type = "text/javascript"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# All JavaScript files should have correct MIME type
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Content-Type = "text/javascript"
+
+# =============================================================================
+# COOP/COEP HEADERS - Cross-Origin Isolation for SharedArrayBuffer
+# Required for WASM Rayon parallelism in astro-core calculations
+# =============================================================================
+
+# Guest workspace - uses WASM for natal chart calculations
+[[headers]]
+  for = "/guest"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# Project routes - workspace (/project/:id) and astrocartography map (/project/:id/map)
+# Note: /* matches all paths including nested ones like /project/id/map
+[[headers]]
+  for = "/project/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# Globe route - needs COOP/COEP for WASM parallelism
+[[headers]]
+  for = "/globe"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# Benchmark route - needs COOP/COEP for WASM parallelism
+[[headers]]
+  for = "/benchmark"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+
+# =============================================================================
+# GLOBAL SECURITY HEADERS
+# Applied to all routes - no COEP to maintain third-party compatibility
+# =============================================================================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self), camera=(), microphone=()"
