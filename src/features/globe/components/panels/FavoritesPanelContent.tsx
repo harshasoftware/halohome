@@ -17,7 +17,7 @@ interface FavoritesPanelContentProps {
   loading: boolean;
   onSelectFavorite: (lat: number, lng: number, name: string) => void;
   onRemoveFavorite: (id: string, name: string) => void;
-  onUpdateNotes?: (id: string, notes: string) => void;
+  onUpdateNotes?: (id: string, notes: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -108,7 +108,7 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
                     id={fav.id}
                     initialNotes={fav.notes || ''}
                     onSave={async (id, notes) => {
-                      onUpdateNotes(id, notes);
+                      await onUpdateNotes(id, notes);
                     }}
                   />
                 ) : (
