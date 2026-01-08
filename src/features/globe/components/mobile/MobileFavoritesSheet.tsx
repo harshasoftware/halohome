@@ -13,6 +13,8 @@ import {
   Navigation,
   Globe2,
   Loader2,
+  Search,
+  X,
 } from 'lucide-react';
 import { MobileBottomSheet } from './MobileBottomSheet';
 import { VirtualList } from '@/lib/patterns';
@@ -36,7 +38,12 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
   onClose,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const setMobileSheetMaximized = useGlobeInteractionStore((s) => s.setMobileSheetMaximized);
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   const handleClose = () => {
     setMobileSheetMaximized(false);
@@ -69,6 +76,40 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
       onMaximizeChange={setMobileSheetMaximized}
     >
       <div className="flex flex-col h-full">
+        {/* Search Input - only show when there are favorites */}
+        {!loading && favorites.length > 0 && (
+          <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 dark:border-white/10">
+            <div className="relative flex items-center">
+              <Search className="absolute left-3 w-5 h-5 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search favorites..."
+                className={cn(
+                  'w-full h-11 pl-10 pr-10 rounded-xl',
+                  'border border-slate-200 dark:border-slate-700',
+                  'bg-white dark:bg-slate-800',
+                  'text-slate-700 dark:text-slate-200',
+                  'placeholder-slate-400 dark:placeholder-slate-500',
+                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'transition-colors'
+                )}
+                style={{ fontSize: '16px' }} // Prevents iOS zoom on focus
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X className="w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
