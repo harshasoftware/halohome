@@ -1,3 +1,16 @@
+// Vite dev server refuses to statically import JS modules from /public.
+// We lazy-load the worker helpers at runtime and opt out of Vite import analysis.
+let __rayonStartWorkers;
+async function __getRayonStartWorkers() {
+    if (!__rayonStartWorkers) {
+        // Use a computed specifier so Vite doesn't try to treat /public files as ESM imports in dev.
+        const workerHelpersUrl = new URL('/wasm/workerHelpers.js', globalThis.location?.href ?? 'http://localhost').toString();
+        const mod = await import(/* @vite-ignore */ workerHelpersUrl);
+        __rayonStartWorkers = mod.startWorkers;
+    }
+    return __rayonStartWorkers;
+}
+
 let wasm;
 
 function addToExternrefTable0(obj) {

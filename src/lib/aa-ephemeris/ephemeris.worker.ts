@@ -224,8 +224,8 @@ function calculateWithAAJS(
   const equatorial = calculator.getEquatorial(julianDate);
   const distance = calculator.getDistance?.(julianDate);
 
-  // Convert RA from hours to radians
-  const raRadians = (equatorial.rightAscension / 24) * 2 * Math.PI;
+  // Convert RA from degrees to radians (aa-js v3.2+ returns degrees)
+  const raRadians = equatorial.rightAscension * (Math.PI / 180);
   // Convert Dec from degrees to radians
   const decRadians = (equatorial.declination / 180) * Math.PI;
 

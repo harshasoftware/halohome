@@ -221,8 +221,8 @@ export function calculatePlanetaryPosition(
     const ecliptic = calculator.getEcliptic(julianDate);
     const equatorial = calculator.getEquatorial(julianDate);
 
-    // Convert RA from hours to radians (aa-js returns hours)
-    const rightAscension = (equatorial.rightAscension / 24) * 2 * Math.PI;
+    // Convert RA from degrees to radians (aa-js v3.2+ returns degrees)
+    const rightAscension = equatorial.rightAscension * DEG_TO_RAD;
     // Convert Dec from degrees to radians
     const declination = equatorial.declination * DEG_TO_RAD;
 
@@ -248,19 +248,59 @@ function calculatePlanetaryPositionFallback(
 ): PlanetaryPosition {
   const t = (julianDate - J2000_EPOCH) / JULIAN_CENTURY;
 
-  // Fallback orbital elements for Chiron and NorthNode
-  const FALLBACK_ELEMENTS: Record<string, { L0: number; Ldot: number; i0: number }> = {
-    Chiron: { L0: 209.35, Ldot: 259.83, i0: 6.93 },
-    NorthNode: { L0: 125.04, Ldot: -6962.025, i0: 5.145 },
-  };
+  // Chiron uses simple orbital elements
+  if (planet === 'Chiron') {
+    const L0 = 209.35;
+    const Ldot = 259.83;
+    const i0 = 6.93;
+    let L = L0 + Ldot * t;
+    L = ((L % 360) + 360) % 360;
+    return calculatePositionFromEcliptic(planet, L, i0, t);
+  }
 
-  const elements = FALLBACK_ELEMENTS[planet] || { L0: 0, Ldot: 0, i0: 0 };
+  // True Node calculation (not Mean Node)
+  // Based on Meeus "Astronomical Algorithms" Chapter 47
+  if (planet === 'NorthNode') {
+    // Mean longitude of the Moon's ascending node
+    const Omega = 125.0445479 - 1934.1362891 * t + 0.0020754 * t * t + t * t * t / 467441.0;
 
-  let L = elements.L0 + elements.Ldot * t;
-  L = ((L % 360) + 360) % 360;
+    // Moon's mean elongation from Sun
+    const D = 297.8501921 + 445267.1114034 * t - 0.0018819 * t * t + t * t * t / 545868.0;
 
-  const eclipticLongitude = L * DEG_TO_RAD;
-  const eclipticLatitude = elements.i0 * DEG_TO_RAD * Math.sin(eclipticLongitude);
+    // Moon's mean anomaly
+    const Mprime = 134.9633964 + 477198.8675055 * t + 0.0087414 * t * t + t * t * t / 69699.0;
+
+    // Moon's argument of latitude
+    const F = 93.2720950 + 483202.0175233 * t - 0.0036539 * t * t - t * t * t / 3526000.0;
+
+    // True Node = Mean Node + periodic corrections
+    // Main correction terms from Meeus
+    let trueNode = Omega
+      - 1.4979 * Math.sin(2 * (D - F) * DEG_TO_RAD)
+      - 0.1500 * Math.sin(Mprime * DEG_TO_RAD)
+      - 0.1226 * Math.sin(2 * D * DEG_TO_RAD)
+      + 0.1176 * Math.sin(2 * F * DEG_TO_RAD)
+      - 0.0801 * Math.sin(2 * (Mprime - F) * DEG_TO_RAD);
+
+    trueNode = ((trueNode % 360) + 360) % 360;
+    return calculatePositionFromEcliptic(planet, trueNode, 5.145, t);
+  }
+
+  // Default fallback (should not reach here)
+  return calculatePositionFromEcliptic(planet, 0, 0, t);
+}
+
+/**
+ * Helper to convert ecliptic longitude to equatorial coordinates
+ */
+function calculatePositionFromEcliptic(
+  planet: Planet,
+  longitudeDeg: number,
+  inclinationDeg: number,
+  t: number
+): PlanetaryPosition {
+  const eclipticLongitude = longitudeDeg * DEG_TO_RAD;
+  const eclipticLatitude = inclinationDeg * DEG_TO_RAD * Math.sin(eclipticLongitude);
 
   // Obliquity of ecliptic (use IAU 2006 model for consistency)
   const eps0 = 84381.406 / 3600.0; // J2000 obliquity in degrees
@@ -285,7 +325,7 @@ function calculatePlanetaryPositionFallback(
     planet,
     rightAscension,
     declination,
-    eclipticLongitude: L,
+    eclipticLongitude: longitudeDeg,
   };
 }
 
