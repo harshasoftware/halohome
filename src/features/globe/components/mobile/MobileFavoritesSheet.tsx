@@ -5,7 +5,7 @@
  * or remove from favorites. Optimized for touch interactions with virtualized list.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Heart,
   MapPin,
@@ -13,10 +13,14 @@ import {
   Navigation,
   Globe2,
   Loader2,
+  Search,
+  SearchX,
+  X,
 } from 'lucide-react';
 import { MobileBottomSheet } from './MobileBottomSheet';
 import { VirtualList } from '@/lib/patterns';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
+import { useFavoritesFilter } from '@/hooks/useFavoritesFilter';
 import { cn } from '@/lib/utils';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
 import { FavoriteNoteEditor } from '../panels/FavoriteNoteEditor';
@@ -39,7 +43,33 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
   onClose,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const setMobileSheetMaximized = useGlobeInteractionStore((s) => s.setMobileSheetMaximized);
+  const { filteredFavorites } = useFavoritesFilter(favorites, searchQuery);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Determine if we're showing filtered results
+  const isFiltering = searchQuery.trim().length > 0;
+  const hasNoResults = isFiltering && filteredFavorites.length === 0;
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    // Return focus to the input after clearing
+    searchInputRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (searchQuery) {
+        handleClearSearch();
+      } else {
+        // Blur the input if there's nothing to clear
+        searchInputRef.current?.blur();
+      }
+    }
+  }, [searchQuery, handleClearSearch]);
 
   const handleClose = () => {
     setMobileSheetMaximized(false);
@@ -61,7 +91,11 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
     <MobileBottomSheet
       onClose={handleClose}
       title="Favorite Cities"
-      subtitle={`${favorites.length} saved location${favorites.length !== 1 ? 's' : ''}`}
+      subtitle={
+        isFiltering
+          ? `${filteredFavorites.length} of ${favorites.length} location${favorites.length !== 1 ? 's' : ''}`
+          : `${favorites.length} saved location${favorites.length !== 1 ? 's' : ''}`
+      }
       icon={icon}
       maxHeight="70vh"
       showBackdrop={true}
@@ -72,6 +106,60 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
       onMaximizeChange={setMobileSheetMaximized}
     >
       <div className="flex flex-col h-full">
+        {/* Search Input - only show when there are favorites */}
+        {!loading && favorites.length > 0 && (
+          <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 dark:border-white/10">
+            <div className="relative flex items-center">
+              <Search className="absolute left-3 w-5 h-5 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Search favorites..."
+                aria-label="Search favorite cities"
+                aria-describedby="mobile-favorites-search-hint"
+                className={cn(
+                  'w-full h-11 pl-10 pr-10 rounded-xl',
+                  'border border-slate-200 dark:border-slate-700',
+                  'bg-white dark:bg-slate-800',
+                  'text-slate-700 dark:text-slate-200',
+                  'placeholder-slate-400 dark:placeholder-slate-500',
+                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'transition-colors'
+                )}
+                style={{ fontSize: '16px' }} // Prevents iOS zoom on focus
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X className="w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+                </button>
+              )}
+            </div>
+            <span id="mobile-favorites-search-hint" className="sr-only">
+              Press Escape to clear search
+            </span>
+          </div>
+        )}
+        {/* Screen reader announcement for result count changes */}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {isFiltering && (
+            hasNoResults
+              ? `No favorites found matching ${searchQuery}`
+              : `${filteredFavorites.length} of ${favorites.length} favorites shown`
+          )}
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
@@ -88,12 +176,30 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
               Tap the heart icon on any city to save it to your favorites for quick access
             </p>
           </div>
+        ) : hasNoResults ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+              <SearchX className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+            </div>
+            <h3 className="text-base font-medium text-slate-700 dark:text-slate-200 mb-2">
+              No Results Found
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">
+              No favorites match "{searchQuery.trim()}"
+            </p>
+            <button
+              onClick={handleClearSearch}
+              className="mt-4 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            >
+              Clear search
+            </button>
+          </div>
         ) : (
           <div className="flex-1 px-4 py-3">
             <VirtualList
-              items={favorites}
+              items={filteredFavorites}
               itemHeight={160}
-              containerHeight={Math.min(favorites.length * 160, 400)}
+              containerHeight={Math.min(filteredFavorites.length * 160, 400)}
               overscan={2}
               className="overflow-y-auto"
               renderItem={(fav, index, style) => (
@@ -168,8 +274,8 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
           </div>
         )}
 
-        {/* Footer tip */}
-        {favorites.length > 0 && (
+        {/* Footer tip - only show when favorites are displayed */}
+        {favorites.length > 0 && !hasNoResults && (
           <div className="flex-shrink-0 px-4 py-3 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50">
             <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <Globe2 className="w-4 h-4" />
