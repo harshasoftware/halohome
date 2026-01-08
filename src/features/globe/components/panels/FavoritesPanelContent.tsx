@@ -8,9 +8,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Heart, MapPin, Trash2, Navigation, Globe2, Search, X } from 'lucide-react';
+import { Heart, MapPin, Trash2, Navigation, Globe2, Search, X, SearchX } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
-import { toast } from 'sonner';
+import { useFavoritesFilter } from '@/hooks/useFavoritesFilter';
 
 interface FavoritesPanelContentProps {
   favorites: FavoriteCity[];
@@ -28,10 +28,15 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
   onClose,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { filteredFavorites } = useFavoritesFilter(favorites, searchQuery);
 
   const handleClearSearch = () => {
     setSearchQuery('');
   };
+
+  // Determine if we're showing filtered results
+  const isFiltering = searchQuery.trim().length > 0;
+  const hasNoResults = isFiltering && filteredFavorites.length === 0;
 
   if (loading) {
     return (
@@ -67,7 +72,9 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
             Favorite Cities
           </h2>
           <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">
-            {favorites.length} {favorites.length === 1 ? 'city' : 'cities'}
+            {isFiltering
+              ? `${filteredFavorites.length} of ${favorites.length}`
+              : `${favorites.length} ${favorites.length === 1 ? 'city' : 'cities'}`}
           </span>
         </div>
       </div>
@@ -98,8 +105,27 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
 
       {/* Favorites List */}
       <ScrollArea className="flex-1">
+        {hasNoResults ? (
+          <div className="flex flex-col items-center justify-center p-8 h-full min-h-[200px] text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+              <SearchX className="w-6 h-6 text-slate-300 dark:text-slate-600" />
+            </div>
+            <h3 className="text-base font-medium text-slate-700 dark:text-slate-200 mb-1">
+              No Results Found
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No favorites match "{searchQuery.trim()}"
+            </p>
+            <button
+              onClick={handleClearSearch}
+              className="mt-3 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : (
         <div className="p-2 space-y-1">
-          {favorites.map((fav) => (
+          {filteredFavorites.map((fav) => (
             <div
               key={fav.id}
               className="group relative rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
@@ -160,6 +186,7 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
             </div>
           ))}
         </div>
+        )}
       </ScrollArea>
 
       {/* Footer tip */}
