@@ -57,30 +57,32 @@ import {
   groupOverallByCountry,
   rankCountriesByScore,
 } from '../utils/scout-utils';
+import type {
+  ScoutMarker,
+  ScoutPanelProps,
+  ViewFilter,
+  ViewMode,
+  SelectedTab,
+  CategoryUpgradeModalProps,
+  CountrySectionProps,
+  OverallCountrySectionProps,
+  LocationCardProps,
+  RankedLocationCardProps,
+  OverallLocationCardProps,
+  BlurredOverallCardProps,
+  BlurredRankedCardProps,
+  SignUpPromptCardProps,
+} from './ScoutPanel/types';
+
+// Re-export ScoutMarker for consumers importing from this file
+export type { ScoutMarker } from './ScoutPanel/types';
 import {
   type PopulationTier,
   POPULATION_TIERS,
   POPULATION_TIER_ORDER,
 } from '../utils/population-tiers';
 
-export interface ScoutMarker {
-  lat: number;
-  lng: number;
-  name: string;
-  nature: 'beneficial' | 'challenging';
-}
-
-interface ScoutPanelProps {
-  planetaryLines: PlanetaryLine[];
-  aspectLines: AspectLine[];
-  onCityClick?: (lat: number, lng: number, cityName: string) => void;
-  onShowCountryMarkers?: (markers: ScoutMarker[]) => void;
-  onClose?: () => void;
-}
-
-type ViewFilter = 'beneficial' | 'challenging';
-type ViewMode = 'top' | 'countries';
-type SelectedTab = 'overall' | ScoutCategory;
+// Types imported from ./ScoutPanel/types.ts
 
 // Number of locations to show before requiring signup
 const FREE_LOCATION_LIMIT = 5;
@@ -796,11 +798,6 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
 };
 
 // Category Upgrade Modal for gated categories
-interface CategoryUpgradeModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
 const CategoryUpgradeModal: React.FC<CategoryUpgradeModalProps> = ({
   open,
   onOpenChange,
@@ -986,15 +983,6 @@ const CategoryUpgradeModal: React.FC<CategoryUpgradeModalProps> = ({
 };
 
 // Country section component - with normalized scoring
-interface CountrySectionProps {
-  country: RankedCountryGroup;
-  category: ScoutCategory;
-  isExpanded: boolean;
-  onToggle: () => void;
-  onCityClick: (location: ScoutLocation) => void;
-  onShowMarkers?: (markers: ScoutMarker[]) => void;
-}
-
 const CountrySection: React.FC<CountrySectionProps> = ({
   country,
   category,
@@ -1088,14 +1076,6 @@ const CountrySection: React.FC<CountrySectionProps> = ({
 };
 
 // Overall country section component - for Countries view in Overall tab
-interface OverallCountrySectionProps {
-  country: OverallCountryGroup;
-  isExpanded: boolean;
-  onToggle: () => void;
-  onCityClick: (location: OverallScoutLocation) => void;
-  onShowMarkers?: (markers: ScoutMarker[]) => void;
-}
-
 const OverallCountrySection: React.FC<OverallCountrySectionProps> = ({
   country,
   isExpanded,
@@ -1188,12 +1168,6 @@ const OverallCountrySection: React.FC<OverallCountrySectionProps> = ({
 };
 
 // Location card component with expandable influences
-interface LocationCardProps {
-  location: ScoutLocation;
-  category: ScoutCategory;
-  onClick: () => void;
-}
-
 const LocationCard: React.FC<LocationCardProps> = ({
   location,
   category,
@@ -1336,13 +1310,6 @@ const LocationCard: React.FC<LocationCardProps> = ({
 };
 
 // Ranked location card for "Top Locations" view
-interface RankedLocationCardProps {
-  location: ScoutLocation & { countryName: string };
-  rank: number;
-  category: ScoutCategory;
-  onClick: () => void;
-}
-
 const RankedLocationCard: React.FC<RankedLocationCardProps> = ({
   location,
   rank,
@@ -1508,12 +1475,6 @@ const RankedLocationCard: React.FC<RankedLocationCardProps> = ({
 };
 
 // Overall location card for cross-category ranking
-interface OverallLocationCardProps {
-  location: OverallScoutLocation;
-  rank: number;
-  onClick: () => void;
-}
-
 const OverallLocationCard: React.FC<OverallLocationCardProps> = ({
   location,
   rank,
@@ -1660,11 +1621,6 @@ const OverallLocationCard: React.FC<OverallLocationCardProps> = ({
 };
 
 // Blurred fake card for overall view (hack-proof placeholder)
-interface BlurredOverallCardProps {
-  fakeCity: { name: string; country: string };
-  rank: number;
-}
-
 const BlurredOverallCard: React.FC<BlurredOverallCardProps> = ({ fakeCity, rank }) => {
   const getRankStyle = () => {
     if (rank <= 3) return 'bg-slate-500/10 border border-slate-400/40 text-slate-600 dark:text-slate-400';
@@ -1722,11 +1678,6 @@ const BlurredOverallCard: React.FC<BlurredOverallCardProps> = ({ fakeCity, rank 
 };
 
 // Blurred fake card for category view (hack-proof placeholder)
-interface BlurredRankedCardProps {
-  fakeCity: { name: string; country: string };
-  rank: number;
-}
-
 const BlurredRankedCard: React.FC<BlurredRankedCardProps> = ({ fakeCity, rank }) => {
   const getRankStyle = () => {
     if (rank <= 3) return 'bg-slate-500/10 border border-slate-400/40 text-slate-600 dark:text-slate-400';
@@ -1779,13 +1730,6 @@ const BlurredRankedCard: React.FC<BlurredRankedCardProps> = ({ fakeCity, rank })
 };
 
 // Sign up prompt card for gated content
-interface SignUpPromptCardProps {
-  remainingCount: number;
-  category: string;
-  /** If true, this gates the TOP locations (premium) rather than extras */
-  isTopLocations?: boolean;
-}
-
 const SignUpPromptCard: React.FC<SignUpPromptCardProps> = ({
   remainingCount,
   category,
