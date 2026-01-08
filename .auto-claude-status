@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "004-add-skeleton-loading-states-for-data-heavy-panels",
+  "state": "building",
+  "subtasks": {
+    "completed": 2,
+    "total": 13,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Foundation - Create Skeleton Component Variants",
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 4,
+    "started_at": "2026-01-08T19:21:55.565515"
+  },
+  "last_update": "2026-01-08T19:30:54.067177"
+}
