@@ -402,25 +402,52 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
     }
   }, []);
 
-  // Attach context menu and long-press listeners to globe container
+  // Attach context menu listener to document level (to catch events on markers that are
+  // rendered in globe.gl's overlay container, which may not be inside our globeContainerRef)
+  useEffect(() => {
+    const handleDocumentContextMenu = (e: MouseEvent) => {
+      const container = globeContainerRef.current;
+      if (!container) return;
+
+      // Check if the click is within the globe bounds
+      const rect = container.getBoundingClientRect();
+      if (
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom
+      ) {
+        return; // Outside the globe area, let default context menu show
+      }
+
+      // Inside globe area - handle as globe context menu
+      handleContextMenu(e);
+    };
+
+    document.addEventListener('contextmenu', handleDocumentContextMenu);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleDocumentContextMenu);
+    };
+  }, [handleContextMenu]);
+
+  // Attach long-press listeners to globe container for mobile/tablet context menu
   useEffect(() => {
     const container = globeContainerRef.current;
     if (!container) return;
 
-    container.addEventListener('contextmenu', handleContextMenu);
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchend', handleTouchEnd);
     container.addEventListener('touchmove', handleTouchMove, { passive: true });
     container.addEventListener('touchcancel', handleTouchEnd);
 
     return () => {
-      container.removeEventListener('contextmenu', handleContextMenu);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [handleContextMenu, handleTouchStart, handleTouchEnd, handleTouchMove]);
+  }, [handleTouchStart, handleTouchEnd, handleTouchMove]);
 
   // birthDataKey is passed from parent - only changes when birth location changes
   // This ensures visibility toggles don't remount the entire globe
