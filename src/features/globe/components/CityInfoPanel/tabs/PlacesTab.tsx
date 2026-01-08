@@ -42,6 +42,8 @@ export const PlacesTab: React.FC<PlacesTabProps> = ({
     itemHeight: PLACE_CARD_ITEM_HEIGHT,
     containerRef: placesScrollRef,
     ...PLACES_LIST_VIRTUALIZATION_CONFIG,
+    // Reset scroll when category changes cause places list to update
+    resetScrollOnItemsChange: true,
   });
 
   const handleCategoryToggle = (category: PlaceCategory) => {

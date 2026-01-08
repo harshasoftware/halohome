@@ -84,6 +84,16 @@ export interface UseVirtualListOptions<T> {
    * When item count is below this, all items are rendered
    */
   minItemsForVirtualization?: number;
+  /**
+   * Reset scroll position when items change significantly (default: false)
+   * Useful for filter changes where scroll position should reset to top
+   */
+  resetScrollOnItemsChange?: boolean;
+  /**
+   * Callback when items array changes - useful for handling edge cases
+   * Called with previous and new item counts
+   */
+  onItemsChange?: (prevCount: number, newCount: number) => void;
 }
 
 export interface UseVirtualListResult<T> {
@@ -107,6 +117,10 @@ export interface UseVirtualListResult<T> {
   scrollToOffset: (offset: number, behavior?: ScrollBehavior) => void;
   /** Whether virtualization is currently active */
   isVirtualized: boolean;
+  /** Reset scroll position to top - useful for filter changes */
+  resetScroll: () => void;
+  /** Current item count (for change detection) */
+  itemCount: number;
 }
 
 // ============================================================================
@@ -151,6 +165,8 @@ export function useVirtualList<T>({
   onScroll,
   enabled = true,
   minItemsForVirtualization = 0,
+  resetScrollOnItemsChange = false,
+  onItemsChange,
 }: UseVirtualListOptions<T>): UseVirtualListResult<T> {
   // Create internal ref if external one not provided
   const internalContainerRef = useRef<HTMLDivElement>(null);
@@ -162,6 +178,9 @@ export function useVirtualList<T>({
 
   // Height cache for variable heights
   const heightCache = useRef<Map<number, number>>(new Map());
+
+  // Track previous item count for change detection
+  const prevItemCountRef = useRef<number>(items.length);
 
   // Determine if we should virtualize
   const shouldVirtualize = enabled && items.length >= minItemsForVirtualization;
@@ -204,6 +223,39 @@ export function useVirtualList<T>({
     // Clear cache when items array reference changes
     heightCache.current.clear();
   }, [items]);
+
+  // Handle items change - notify callback and optionally reset scroll
+  useEffect(() => {
+    const prevCount = prevItemCountRef.current;
+    const newCount = items.length;
+
+    // Only trigger if count actually changed
+    if (prevCount !== newCount) {
+      // Call the change callback
+      onItemsChange?.(prevCount, newCount);
+
+      // Reset scroll if enabled
+      if (resetScrollOnItemsChange) {
+        const container = containerRef.current;
+        if (container) {
+          container.scrollTop = 0;
+          setScrollTop(0);
+        }
+      }
+
+      // Update ref for next comparison
+      prevItemCountRef.current = newCount;
+    }
+  }, [items.length, resetScrollOnItemsChange, onItemsChange, containerRef]);
+
+  // Reset scroll function - can be called imperatively
+  const resetScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTop = 0;
+      setScrollTop(0);
+    }
+  }, [containerRef]);
 
   // Calculate visible range
   const { startIndex, endIndex } = useMemo(() => {
@@ -286,7 +338,7 @@ export function useVirtualList<T>({
     };
   }, [containerRef, handleScroll]);
 
-  // Measure container height and handle resize
+  // Measure container height and handle resize (including orientation changes)
   useEffect(() => {
     const container = containerRef.current;
     if (!container || fixedContainerHeight !== undefined) return;
@@ -303,8 +355,24 @@ export function useVirtualList<T>({
     const resizeObserver = new ResizeObserver(measureHeight);
     resizeObserver.observe(container);
 
+    // Handle orientation changes on mobile devices
+    // This complements ResizeObserver for cases where orientation change
+    // events might fire before resize completes
+    const handleOrientationChange = () => {
+      // Small delay to ensure layout has updated after orientation change
+      setTimeout(measureHeight, 100);
+    };
+
+    // Listen for orientation changes
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    // Also handle resize as a fallback for browsers without orientationchange
+    window.addEventListener('resize', measureHeight);
+
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', measureHeight);
     };
   }, [containerRef, fixedContainerHeight]);
 
@@ -344,6 +412,8 @@ export function useVirtualList<T>({
     scrollToIndex,
     scrollToOffset,
     isVirtualized: shouldVirtualize,
+    resetScroll,
+    itemCount: items.length,
   };
 }
 

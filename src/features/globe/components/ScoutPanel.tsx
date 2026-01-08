@@ -539,6 +539,8 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     containerRef: overallTopScrollRef,
     overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
     minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    // Reset scroll when filter changes cause item list to change
+    resetScrollOnItemsChange: true,
   });
 
   // Build combined list of items for virtualized Category Top Locations
@@ -599,6 +601,8 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     containerRef: categoryTopScrollRef,
     overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
     minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    // Reset scroll when category changes cause item list to change
+    resetScrollOnItemsChange: true,
   });
 
   // Get unique countries for overall view (for country filter dropdown)
@@ -641,6 +645,8 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     containerRef: overallCountriesScrollRef,
     overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
     minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    // Reset scroll when country filter changes
+    resetScrollOnItemsChange: true,
   });
 
   // Build virtual items for Category Countries view
@@ -665,6 +671,8 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     containerRef: categoryCountriesScrollRef,
     overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
     minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    // Reset scroll when category or filter changes
+    resetScrollOnItemsChange: true,
   });
 
   // Toggle country expansion
