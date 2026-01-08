@@ -2,12 +2,13 @@
  * FavoritesPanelContent - Content for the favorites panel in the right panel stack
  *
  * Displays user's favorite cities with actions to navigate or remove.
+ * Includes search functionality to filter favorites by city name or country.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Heart, MapPin, Trash2, Navigation, Globe2 } from 'lucide-react';
+import { Heart, MapPin, Trash2, Navigation, Globe2, Search, X } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 import { toast } from 'sonner';
 
@@ -26,6 +27,12 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
   onRemoveFavorite,
   onClose,
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8 h-64">
@@ -62,6 +69,30 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
           <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">
             {favorites.length} {favorites.length === 1 ? 'city' : 'cities'}
           </span>
+        </div>
+      </div>
+
+      {/* Search Input */}
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
+        <div className="relative flex items-center">
+          <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search favorites..."
+            className="w-full h-9 pl-9 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            style={{ fontSize: '16px' }} // Prevents iOS zoom on focus
+          />
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
+            </button>
+          )}
         </div>
       </div>
 
