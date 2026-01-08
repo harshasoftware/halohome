@@ -37,6 +37,7 @@ import { useAuthActions } from '@/hooks/useAuthSync';
 import { useGoogleOneTap } from '@/hooks/useGoogleOneTap';
 import { useAISubscription } from '../ai/useAISubscription';
 import { supabase } from '@/integrations/supabase/client';
+import { SkeletonScoutPanelContent } from '@/components/ui/skeleton-chart';
 
 // Lucide icon mapping for categories
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -735,11 +736,16 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
 
       {/* Location List */}
       <div className="flex-1 min-h-0 relative">
-        {isOverallView ? (
+        {/* Skeleton loading state when computing */}
+        {isComputing ? (
+          <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
+            <SkeletonScoutPanelContent viewMode={viewMode} />
+          </div>
+        ) : isOverallView ? (
           // Overall View - Ranked by combined scores across all categories
           viewMode === 'top' ? (
             // Top Locations View (cities ranked) for Overall tab
-            !isComputing && filteredOverallLocations.length === 0 ? (
+            filteredOverallLocations.length === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
                 <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
                   <Globe2 className="h-10 w-10 text-slate-400 dark:text-slate-600" />
@@ -787,7 +793,7 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
             )
           ) : (
             // Countries View for Overall tab - grouped by country with normalized scoring
-            !isComputing && overallCountryGroups.length === 0 ? (
+            overallCountryGroups.length === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
                 <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
                   <Globe2 className="h-10 w-10 text-slate-400 dark:text-slate-600" />
@@ -818,7 +824,7 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
           )
         ) : viewMode === 'top' ? (
           // Top Locations View - All locations ranked by score (category view)
-          !isComputing && topLocations.length === 0 ? (
+          topLocations.length === 0 ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
               <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
                 <MapPin className="h-10 w-10 text-slate-400 dark:text-slate-600" />
@@ -867,7 +873,7 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
           )
         ) : (
           // Countries View - Grouped by country
-          !isComputing && displayCountries.length === 0 ? (
+          displayCountries.length === 0 ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
               <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
                 <Globe2 className="h-10 w-10 text-slate-400 dark:text-slate-600" />

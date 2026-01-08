@@ -522,4 +522,272 @@ export function SkeletonRelocationAnalysis({ className }: { className?: string }
   )
 }
 
+/**
+ * SkeletonScoutLocationCard - Card showing a scouted location
+ * Matches the structure of RankedLocationCard and OverallLocationCard
+ */
+export interface SkeletonScoutLocationCardProps {
+  /** Show rank badge on the left */
+  showRank?: boolean
+  /** Show category badges (for overall view) */
+  showCategoryBadges?: boolean
+  /** Number of tag badges to show */
+  tagCount?: number
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutLocationCard({
+  showRank = true,
+  showCategoryBadges = false,
+  tagCount = 2,
+  className,
+}: SkeletonScoutLocationCardProps) {
+  return (
+    <div
+      className={cn(
+        "p-4 rounded-xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/10",
+        className
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* Rank Badge */}
+        {showRank && (
+          <Skeleton className="flex-shrink-0 w-9 h-9 rounded-full" />
+        )}
+
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* City Name */}
+          <Skeleton className="h-4 w-32" />
+          {/* Country */}
+          <Skeleton className="h-3 w-20" />
+
+          {/* Nature Badge + Distance */}
+          <div className="flex items-center gap-2 pt-1">
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-3 w-14" />
+          </div>
+
+          {/* Category badges (for overall view) or Planet line tags */}
+          {showCategoryBadges ? (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <Skeleton className="h-5 w-14 rounded-md" />
+              <Skeleton className="h-5 w-12 rounded-md" />
+              <Skeleton className="h-5 w-16 rounded-md" />
+            </div>
+          ) : tagCount > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {Array.from({ length: tagCount }).map((_, i) => (
+                <Skeleton key={i} className="h-5 w-16 rounded-md" />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Score Badge */}
+        <Skeleton className="flex-shrink-0 w-10 h-10 rounded-full" />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutLocationCardList - List of scout location cards
+ */
+export interface SkeletonScoutLocationCardListProps {
+  /** Number of cards to show */
+  count?: number
+  /** Show rank badges */
+  showRank?: boolean
+  /** Show category badges (for overall view) */
+  showCategoryBadges?: boolean
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutLocationCardList({
+  count = 5,
+  showRank = true,
+  showCategoryBadges = false,
+  className,
+}: SkeletonScoutLocationCardListProps) {
+  return (
+    <div className={cn("space-y-3", className)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonScoutLocationCard
+          key={i}
+          showRank={showRank}
+          showCategoryBadges={showCategoryBadges}
+          tagCount={i % 2 === 0 ? 2 : 1}
+        />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutFilterPills - Category filter pills skeleton
+ */
+export interface SkeletonScoutFilterPillsProps {
+  /** Number of pills to show */
+  count?: number
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutFilterPills({
+  count = 7,
+  className,
+}: SkeletonScoutFilterPillsProps) {
+  return (
+    <div className={cn("flex gap-2 overflow-x-hidden px-3", className)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton
+          key={i}
+          className={cn(
+            "h-9 rounded-full flex-shrink-0",
+            i === 0 ? "w-20" : "w-16" // First pill (Overall) is wider
+          )}
+        />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutFiltersRow - Filter controls row skeleton
+ */
+export interface SkeletonScoutFiltersRowProps {
+  /** Show country filter */
+  showCountryFilter?: boolean
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutFiltersRow({
+  showCountryFilter = true,
+  className,
+}: SkeletonScoutFiltersRowProps) {
+  return (
+    <div className={cn("flex items-center gap-2 px-4 py-2", className)}>
+      {/* View Mode Toggle */}
+      <Skeleton className="h-7 w-24 rounded-lg" />
+      {/* Population Filter */}
+      <Skeleton className="h-7 w-20 rounded-md" />
+      {/* Country Filter */}
+      {showCountryFilter && (
+        <Skeleton className="h-7 w-28 rounded-md" />
+      )}
+      {/* Spacer */}
+      <div className="flex-1" />
+      {/* Good/Avoid Toggle */}
+      <Skeleton className="h-7 w-24 rounded-lg" />
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutStatsRow - Stats summary row skeleton
+ */
+export interface SkeletonScoutStatsRowProps {
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutStatsRow({
+  className,
+}: SkeletonScoutStatsRowProps) {
+  return (
+    <div className={cn("flex items-center justify-between px-4 py-1.5", className)}>
+      <Skeleton className="h-3 w-32" />
+      <Skeleton className="h-3 w-20" />
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutCountrySection - Country accordion section skeleton
+ */
+export interface SkeletonScoutCountrySectionProps {
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutCountrySection({
+  className,
+}: SkeletonScoutCountrySectionProps) {
+  return (
+    <div className={cn("border-b border-slate-200 dark:border-white/5", className)}>
+      <div className="w-full px-4 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Flag */}
+          <Skeleton className="w-6 h-4 rounded" />
+          {/* Country name */}
+          <Skeleton className="h-4 w-24" />
+          {/* Count badges */}
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-4 w-10 rounded-full" />
+            <Skeleton className="h-4 w-10 rounded-full" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-3 w-14" />
+          <Skeleton className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutCountrySectionList - List of country sections
+ */
+export interface SkeletonScoutCountrySectionListProps {
+  /** Number of country sections to show */
+  count?: number
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutCountrySectionList({
+  count = 5,
+  className,
+}: SkeletonScoutCountrySectionListProps) {
+  return (
+    <div className={className}>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonScoutCountrySection key={i} />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * SkeletonScoutPanel - Full skeleton for ScoutPanel content area
+ * Shows skeleton for the scrollable content (without the static header elements)
+ */
+export interface SkeletonScoutPanelContentProps {
+  /** View mode: top (location cards) or countries (accordion sections) */
+  viewMode?: "top" | "countries"
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonScoutPanelContent({
+  viewMode = "top",
+  className,
+}: SkeletonScoutPanelContentProps) {
+  return (
+    <div className={cn("h-full", className)}>
+      {viewMode === "top" ? (
+        <div className="p-4">
+          <SkeletonScoutLocationCardList count={6} showCategoryBadges />
+        </div>
+      ) : (
+        <SkeletonScoutCountrySectionList count={8} />
+      )}
+    </div>
+  )
+}
+
 export default SkeletonScoreCard
