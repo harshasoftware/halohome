@@ -34,7 +34,18 @@ const Benchmark = lazy(() => import("./pages/Benchmark"));
 // CopilotKit runtime URL - Supabase Edge Function
 const COPILOT_RUNTIME_URL = "https://eypsystctqwvphvcrmxb.supabase.co/functions/v1/copilot-runtime";
 
-const queryClient = new QueryClient();
+// Configure React Query caching for reduced network requests
+// staleTime: 5 minutes - data considered fresh, won't refetch on component mount
+// gcTime: 10 minutes - unused cache entries retained for quick re-access
+// Ideal for astrology data that rarely changes during a session
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 300000, // 5 minutes
+      gcTime: 600000, // 10 minutes
+    },
+  },
+});
 
 // Loading fallback for lazy routes - theme-aware version
 const RouteLoader = () => (

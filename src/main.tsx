@@ -24,14 +24,7 @@ import GoogleMapsWrapper from './contexts/GoogleMapsWrapper.tsx';
 import { PostHogProvider } from 'posthog-js/react';
 import { BrowserRouter } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
-import { preconnect, prefetchResource } from '@/lib/patterns';
-
-// ============================================================================
-// Resource Hints - Preconnect to required origins for faster loads
-// ============================================================================
-preconnect('https://eypsystctqwvphvcrmxb.supabase.co'); // Supabase
-preconnect('https://maps.googleapis.com'); // Google Maps
-preconnect('https://fonts.googleapis.com'); // Google Fonts
+import { prefetchResource } from '@/lib/patterns';
 
 // Prefetch likely next pages (landing page visitors often go to guest)
 if (window.location.pathname === '/') {
