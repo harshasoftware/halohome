@@ -122,3 +122,130 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Comment on the check_rate_limit function for documentation
 COMMENT ON FUNCTION check_rate_limit(TEXT, TEXT, INTEGER, INTEGER) IS
   'Atomically checks and increments rate limit counter. Returns JSON with allowed (bool), remaining (int), reset_at (timestamp), current (int), limit (int). Window resets automatically when expired.';
+
+-- ============================================================================
+-- SCHEDULED CLEANUP JOB (pg_cron)
+-- ============================================================================
+-- pg_cron is available on Supabase Pro plans and above.
+-- This section sets up a scheduled job to clean up old rate limit records.
+--
+-- MANUAL CLEANUP:
+--   If pg_cron is not available, run manually:
+--     SELECT cleanup_old_rate_limits(24);  -- Delete records older than 24 hours
+--
+-- VERIFY CLEANUP:
+--   SELECT COUNT(*) FROM public.rate_limits;  -- Check total records
+--   SELECT window_start, COUNT(*) FROM public.rate_limits GROUP BY window_start ORDER BY window_start;
+--
+-- To enable pg_cron on Supabase:
+-- 1. Go to Dashboard > Database > Extensions
+-- 2. Search for "pg_cron" and enable it
+-- 3. Run the migration below
+-- ============================================================================
+
+-- Enable pg_cron extension (only if available)
+-- This extension allows scheduling PostgreSQL jobs
+DO $$
+BEGIN
+  -- Check if pg_cron extension can be created
+  CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog;
+  RAISE NOTICE 'pg_cron extension enabled successfully';
+EXCEPTION
+  WHEN OTHERS THEN
+    -- pg_cron might not be available (e.g., local dev, non-Pro Supabase)
+    RAISE NOTICE 'pg_cron extension not available: %. Manual cleanup required.', SQLERRM;
+END $$;
+
+-- Schedule the cleanup job to run every hour
+-- Removes rate limit records older than 24 hours to prevent table bloat
+DO $$
+DECLARE
+  job_exists BOOLEAN;
+BEGIN
+  -- Check if pg_cron is available by checking for cron.job table
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'cron' AND table_name = 'job'
+  ) THEN
+    -- Check if job already exists (idempotent)
+    SELECT EXISTS (
+      SELECT 1 FROM cron.job WHERE jobname = 'cleanup-rate-limits'
+    ) INTO job_exists;
+
+    IF NOT job_exists THEN
+      -- Schedule cleanup every hour at minute 15
+      -- Runs: cleanup_old_rate_limits(24) - deletes records older than 24 hours
+      PERFORM cron.schedule(
+        'cleanup-rate-limits',           -- job name (unique identifier)
+        '15 * * * *',                     -- cron expression: every hour at :15
+        'SELECT cleanup_old_rate_limits(24)'
+      );
+      RAISE NOTICE 'pg_cron job "cleanup-rate-limits" scheduled successfully (runs hourly at :15)';
+    ELSE
+      RAISE NOTICE 'pg_cron job "cleanup-rate-limits" already exists';
+    END IF;
+  ELSE
+    RAISE NOTICE 'pg_cron not available. Please run cleanup_old_rate_limits(24) manually or via external scheduler.';
+  END IF;
+END $$;
+
+-- Helper function to check scheduled jobs (useful for debugging)
+-- Usage: SELECT * FROM get_rate_limit_cron_jobs();
+CREATE OR REPLACE FUNCTION get_rate_limit_cron_jobs()
+RETURNS TABLE (
+  jobid BIGINT,
+  schedule TEXT,
+  command TEXT,
+  nodename TEXT,
+  nodeport INTEGER,
+  database TEXT,
+  username TEXT,
+  active BOOLEAN,
+  jobname TEXT
+) AS $$
+BEGIN
+  -- Check if pg_cron is available
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'cron' AND table_name = 'job'
+  ) THEN
+    RETURN QUERY
+    SELECT j.jobid, j.schedule, j.command, j.nodename, j.nodeport,
+           j.database, j.username, j.active, j.jobname
+    FROM cron.job j
+    WHERE j.jobname LIKE '%rate-limit%';
+  ELSE
+    -- Return empty result if pg_cron not available
+    RETURN;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION get_rate_limit_cron_jobs() IS
+  'Returns rate limit related pg_cron jobs. Empty result if pg_cron not available.';
+
+-- Function to manually unschedule the cleanup job (if needed)
+-- Usage: SELECT unschedule_rate_limit_cleanup();
+CREATE OR REPLACE FUNCTION unschedule_rate_limit_cleanup()
+RETURNS TEXT AS $$
+BEGIN
+  -- Check if pg_cron is available
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'cron' AND table_name = 'job'
+  ) THEN
+    -- Check if job exists
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cleanup-rate-limits') THEN
+      PERFORM cron.unschedule('cleanup-rate-limits');
+      RETURN 'Successfully unscheduled cleanup-rate-limits job';
+    ELSE
+      RETURN 'Job cleanup-rate-limits does not exist';
+    END IF;
+  ELSE
+    RETURN 'pg_cron not available';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION unschedule_rate_limit_cleanup() IS
+  'Unschedules the rate limit cleanup cron job. Returns status message.';
