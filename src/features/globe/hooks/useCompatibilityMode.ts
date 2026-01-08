@@ -23,6 +23,7 @@ export interface PartnerChartData {
   longitude: number;
   cityName?: string;
   isSaved?: boolean;
+  avatar?: string; // DiceBear avatar data URI
 }
 
 // State for compatibility mode

@@ -1135,7 +1135,7 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
 
     // Regular person location
     const personLocation = item as PersonLocation;
-    const cacheKey = getPersonMarkerKey(personLocation.id, personLocation.count, personLocation.gender);
+    const cacheKey = getPersonMarkerKey(personLocation.id, personLocation.count, personLocation.gender, personLocation.avatarUrl);
     return globeMarkerCache.getOrCreate(cacheKey, () =>
       createPersonMarker(
         personLocation.name,

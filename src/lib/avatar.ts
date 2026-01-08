@@ -67,3 +67,16 @@ export async function generateAvatar(
   const dataUri = await avatar.toDataUri();
   return dataUri;
 }
+
+/**
+ * Generate a random avatar with a random seed.
+ * Used for shuffling/selecting different avatar variations.
+ */
+export async function generateRandomAvatar(
+  gender?: PersonData['gender'],
+  birthDate?: string
+): Promise<string> {
+  // Generate a random seed
+  const randomSeed = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  return generateAvatar(randomSeed, gender, birthDate);
+}

@@ -78,8 +78,10 @@ export const globeMarkerCache = new MarkerCache();
 /**
  * Generate cache key for person location markers
  */
-export function getPersonMarkerKey(id: string, count: number, gender: string): string {
-  return `person-${id}-${count}-${gender}`;
+export function getPersonMarkerKey(id: string, count: number, gender: string, avatarUrl?: string): string {
+  // Include avatarUrl in cache key so marker updates when avatar becomes available
+  const avatarHash = avatarUrl ? avatarUrl.slice(-20) : 'no-avatar';
+  return `person-${id}-${count}-${gender}-${avatarHash}`;
 }
 
 /**
