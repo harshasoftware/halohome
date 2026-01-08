@@ -2187,6 +2187,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
           onRemoveFavorite={(id, name) => {
             removeFavorite(id);
           }}
+          onUpdateNotes={updateFavoriteNotes}
           onClose={() => setMobileFavoritesSheetOpen(false)}
         />
       )}
