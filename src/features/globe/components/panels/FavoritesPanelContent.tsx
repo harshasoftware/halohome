@@ -16,6 +16,7 @@ interface FavoritesPanelContentProps {
   loading: boolean;
   onSelectFavorite: (lat: number, lng: number, name: string) => void;
   onRemoveFavorite: (id: string, name: string) => void;
+  onUpdateNotes?: (id: string, notes: string) => void;
   onClose: () => void;
 }
 
