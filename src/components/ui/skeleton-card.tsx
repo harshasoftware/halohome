@@ -199,4 +199,45 @@ export function SkeletonPlaceCard({ className }: { className?: string }) {
   )
 }
 
+/**
+ * Skeleton for mobile favorites sheet cards - larger touch-friendly dimensions
+ * Matches MobileFavoritesSheet's card layout with larger icon, title, subtitle,
+ * coordinates, and action buttons area.
+ */
+export function SkeletonMobileFavoriteCard({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative rounded-xl border p-4",
+        "bg-white dark:bg-white/[0.02]",
+        "border-slate-200 dark:border-white/10",
+        className
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* City icon - larger for mobile touch */}
+        <Skeleton className="flex-shrink-0 w-12 h-12 rounded-xl" />
+
+        {/* City info */}
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* Title */}
+          <Skeleton className="h-5 w-3/4" />
+          {/* Country */}
+          <Skeleton className="h-4 w-1/2" />
+          {/* Coordinates */}
+          <Skeleton className="h-3 w-2/5" />
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200 dark:border-white/10">
+        {/* Go to City button */}
+        <Skeleton className="flex-1 h-10 rounded-lg" />
+        {/* Delete button */}
+        <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
+      </div>
+    </div>
+  )
+}
+
 export default SkeletonCard
