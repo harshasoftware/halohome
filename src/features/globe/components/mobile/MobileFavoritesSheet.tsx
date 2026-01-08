@@ -5,7 +5,7 @@
  * or remove from favorites. Optimized for touch interactions with virtualized list.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Heart,
   MapPin,
@@ -44,13 +44,29 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
   const setMobileSheetMaximized = useGlobeInteractionStore((s) => s.setMobileSheetMaximized);
   const { filteredFavorites } = useFavoritesFilter(favorites, searchQuery);
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   // Determine if we're showing filtered results
   const isFiltering = searchQuery.trim().length > 0;
   const hasNoResults = isFiltering && filteredFavorites.length === 0;
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
     setSearchQuery('');
-  };
+    // Return focus to the input after clearing
+    searchInputRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (searchQuery) {
+        handleClearSearch();
+      } else {
+        // Blur the input if there's nothing to clear
+        searchInputRef.current?.blur();
+      }
+    }
+  }, [searchQuery, handleClearSearch]);
 
   const handleClose = () => {
     setMobileSheetMaximized(false);
@@ -91,12 +107,16 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
         {!loading && favorites.length > 0 && (
           <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 dark:border-white/10">
             <div className="relative flex items-center">
-              <Search className="absolute left-3 w-5 h-5 text-slate-400 pointer-events-none" />
+              <Search className="absolute left-3 w-5 h-5 text-slate-400 pointer-events-none" aria-hidden="true" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Search favorites..."
+                aria-label="Search favorite cities"
+                aria-describedby="mobile-favorites-search-hint"
                 className={cn(
                   'w-full h-11 pl-10 pr-10 rounded-xl',
                   'border border-slate-200 dark:border-slate-700',
@@ -118,8 +138,24 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
                 </button>
               )}
             </div>
+            <span id="mobile-favorites-search-hint" className="sr-only">
+              Press Escape to clear search
+            </span>
           </div>
         )}
+        {/* Screen reader announcement for result count changes */}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {isFiltering && (
+            hasNoResults
+              ? `No favorites found matching ${searchQuery}`
+              : `${filteredFavorites.length} of ${favorites.length} favorites shown`
+          )}
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">

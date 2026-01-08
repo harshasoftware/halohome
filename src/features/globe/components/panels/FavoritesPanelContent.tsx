@@ -5,7 +5,7 @@
  * Includes search functionality to filter favorites by city name or country.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Heart, MapPin, Trash2, Navigation, Globe2, Search, X, SearchX } from 'lucide-react';
@@ -29,10 +29,25 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { filteredFavorites } = useFavoritesFilter(favorites, searchQuery);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
     setSearchQuery('');
-  };
+    // Return focus to the input after clearing
+    searchInputRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (searchQuery) {
+        handleClearSearch();
+      } else {
+        // Blur the input if there's nothing to clear
+        searchInputRef.current?.blur();
+      }
+    }
+  }, [searchQuery, handleClearSearch]);
 
   // Determine if we're showing filtered results
   const isFiltering = searchQuery.trim().length > 0;
@@ -82,12 +97,16 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
       {/* Search Input */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
         <div className="relative flex items-center">
-          <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+          <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Search favorites..."
+            aria-label="Search favorite cities"
+            aria-describedby="favorites-search-hint"
             className="w-full h-9 pl-9 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             style={{ fontSize: '16px' }} // Prevents iOS zoom on focus
           />
@@ -101,6 +120,22 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
             </button>
           )}
         </div>
+        <span id="favorites-search-hint" className="sr-only">
+          Press Escape to clear search
+        </span>
+      </div>
+      {/* Screen reader announcement for result count changes */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {isFiltering && (
+          hasNoResults
+            ? `No favorites found matching ${searchQuery}`
+            : `${filteredFavorites.length} of ${favorites.length} favorites shown`
+        )}
       </div>
 
       {/* Favorites List */}
