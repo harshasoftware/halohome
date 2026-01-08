@@ -9,3 +9,6 @@
 export { LocationCard } from './LocationCard';
 export { RankedLocationCard } from './RankedLocationCard';
 export { OverallLocationCard } from './OverallLocationCard';
+
+// Phase 3: Country Section Components
+export { CountrySection } from './CountrySection';
