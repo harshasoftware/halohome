@@ -13,3 +13,6 @@ export { OverallLocationCard } from './OverallLocationCard';
 // Phase 3: Country Section Components
 export { CountrySection } from './CountrySection';
 export { OverallCountrySection } from './OverallCountrySection';
+
+// Phase 4: Auth & Premium Components
+export { BlurredOverallCard, BlurredRankedCard } from './BlurredCards';
