@@ -2,13 +2,16 @@
  * FavoritesPanelContent - Content for the favorites panel in the right panel stack
  *
  * Displays user's favorite cities with actions to navigate or remove.
+ * Supports batch selection and deletion of favorites.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Heart, MapPin, Trash2, Navigation, Globe2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Heart, MapPin, Trash2, Navigation, Globe2, CheckSquare, X } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
+import { useFavoriteSelection } from '@/hooks/useFavoriteSelection';
 import { toast } from 'sonner';
 
 interface FavoritesPanelContentProps {
@@ -26,6 +29,27 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
   onRemoveFavorite,
   onClose,
 }) => {
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const {
+    selectedCount,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    isSelected,
+    isAllSelected,
+  } = useFavoriteSelection();
+
+  // Exit select mode and clear selection
+  const exitSelectMode = () => {
+    setIsSelectMode(false);
+    clearSelection();
+  };
+
+  // Handle select all favorites
+  const handleSelectAll = () => {
+    selectAll(favorites.map(fav => fav.id));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8 h-64">
@@ -62,7 +86,62 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
           <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">
             {favorites.length} {favorites.length === 1 ? 'city' : 'cities'}
           </span>
+          {/* Select mode toggle */}
+          {!isSelectMode ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSelectMode(true)}
+              className="h-8 px-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              title="Select multiple"
+            >
+              <CheckSquare className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={exitSelectMode}
+              className="h-8 px-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              title="Exit select mode"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
+
+        {/* Bulk action toolbar - shown when in select mode */}
+        {isSelectMode && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-white/5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={isAllSelected(favorites.length) ? clearSelection : handleSelectAll}
+              className="h-8 text-xs"
+            >
+              {isAllSelected(favorites.length) ? 'Deselect All' : 'Select All'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearSelection}
+              className="h-8 text-xs"
+              disabled={selectedCount === 0}
+            >
+              Clear
+            </Button>
+            <div className="flex-1" />
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={selectedCount === 0}
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              Delete{selectedCount > 0 ? ` (${selectedCount})` : ''}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Favorites List */}
@@ -71,61 +150,106 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
           {favorites.map((fav) => (
             <div
               key={fav.id}
-              className="group relative rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              className={`group relative rounded-lg border bg-white dark:bg-slate-900 transition-colors ${
+                isSelectMode && isSelected(fav.id)
+                  ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
             >
-              <button
-                onClick={() => onSelectFavorite(fav.latitude, fav.longitude, fav.city_name)}
-                className="w-full p-3 text-left"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-slate-800 dark:text-white truncate">
-                      {fav.city_name}
-                    </h3>
-                    {fav.country && (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
-                        {fav.country}
+              {isSelectMode ? (
+                // Select mode: clicking anywhere toggles selection
+                <button
+                  onClick={() => toggleSelection(fav.id)}
+                  className="w-full p-3 text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox */}
+                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10">
+                      <Checkbox
+                        checked={isSelected(fav.id)}
+                        onCheckedChange={() => toggleSelection(fav.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-5 w-5"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-slate-800 dark:text-white truncate">
+                        {fav.city_name}
+                      </h3>
+                      {fav.country && (
+                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                          {fav.country}
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">
+                        {fav.latitude.toFixed(4)}°, {fav.longitude.toFixed(4)}°
                       </p>
-                    )}
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">
-                      {fav.latitude.toFixed(4)}°, {fav.longitude.toFixed(4)}°
-                    </p>
-                    {fav.notes && (
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
-                        {fav.notes}
-                      </p>
-                    )}
+                      {fav.notes && (
+                        <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
+                          {fav.notes}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              ) : (
+                // Normal mode: clicking navigates to city
+                <>
+                  <button
+                    onClick={() => onSelectFavorite(fav.latitude, fav.longitude, fav.city_name)}
+                    className="w-full p-3 text-left"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-slate-800 dark:text-white truncate">
+                          {fav.city_name}
+                        </h3>
+                        {fav.country && (
+                          <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                            {fav.country}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">
+                          {fav.latitude.toFixed(4)}°, {fav.longitude.toFixed(4)}°
+                        </p>
+                        {fav.notes && (
+                          <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
+                            {fav.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
 
-              {/* Actions */}
-              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-slate-400 hover:text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                  onClick={() => onSelectFavorite(fav.latitude, fav.longitude, fav.city_name)}
-                  title="Navigate to city"
-                >
-                  <Navigation className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveFavorite(fav.id, fav.city_name);
-                  }}
-                  title="Remove from favorites"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+                  {/* Actions - only visible in normal mode */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                      onClick={() => onSelectFavorite(fav.latitude, fav.longitude, fav.city_name)}
+                      title="Navigate to city"
+                    >
+                      <Navigation className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFavorite(fav.id, fav.city_name);
+                      }}
+                      title="Remove from favorites"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
