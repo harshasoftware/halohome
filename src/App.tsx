@@ -91,21 +91,77 @@ const App = () => (
                         <Workspace />
                       </ErrorBoundary>
                     } />
-                    <Route path="/payment/success" element={<PaymentSuccess />} />
-                    <Route path="/astro-payment-success" element={<AstroPaymentSuccess />} />
-                    <Route path="/ai-subscription" element={<AISubscription />} />
-                    <Route path="/blog" element={<BlogIndex />} />
-                    <Route path="/blog/scout-algorithm" element={<ScoutAlgorithmBlog />} />
-                    <Route path="/blog/astrology-systems" element={<AstrologySystemsBlog />} />
-                    <Route path="/blog/duo-mode" element={<DuoModeBlog />} />
-                    <Route path="/blog/planetary-precision" element={<PlanetaryPrecisionBlog />} />
-                    <Route path="/blog/methodology" element={<MethodologyBlog />} />
-                    <Route path="/sample-report" element={<SampleReport />} />
-                    <Route path="/benchmark" element={<Benchmark />} />
+                    <Route path="/payment/success" element={
+                      <ErrorBoundary componentName="PaymentSuccess">
+                        <PaymentSuccess />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/astro-payment-success" element={
+                      <ErrorBoundary componentName="AstroPaymentSuccess">
+                        <AstroPaymentSuccess />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/ai-subscription" element={
+                      <ErrorBoundary componentName="AISubscription">
+                        <AISubscription />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/blog" element={
+                      <ErrorBoundary componentName="BlogIndex">
+                        <BlogIndex />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/blog/scout-algorithm" element={
+                      <ErrorBoundary componentName="ScoutAlgorithmBlog">
+                        <ScoutAlgorithmBlog />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/blog/astrology-systems" element={
+                      <ErrorBoundary componentName="AstrologySystemsBlog">
+                        <AstrologySystemsBlog />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/blog/duo-mode" element={
+                      <ErrorBoundary componentName="DuoModeBlog">
+                        <DuoModeBlog />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/blog/planetary-precision" element={
+                      <ErrorBoundary componentName="PlanetaryPrecisionBlog">
+                        <PlanetaryPrecisionBlog />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/blog/methodology" element={
+                      <ErrorBoundary componentName="MethodologyBlog">
+                        <MethodologyBlog />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/sample-report" element={
+                      <ErrorBoundary componentName="SampleReport">
+                        <SampleReport />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/benchmark" element={
+                      <ErrorBoundary componentName="Benchmark">
+                        <Benchmark />
+                      </ErrorBoundary>
+                    } />
                     <Route path="/update-password" element={<Navigate to="/" replace />} />
-                    <Route path="/share/:shareId" element={<SharePage />} />
-                    <Route path="/s/:shortCode" element={<SharedGlobePage />} />
-                    <Route path="/embed/:shortCode" element={<EmbedPage />} />
+                    <Route path="/share/:shareId" element={
+                      <ErrorBoundary componentName="SharePage">
+                        <SharePage />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/s/:shortCode" element={
+                      <ErrorBoundary componentName="SharedGlobePage">
+                        <SharedGlobePage />
+                      </ErrorBoundary>
+                    } />
+                    <Route path="/embed/:shortCode" element={
+                      <ErrorBoundary componentName="EmbedPage">
+                        <EmbedPage />
+                      </ErrorBoundary>
+                    } />
                     <Route path="/project/:projectId" element={
                       <ErrorBoundary componentName="Workspace">
                         <Workspace defaultView="map" />
