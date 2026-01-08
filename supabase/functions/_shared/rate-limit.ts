@@ -6,6 +6,32 @@
 
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// =============================================================================
+// RATE LIMIT CONFIGURATIONS
+// =============================================================================
+
+/**
+ * Endpoint identifiers for rate limiting
+ * Use these constants when calling checkRateLimit to ensure consistency
+ */
+export const RATE_LIMIT_ENDPOINTS = {
+  ASTRO_AI_CHAT: 'astro-ai-chat',
+  CREATE_ASTRO_REPORT_PAYMENT: 'create-astro-report-payment',
+  VERIFY_ASTRO_PAYMENT: 'verify-astro-payment',
+  AI_SUBSCRIPTION: 'ai-subscription',
+  AI_SUBSCRIPTION_CHECKOUT: 'ai-subscription-checkout',
+  COPILOT_RUNTIME: 'copilot-runtime',
+  SEARCH_FLIGHTS: 'search-flights',
+} as const;
+
+export type RateLimitEndpoint = typeof RATE_LIMIT_ENDPOINTS[keyof typeof RATE_LIMIT_ENDPOINTS];
+
+/**
+ * User tier for rate limiting
+ * Different tiers receive different rate limits
+ */
+export type UserTier = 'anonymous' | 'authenticated';
+
 /**
  * Rate limit configuration for a specific check
  */
@@ -15,6 +41,113 @@ export interface RateLimitConfig {
   /** Window duration in seconds */
   windowSeconds: number;
 }
+
+/**
+ * Tiered rate limit configuration with separate limits per user tier
+ */
+export interface TieredRateLimitConfig {
+  anonymous: RateLimitConfig;
+  authenticated: RateLimitConfig;
+}
+
+/**
+ * Rate limit configurations for all endpoints
+ *
+ * Guidelines:
+ * - AI endpoints (astro-ai-chat, copilot-runtime): Strictest limits due to expensive API costs
+ * - Payment endpoints: Moderate limits to prevent enumeration/abuse
+ * - Subscription checkout: Moderate limits, status checks more lenient
+ * - Flight search: Moderate limits due to external API costs
+ *
+ * All windows are in seconds. Standard window is 60 seconds (1 minute).
+ */
+export const RATE_LIMIT_CONFIGS: Record<RateLimitEndpoint, TieredRateLimitConfig> = {
+  // CRITICAL: AI Chat - Most expensive endpoint (Perplexity API costs)
+  // Anonymous: 5 requests per minute (very strict to prevent abuse)
+  // Authenticated: 20 requests per minute (generous for paying users)
+  [RATE_LIMIT_ENDPOINTS.ASTRO_AI_CHAT]: {
+    anonymous: { maxRequests: 5, windowSeconds: 60 },
+    authenticated: { maxRequests: 20, windowSeconds: 60 },
+  },
+
+  // Payment Creation - Moderate limits to prevent session abuse
+  // Same limits for both tiers as payment creation typically requires auth anyway
+  [RATE_LIMIT_ENDPOINTS.CREATE_ASTRO_REPORT_PAYMENT]: {
+    anonymous: { maxRequests: 10, windowSeconds: 60 },
+    authenticated: { maxRequests: 10, windowSeconds: 60 },
+  },
+
+  // Payment Verification - Moderate limits to prevent enumeration attacks
+  // Slightly stricter for anonymous to prevent brute-force attempts
+  [RATE_LIMIT_ENDPOINTS.VERIFY_ASTRO_PAYMENT]: {
+    anonymous: { maxRequests: 5, windowSeconds: 60 },
+    authenticated: { maxRequests: 10, windowSeconds: 60 },
+  },
+
+  // AI Subscription - Status checks (general subscription operations)
+  // More lenient as status checks don't cost money
+  [RATE_LIMIT_ENDPOINTS.AI_SUBSCRIPTION]: {
+    anonymous: { maxRequests: 20, windowSeconds: 60 },
+    authenticated: { maxRequests: 30, windowSeconds: 60 },
+  },
+
+  // AI Subscription Checkout - Creating Stripe checkout sessions
+  // Stricter than status checks as it creates external resources
+  [RATE_LIMIT_ENDPOINTS.AI_SUBSCRIPTION_CHECKOUT]: {
+    anonymous: { maxRequests: 5, windowSeconds: 60 },
+    authenticated: { maxRequests: 10, windowSeconds: 60 },
+  },
+
+  // CopilotKit Runtime - Also uses Perplexity API
+  // Similar limits to astro-ai-chat due to API costs
+  [RATE_LIMIT_ENDPOINTS.COPILOT_RUNTIME]: {
+    anonymous: { maxRequests: 5, windowSeconds: 60 },
+    authenticated: { maxRequests: 20, windowSeconds: 60 },
+  },
+
+  // Flight Search - Uses RapidAPI Skyscanner
+  // Moderate limits as external API has its own costs/limits
+  [RATE_LIMIT_ENDPOINTS.SEARCH_FLIGHTS]: {
+    anonymous: { maxRequests: 10, windowSeconds: 60 },
+    authenticated: { maxRequests: 20, windowSeconds: 60 },
+  },
+};
+
+/**
+ * Get the rate limit configuration for an endpoint and user tier
+ *
+ * @param endpoint - The endpoint being rate limited
+ * @param userTier - The user tier ('anonymous' or 'authenticated')
+ * @returns Rate limit configuration for the endpoint/tier combination
+ *
+ * @example
+ * ```ts
+ * const config = getRateLimitConfig('astro-ai-chat', userId ? 'authenticated' : 'anonymous');
+ * const result = await checkRateLimit(supabase, identifier, endpoint, config);
+ * ```
+ */
+export function getRateLimitConfig(endpoint: RateLimitEndpoint, userTier: UserTier): RateLimitConfig {
+  const endpointConfig = RATE_LIMIT_CONFIGS[endpoint];
+  if (!endpointConfig) {
+    // Fallback to strict anonymous limits for unknown endpoints
+    return { maxRequests: 5, windowSeconds: 60 };
+  }
+  return endpointConfig[userTier];
+}
+
+/**
+ * Determine user tier based on whether a user ID is present
+ *
+ * @param userId - Optional user ID from authentication
+ * @returns 'authenticated' if userId is truthy, 'anonymous' otherwise
+ */
+export function getUserTier(userId?: string | null): UserTier {
+  return userId ? 'authenticated' : 'anonymous';
+}
+
+// =============================================================================
+// CORE RATE LIMIT TYPES AND FUNCTIONS
+// =============================================================================
 
 /**
  * Result from a rate limit check
