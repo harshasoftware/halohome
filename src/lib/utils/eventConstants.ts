@@ -12,6 +12,7 @@ export enum AnalyticsEvent {
   PAYMENT_SUCCESS = 'payment_success',
   ERROR_OCCURRED = 'error_occurred',
   SESSION_RECORDED = 'session_recorded', // For explicit session recording events
+  COMPONENT_LOAD_ERROR = 'component_load_error', // For lazy-load component failures
   // Add more as needed
 }
 

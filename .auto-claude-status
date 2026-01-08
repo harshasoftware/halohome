@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "004-add-skeleton-loading-states-for-data-heavy-panels",
+  "spec": "019-graceful-error-recovery",
   "state": "building",
   "subtasks": {
-    "completed": 8,
-    "total": 13,
+    "completed": 2,
+    "total": 10,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Favorites Panel Skeletons",
+    "current": "PostHog Error Logging Integration",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 10,
-    "started_at": "2026-01-08T19:21:55.565515"
+    "number": 3,
+    "started_at": "2026-01-08T20:44:06.906720"
   },
-  "last_update": "2026-01-08T19:47:15.554704"
+  "last_update": "2026-01-08T20:48:37.835203"
 }
