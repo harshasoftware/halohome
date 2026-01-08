@@ -25,6 +25,7 @@ interface MobileFavoritesSheetProps {
   loading: boolean;
   onSelectFavorite: (lat: number, lng: number, name: string) => void;
   onRemoveFavorite: (id: string, name: string) => void;
+  onUpdateNotes?: (id: string, notes: string) => void;
   onClose: () => void;
 }
 
@@ -33,6 +34,7 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
   loading,
   onSelectFavorite,
   onRemoveFavorite,
+  onUpdateNotes,
   onClose,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
