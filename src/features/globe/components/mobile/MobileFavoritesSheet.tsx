@@ -14,11 +14,13 @@ import {
   Globe2,
   Loader2,
   Search,
+  SearchX,
   X,
 } from 'lucide-react';
 import { MobileBottomSheet } from './MobileBottomSheet';
 import { VirtualList } from '@/lib/patterns';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
+import { useFavoritesFilter } from '@/hooks/useFavoritesFilter';
 import { cn } from '@/lib/utils';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
 
@@ -40,6 +42,11 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
   const [isMaximized, setIsMaximized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const setMobileSheetMaximized = useGlobeInteractionStore((s) => s.setMobileSheetMaximized);
+  const { filteredFavorites } = useFavoritesFilter(favorites, searchQuery);
+
+  // Determine if we're showing filtered results
+  const isFiltering = searchQuery.trim().length > 0;
+  const hasNoResults = isFiltering && filteredFavorites.length === 0;
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -65,7 +72,11 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
     <MobileBottomSheet
       onClose={handleClose}
       title="Favorite Cities"
-      subtitle={`${favorites.length} saved location${favorites.length !== 1 ? 's' : ''}`}
+      subtitle={
+        isFiltering
+          ? `${filteredFavorites.length} of ${favorites.length} location${favorites.length !== 1 ? 's' : ''}`
+          : `${favorites.length} saved location${favorites.length !== 1 ? 's' : ''}`
+      }
       icon={icon}
       maxHeight="70vh"
       showBackdrop={true}
@@ -126,12 +137,30 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
               Tap the heart icon on any city to save it to your favorites for quick access
             </p>
           </div>
+        ) : hasNoResults ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+              <SearchX className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+            </div>
+            <h3 className="text-base font-medium text-slate-700 dark:text-slate-200 mb-2">
+              No Results Found
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">
+              No favorites match "{searchQuery.trim()}"
+            </p>
+            <button
+              onClick={handleClearSearch}
+              className="mt-4 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            >
+              Clear search
+            </button>
+          </div>
         ) : (
           <div className="flex-1 px-4 py-3">
             <VirtualList
-              items={favorites}
+              items={filteredFavorites}
               itemHeight={160}
-              containerHeight={Math.min(favorites.length * 160, 400)}
+              containerHeight={Math.min(filteredFavorites.length * 160, 400)}
               overscan={2}
               className="overflow-y-auto"
               renderItem={(fav, index, style) => (
@@ -195,8 +224,8 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
           </div>
         )}
 
-        {/* Footer tip */}
-        {favorites.length > 0 && (
+        {/* Footer tip - only show when favorites are displayed */}
+        {favorites.length > 0 && !hasNoResults && (
           <div className="flex-shrink-0 px-4 py-3 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50">
             <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
               <Globe2 className="w-4 h-4" />
