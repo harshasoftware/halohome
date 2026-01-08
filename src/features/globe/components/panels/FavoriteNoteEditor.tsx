@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Pencil, Loader2, Check } from 'lucide-react';
+import { Pencil, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutoSaveNote } from '@/hooks/useAutoSaveNote';
 import { cn } from '@/lib/utils';
@@ -98,35 +98,61 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
     []
   );
 
-  // Render status indicator
+  // Render status indicator - subtle icon-based indicators with smooth animations
   const renderStatusIndicator = () => {
     if (isSaving) {
       return (
-        <div className="flex items-center gap-1 text-xs text-slate-400">
+        <div
+          className={cn(
+            'flex items-center gap-1 text-slate-400 dark:text-slate-500',
+            'animate-in fade-in duration-150'
+          )}
+          title="Saving..."
+        >
           <Loader2 className="w-3 h-3 animate-spin" />
-          <span>Saving...</span>
         </div>
       );
     }
 
     if (showSaved) {
       return (
-        <div className="flex items-center gap-1 text-xs text-green-500">
-          <Check className="w-3 h-3" />
-          <span>Saved</span>
+        <div
+          className={cn(
+            'flex items-center gap-1 text-green-500 dark:text-green-400',
+            'animate-in fade-in zoom-in-50 duration-200'
+          )}
+          title="Saved"
+        >
+          <Check className="w-3 h-3" strokeWidth={3} />
         </div>
       );
     }
 
     if (hasUnsavedChanges) {
       return (
-        <span className="text-xs text-amber-500">Unsaved changes</span>
+        <div
+          className={cn(
+            'flex items-center',
+            'animate-in fade-in duration-150'
+          )}
+          title="Unsaved changes"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
+        </div>
       );
     }
 
     if (error) {
       return (
-        <span className="text-xs text-red-500">Error saving</span>
+        <div
+          className={cn(
+            'flex items-center gap-1 text-red-500 dark:text-red-400',
+            'animate-in fade-in duration-150'
+          )}
+          title="Error saving notes"
+        >
+          <AlertCircle className="w-3 h-3" />
+        </div>
       );
     }
 
@@ -141,24 +167,27 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
     >
       {isEditing ? (
         <div className="space-y-1">
-          <Textarea
-            ref={textareaRef}
-            value={value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            placeholder="Add notes..."
-            className={cn(
-              'min-h-[60px] text-sm resize-none',
-              'bg-white dark:bg-slate-800',
-              'border-slate-200 dark:border-slate-700',
-              'focus:ring-blue-500 focus:border-blue-500',
-              'placeholder:text-slate-400 dark:placeholder:text-slate-500'
-            )}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <div className="flex justify-end">
-            {renderStatusIndicator()}
+          <div className="relative">
+            <Textarea
+              ref={textareaRef}
+              value={value}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              placeholder="Add notes..."
+              className={cn(
+                'min-h-[60px] text-sm resize-none pr-6',
+                'bg-white dark:bg-slate-800',
+                'border-slate-200 dark:border-slate-700',
+                'focus:ring-blue-500 focus:border-blue-500',
+                'placeholder:text-slate-400 dark:placeholder:text-slate-500'
+              )}
+              onClick={(e) => e.stopPropagation()}
+            />
+            {/* Status indicator positioned in top-right corner of textarea */}
+            <div className="absolute top-2 right-2 z-10">
+              {renderStatusIndicator()}
+            </div>
           </div>
         </div>
       ) : (
@@ -170,29 +199,29 @@ export const FavoriteNoteEditor: React.FC<FavoriteNoteEditorProps> = ({
           )}
         >
           {value ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-3 pr-6">
+            <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-3 pr-8">
               {value}
             </p>
           ) : (
-            <p className="text-sm text-slate-400 dark:text-slate-500 italic pr-6">
+            <p className="text-sm text-slate-400 dark:text-slate-500 italic pr-8">
               Add notes...
             </p>
           )}
-          {/* Pencil icon hint on hover */}
-          <Pencil
-            className={cn(
-              'absolute right-1 top-1/2 -translate-y-1/2',
-              'w-3.5 h-3.5 text-slate-400',
-              'opacity-0 group-hover/note:opacity-100',
-              'transition-opacity duration-150'
+          {/* Right side indicators container */}
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {/* Status indicator in view mode - always visible when active */}
+            {(isSaving || showSaved || error) && renderStatusIndicator()}
+            {/* Pencil icon hint on hover - hidden when status is showing */}
+            {!(isSaving || showSaved || error) && (
+              <Pencil
+                className={cn(
+                  'w-3.5 h-3.5 text-slate-400',
+                  'opacity-0 group-hover/note:opacity-100',
+                  'transition-opacity duration-150'
+                )}
+              />
             )}
-          />
-          {/* Status indicator in view mode */}
-          {(isSaving || showSaved || error) && (
-            <div className="mt-1">
-              {renderStatusIndicator()}
-            </div>
-          )}
+          </div>
         </div>
       )}
     </div>
