@@ -42,7 +42,8 @@ async function __getRayonStartWorkers() {
 const PATCH_MARKERS = [
   '// Rayon Worker Shim for Vite Compatibility',
   '__getRayonStartWorkers',
-  '/* @vite-ignore */ workerHelpersUrl'
+  '/* @vite-ignore */ workerHelpersUrl',
+  "module_or_path = '/wasm/astro_core_bg.wasm'"
 ];
 
 function patchFile(filePath) {
@@ -87,6 +88,14 @@ function patchFile(filePath) {
   content = content.replace(
     /\bstartWorkers\s*\(/g,
     '(await __getRayonStartWorkers())('
+  );
+
+  // Fix WASM URL to use absolute path instead of import.meta.url
+  // This is critical for production builds where Vite bundles JS to /assets/
+  // but WASM stays in /wasm/ (public folder)
+  content = content.replace(
+    /module_or_path = new URL\('astro_core_bg\.wasm', import\.meta\.url\);/g,
+    "module_or_path = '/wasm/astro_core_bg.wasm';"
   );
 
   fs.writeFileSync(filePath, content, 'utf-8');
