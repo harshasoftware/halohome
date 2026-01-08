@@ -9,6 +9,16 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Heart, MapPin, Trash2, Navigation, Globe2, CheckSquare, X } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 import { useFavoriteSelection } from '@/hooks/useFavoriteSelection';
@@ -19,6 +29,7 @@ interface FavoritesPanelContentProps {
   loading: boolean;
   onSelectFavorite: (lat: number, lng: number, name: string) => void;
   onRemoveFavorite: (id: string, name: string) => void;
+  onRemoveMultipleFavorites?: (ids: string[]) => Promise<void>;
   onClose: () => void;
 }
 
@@ -27,10 +38,14 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
   loading,
   onSelectFavorite,
   onRemoveFavorite,
+  onRemoveMultipleFavorites,
   onClose,
 }) => {
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const {
+    selectedIds,
     selectedCount,
     toggleSelection,
     selectAll,
@@ -48,6 +63,24 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
   // Handle select all favorites
   const handleSelectAll = () => {
     selectAll(favorites.map(fav => fav.id));
+  };
+
+  // Handle batch delete with confirmation
+  const handleBatchDelete = async () => {
+    if (!onRemoveMultipleFavorites || selectedCount === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const idsToDelete = Array.from(selectedIds);
+      await onRemoveMultipleFavorites(idsToDelete);
+      toast.success(`Deleted ${selectedCount} ${selectedCount === 1 ? 'favorite' : 'favorites'}`);
+      exitSelectMode();
+    } catch (error) {
+      toast.error('Failed to delete favorites. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   if (loading) {
@@ -135,7 +168,8 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
               variant="destructive"
               size="sm"
               className="h-8 text-xs"
-              disabled={selectedCount === 0}
+              disabled={selectedCount === 0 || !onRemoveMultipleFavorites || isDeleting}
+              onClick={() => setShowDeleteConfirm(true)}
             >
               <Trash2 className="w-3 h-3 mr-1" />
               Delete{selectedCount > 0 ? ` (${selectedCount})` : ''}
@@ -262,6 +296,30 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
           Click a city to fly there on the globe
         </p>
       </div>
+
+      {/* Batch Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedCount} {selectedCount === 1 ? 'favorite' : 'favorites'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. {selectedCount === 1
+                ? 'This favorite city will be permanently removed.'
+                : `These ${selectedCount} favorite cities will be permanently removed.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBatchDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : `Delete ${selectedCount === 1 ? 'Favorite' : 'Favorites'}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
