@@ -1,6 +1,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  checkRateLimit,
+  getClientIp,
+  buildIdentifier,
+  getRateLimitConfig,
+  getUserTier,
+  rateLimitResponse,
+  rateLimitHeaders,
+  RATE_LIMIT_ENDPOINTS,
+} from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,9 +36,29 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    console.log("Astro report payment request:", body);
 
     const { tier, birthHash, successUrl, cancelUrl } = body;
+
+    // ==========================================================================
+    // RATE LIMITING CHECK - Must happen BEFORE any expensive operations
+    // Uses client IP for tracking since this endpoint doesn't require auth
+    // ==========================================================================
+    const clientIp = getClientIp(req);
+    const rateLimitIdentifier = buildIdentifier(null, clientIp);
+    const userTier = getUserTier(null); // Anonymous endpoint - uses IP-based limits
+    const rateLimitConfig = getRateLimitConfig(RATE_LIMIT_ENDPOINTS.CREATE_ASTRO_REPORT_PAYMENT, userTier);
+
+    const rateLimitResult = await checkRateLimit(
+      supabaseClient,
+      rateLimitIdentifier,
+      RATE_LIMIT_ENDPOINTS.CREATE_ASTRO_REPORT_PAYMENT,
+      rateLimitConfig
+    );
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
+    // ==========================================================================
 
     // Validate tier
     if (tier !== 5 && tier !== 10) {
@@ -100,8 +130,20 @@ serve(async (req) => {
       .update({ stripe_session_id: session.id })
       .eq('id', purchase.id);
 
-    return new Response(JSON.stringify({ url: session.url, purchaseId: purchase.id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({
+      url: session.url,
+      purchaseId: purchase.id,
+      rateLimit: {
+        remaining: rateLimitResult.remaining,
+        limit: rateLimitResult.limit,
+        resetAt: rateLimitResult.resetAt.toISOString(),
+      },
+    }), {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        ...rateLimitHeaders(rateLimitResult),
+      },
       status: 200,
     });
   } catch (error) {

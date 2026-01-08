@@ -1,4 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  checkRateLimit,
+  getClientIp,
+  buildIdentifier,
+  getRateLimitConfig,
+  getUserTier,
+  rateLimitResponse,
+  rateLimitHeaders,
+  RATE_LIMIT_ENDPOINTS,
+} from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,7 +138,36 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client for rate limiting
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     const { action, originLat, originLng, destLat, destLng, departDate } = await req.json();
+
+    // ==========================================================================
+    // RATE LIMITING CHECK - Must happen BEFORE any external API calls
+    // Uses client IP for tracking since this endpoint doesn't require auth
+    // ==========================================================================
+    const clientIp = getClientIp(req);
+    const rateLimitIdentifier = buildIdentifier(null, clientIp);
+    const userTier = getUserTier(null); // Anonymous endpoint - uses IP-based limits
+    const rateLimitConfig = getRateLimitConfig(RATE_LIMIT_ENDPOINTS.SEARCH_FLIGHTS, userTier);
+
+    const rateLimitResult = await checkRateLimit(
+      supabaseClient,
+      rateLimitIdentifier,
+      RATE_LIMIT_ENDPOINTS.SEARCH_FLIGHTS,
+      rateLimitConfig
+    );
+
+    if (!rateLimitResult.allowed) {
+      console.warn(`[SECURITY] Rate limit exceeded for search-flights: ${rateLimitIdentifier}`);
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
+    // ==========================================================================
 
     // Action: find-airports - Find nearest airports for origin and destination
     if (action === 'find-airports') {
@@ -137,8 +177,17 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         originAirport,
         destinationAirport: destAirport,
+        rateLimit: {
+          remaining: rateLimitResult.remaining,
+          limit: rateLimitResult.limit,
+          resetAt: rateLimitResult.resetAt.toISOString(),
+        },
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          ...rateLimitHeaders(rateLimitResult),
+        },
         status: 200,
       });
     }
@@ -152,23 +201,40 @@ serve(async (req) => {
         return new Response(JSON.stringify({
           error: 'Could not find nearby airports',
           flights: [],
+          rateLimit: {
+            remaining: rateLimitResult.remaining,
+            limit: rateLimitResult.limit,
+            resetAt: rateLimitResult.resetAt.toISOString(),
+          },
         }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            ...rateLimitHeaders(rateLimitResult),
+          },
           status: 200,
         });
       }
 
       // If no API key, return mock data
       if (!RAPIDAPI_KEY) {
-        console.log('No RapidAPI key configured, returning mock flights');
         const mockFlights = getMockFlights(originAirport.iataCode, destAirport.iataCode, departDate);
         return new Response(JSON.stringify({
           flights: mockFlights,
           originAirport,
           destinationAirport: destAirport,
           isMockData: true,
+          rateLimit: {
+            remaining: rateLimitResult.remaining,
+            limit: rateLimitResult.limit,
+            resetAt: rateLimitResult.resetAt.toISOString(),
+          },
         }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            ...rateLimitHeaders(rateLimitResult),
+          },
           status: 200,
         });
       }
@@ -192,8 +258,17 @@ serve(async (req) => {
           originAirport,
           destinationAirport: destAirport,
           isMockData: true,
+          rateLimit: {
+            remaining: rateLimitResult.remaining,
+            limit: rateLimitResult.limit,
+            resetAt: rateLimitResult.resetAt.toISOString(),
+          },
         }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            ...rateLimitHeaders(rateLimitResult),
+          },
           status: 200,
         });
       }
@@ -257,14 +332,34 @@ serve(async (req) => {
         originAirport,
         destinationAirport: destAirport,
         isMockData: false,
+        rateLimit: {
+          remaining: rateLimitResult.remaining,
+          limit: rateLimitResult.limit,
+          resetAt: rateLimitResult.resetAt.toISOString(),
+        },
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          ...rateLimitHeaders(rateLimitResult),
+        },
         status: 200,
       });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid action' }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({
+      error: 'Invalid action',
+      rateLimit: {
+        remaining: rateLimitResult.remaining,
+        limit: rateLimitResult.limit,
+        resetAt: rateLimitResult.resetAt.toISOString(),
+      },
+    }), {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        ...rateLimitHeaders(rateLimitResult),
+      },
       status: 400,
     });
 
