@@ -19,6 +19,7 @@ import { VirtualList } from '@/lib/patterns';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 import { cn } from '@/lib/utils';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
+import { FavoriteNoteEditor } from '../panels/FavoriteNoteEditor';
 
 interface MobileFavoritesSheetProps {
   favorites: FavoriteCity[];
@@ -124,10 +125,21 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">
                           {fav.latitude.toFixed(4)}°, {fav.longitude.toFixed(4)}°
                         </p>
-                        {fav.notes && (
-                          <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
-                            {fav.notes}
-                          </p>
+                        {/* Notes section with inline editing */}
+                        {onUpdateNotes ? (
+                          <FavoriteNoteEditor
+                            id={fav.id}
+                            initialNotes={fav.notes || ''}
+                            onSave={async (id, notes) => {
+                              onUpdateNotes(id, notes);
+                            }}
+                          />
+                        ) : (
+                          fav.notes && (
+                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
+                              {fav.notes}
+                            </p>
+                          )
                         )}
                       </div>
                     </div>
