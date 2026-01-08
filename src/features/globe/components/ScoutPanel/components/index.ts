@@ -12,3 +12,4 @@ export { OverallLocationCard } from './OverallLocationCard';
 
 // Phase 3: Country Section Components
 export { CountrySection } from './CountrySection';
+export { OverallCountrySection } from './OverallCountrySection';
