@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "003-add-batch-delete-to-favorites",
+  "spec": "004-add-skeleton-loading-states-for-data-heavy-panels",
   "state": "building",
   "subtasks": {
-    "completed": 4,
-    "total": 7,
+    "completed": 8,
+    "total": 13,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Mobile UI Implementation",
+    "current": "Favorites Panel Skeletons",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 6,
-    "started_at": "2026-01-08T19:22:00.841106"
+    "number": 10,
+    "started_at": "2026-01-08T19:21:55.565515"
   },
-  "last_update": "2026-01-08T19:34:02.135106"
+  "last_update": "2026-01-08T19:47:15.554704"
 }

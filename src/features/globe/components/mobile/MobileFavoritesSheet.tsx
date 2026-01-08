@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
 import { toast } from 'sonner';
 import { FavoriteNoteEditor } from '../panels/FavoriteNoteEditor';
+import { SkeletonMobileFavoriteCard } from '@/components/ui/skeleton-card';
 
 interface MobileFavoritesSheetProps {
   favorites: FavoriteCity[];
@@ -150,8 +151,10 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
     >
       <div className="flex flex-col h-full">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+          <div className="flex-1 px-4 py-3 space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonMobileFavoriteCard key={i} />
+            ))}
           </div>
         ) : favorites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">

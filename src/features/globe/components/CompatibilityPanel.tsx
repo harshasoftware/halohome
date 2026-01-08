@@ -13,7 +13,6 @@ import {
   ChevronDown,
   Users,
   X,
-  Loader2,
   TrendingUp,
   Home,
   Plane,
@@ -22,6 +21,7 @@ import {
   Trash2,
   Info,
 } from 'lucide-react';
+import { SkeletonCompatibilityPanelContent } from '@/components/ui/skeleton-chart';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -366,12 +366,7 @@ const CompatibilityPanelComponent: React.FC<CompatibilityPanelProps> = ({
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <Loader2 className="w-8 h-8 text-pink-500 animate-spin mb-3" />
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Finding your perfect destinations...
-            </p>
-          </div>
+          <SkeletonCompatibilityPanelContent locationCount={5} />
         ) : !analysis || analysis.topLocations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">

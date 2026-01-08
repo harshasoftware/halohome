@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { MapPin, ArrowRight, Compass, Home, RefreshCw, Info, Loader2 } from 'lucide-react';
+import { MapPin, ArrowRight, Home, RefreshCw, Info } from 'lucide-react';
+import { SkeletonRelocationAnalysis } from '@/components/ui/skeleton-chart';
 import { Button } from '@/components/ui/button';
 import type { RelocationChartResult, RelocationPlanetPosition } from '@/lib/astro-types';
 import { formatHouseChange, formatAngularShift } from '@/hooks/useRelocationChart';
@@ -61,11 +62,8 @@ const RelocationPanelComponent: React.FC<RelocationPanelProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 gap-4">
-        <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Calculating relocation chart...
-        </p>
+      <div className="h-full overflow-y-auto">
+        <SkeletonRelocationAnalysis />
       </div>
     );
   }
