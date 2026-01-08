@@ -2,9 +2,9 @@
   "feature": "Implement virtual scrolling for long lists in Scout and Cities panels",
   "description": "The ScoutPanel displays lists of cities grouped by country, and CityInfoPanel can show many nearby places/attractions. Large lists force the browser to render all DOM nodes even when only a fraction are visible. This implementation adds virtualization to improve performance.",
   "created_at": "2026-01-08T09:33:36.742Z",
-  "updated_at": "2026-01-08T10:15:00.000Z",
+  "updated_at": "2026-01-08T13:11:27.669Z",
   "status": "in_progress",
-  "planStatus": "approved",
+  "planStatus": "in_progress",
   "workflow_type": "development",
   "services_involved": [
     "frontend"
@@ -111,38 +111,44 @@
           "id": "3.1",
           "title": "Measure country section component heights",
           "description": "Audit CountrySection and OverallCountrySection components to determine collapsed and expanded heights. Expanded sections contain nested city cards.",
-          "status": "pending",
+          "status": "completed",
           "estimated_effort": "small",
           "acceptance_criteria": [
             "Document collapsed header height",
             "Document expanded calculation (header + n * card height)",
             "Create height calculator function for sections"
-          ]
+          ],
+          "notes": "Audited CountrySection and OverallCountrySection components. Added to scout-panel-heights.ts: COUNTRY_SECTION_HEADER_HEIGHT (56px) for collapsed header, LOCATION_CARD_BASE_HEIGHT (130px) and LOCATION_CARD_WITH_EXPAND_HEIGHT (170px) for nested cards, padding constants (pt-1=4px, pb-4=16px, space-y-2=8px gap), and height calculator functions: getCountrySectionExpandedHeight(), getOverallCountrySectionExpandedHeight(), and getCountrySectionHeight(). Also added COUNTRY_SECTION_VIRTUALIZATION_CONFIG with recommended overscan of 2.",
+          "updated_at": "2026-01-08T10:23:50.706279+00:00"
         },
         {
           "id": "3.2",
           "title": "Implement virtual scrolling for Overall Countries view",
           "description": "Refactor the overallCountryGroups.map at lines 805-814 to use virtualization. Must handle dynamic heights as sections expand/collapse.",
-          "status": "pending",
+          "status": "completed",
           "estimated_effort": "large",
           "acceptance_criteria": [
             "Country sections virtualized correctly",
             "Expand/collapse animations work smoothly",
             "Height recalculates on expansion state change",
             "Scroll position maintained during expand/collapse"
-          ]
+          ],
+          "notes": "Implemented virtual scrolling for Overall Countries view. Added OverallCountryVirtualItem type and getOverallCountryVirtualItemHeight function for dynamic height calculation based on expansion state. Created overallCountryVirtualItems useMemo that includes expansion state for each country section. Used useVirtualList hook with COUNTRY_SECTION_VIRTUALIZATION_CONFIG (overscan: 2, minItemsForVirtualization: 5). Replaced static overallCountryGroups.map() with VirtualListContainer for virtualized rendering.",
+          "updated_at": "2026-01-08T10:29:59.143420+00:00"
         },
         {
           "id": "3.3",
           "title": "Implement virtual scrolling for Category Countries view",
           "description": "Refactor the displayCountries.map at lines 885-895 to use virtualization. Similar to Overall countries but with different data structure.",
-          "status": "pending",
+          "status": "completed",
           "estimated_effort": "medium",
           "acceptance_criteria": [
             "Country sections virtualized correctly",
             "Filter changes handled gracefully",
             "onShowMarkers callback works with virtualized list"
-          ]
+          ],
+          "notes": "Implemented virtual scrolling for Category Countries view. Added categoryCountriesScrollRef for scroll container tracking, created categoryCountryVirtualItems useMemo with expansion state for each country section, set up useVirtualList hook with COUNTRY_SECTION_VIRTUALIZATION_CONFIG (overscan: 2, minItemsForVirtualization: 5), and replaced static displayCountries.map() with VirtualListContainer for virtualized rendering. Follows same pattern as Overall Countries virtualization.",
+          "updated_at": "2026-01-08T13:14:11.600451+00:00"
         }
       ]
     },
@@ -156,13 +162,15 @@
           "id": "4.1",
           "title": "Measure PlaceCard component height",
           "description": "Audit PlaceCard component to determine fixed height. Cards have photo, title, rating, badges - need consistent sizing.",
-          "status": "pending",
+          "status": "completed",
           "estimated_effort": "small",
           "acceptance_criteria": [
             "Document PlaceCard height",
             "Ensure consistent card height regardless of content",
             "Create PLACE_CARD_HEIGHT constant"
-          ]
+          ],
+          "notes": "Audited PlaceCard component structure. Created places-tab-heights.ts with height constants: PLACE_CARD_HEIGHT (104px), PLACE_CARD_GAP (12px), PLACE_CARD_ITEM_HEIGHT (116px). PlaceCard has fixed structure: 80px photo (w-20 h-20), up to 86px info section (title + rating + distance + badge), with 8px padding (p-2). Using 104px for virtualization to ensure all content fits with 2px buffer.",
+          "updated_at": "2026-01-08T13:22:34.164729+00:00"
         },
         {
           "id": "4.2",
@@ -255,5 +263,6 @@
       "SignUpPromptCard and BlurredCards are special items at list top for non-authenticated users"
     ]
   },
-  "last_updated": "2026-01-08T10:20:27.088877+00:00"
+  "last_updated": "2026-01-08T13:22:34.164866+00:00",
+  "recoveryNote": "Task recovered from stuck state at 2026-01-08T13:11:27.669Z"
 }
