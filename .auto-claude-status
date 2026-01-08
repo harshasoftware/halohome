@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "002-add-search-to-favorites-panel",
+  "spec": "003-add-batch-delete-to-favorites",
   "state": "building",
   "subtasks": {
-    "completed": 6,
+    "completed": 4,
     "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Polish & Testing",
+    "current": "Mobile UI Implementation",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 8,
-    "started_at": "2026-01-08T19:22:03.401898"
+    "number": 6,
+    "started_at": "2026-01-08T19:22:00.841106"
   },
-  "last_update": "2026-01-08T19:38:51.047765"
+  "last_update": "2026-01-08T19:34:02.135106"
 }
