@@ -20,16 +20,32 @@
  * @security These protocols are commonly used in XSS attacks:
  * - `javascript:` - Executes JavaScript code directly
  * - `vbscript:` - Executes VBScript (IE-specific, legacy attack vector)
- * - `data:` - Can embed executable content or redirect to malicious pages
  * - `file:` - Can access local file system (security sandbox bypass)
  * - `blob:` - Can execute content from Blob URLs
+ *
+ * Note: `data:` is handled separately to allow safe image data URIs
  */
 const DANGEROUS_PROTOCOLS = [
   'javascript:',
   'vbscript:',
-  'data:',
   'file:',
   'blob:',
+] as const;
+
+/**
+ * Safe data URI prefixes for images.
+ * These are commonly used by avatar generators like DiceBear.
+ *
+ * @constant
+ * @security Only image MIME types are allowed - no text/html or other executable types
+ */
+const SAFE_DATA_IMAGE_PREFIXES = [
+  'data:image/svg+xml',
+  'data:image/png',
+  'data:image/jpeg',
+  'data:image/jpg',
+  'data:image/gif',
+  'data:image/webp',
 ] as const;
 
 /**
@@ -105,6 +121,13 @@ export function sanitizeUrl(url: string | null | undefined, fallback: string = '
   // Check for safe absolute URLs
   for (const protocol of SAFE_PROTOCOLS) {
     if (normalizedUrl.startsWith(protocol)) {
+      return trimmedUrl;
+    }
+  }
+
+  // Check for safe data image URIs (used by avatar generators like DiceBear)
+  for (const prefix of SAFE_DATA_IMAGE_PREFIXES) {
+    if (normalizedUrl.startsWith(prefix)) {
       return trimmedUrl;
     }
   }

@@ -5,7 +5,7 @@
  * Now includes city search functionality for birth location.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,10 @@ export const QuickBirthDataModal: React.FC<QuickBirthDataModalProps> = ({
   const [searchedCoords, setSearchedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Memoize requestOptions to prevent setValue from changing on every render,
+  // which would trigger the form reset useEffect
+  const requestOptions = useMemo(() => ({ types: ['(cities)'] }), []);
+
   // Places autocomplete for city search
   const {
     ready,
@@ -44,7 +48,7 @@ export const QuickBirthDataModal: React.FC<QuickBirthDataModalProps> = ({
     setValue: setSearchValue,
     clearSuggestions,
   } = usePlacesAutocomplete({
-    requestOptions: { types: ['(cities)'] },
+    requestOptions,
     debounce: 300,
   });
 

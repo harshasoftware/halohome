@@ -2,6 +2,21 @@ import { FamilyTree, PersonData } from '../../../types/familyTree';
 import { PersonLocation, Migration } from '../types/migration';
 import { generateAvatar } from '../../../lib/avatar';
 
+/**
+ * Check if a URL is a valid avatar URL that will pass sanitization.
+ * Valid URLs are: https://, data:image/*, or valid relative paths.
+ */
+function isValidAvatarUrl(url: string | undefined): boolean {
+  if (!url || url.trim() === '') return false;
+  const normalized = url.trim().toLowerCase();
+  // Allow https URLs
+  if (normalized.startsWith('https://')) return true;
+  // Allow safe data image URIs (DiceBear generates these)
+  if (normalized.startsWith('data:image/')) return true;
+  // Reject anything else (http, blob, javascript, etc.) - will be regenerated
+  return false;
+}
+
 export const transformTreeToGlobeData = async (tree: FamilyTree): Promise<{ locations: PersonLocation[], migrations: Migration[] }> => {
   const locations: PersonLocation[] = [];
   const migrations: Migration[] = [];
@@ -15,7 +30,8 @@ export const transformTreeToGlobeData = async (tree: FamilyTree): Promise<{ loca
           if (validLocations.length > 0) {
             const firstLocation = validLocations[0];
             let avatarUrl = person.avatar;
-            if (!avatarUrl || avatarUrl.includes('pravatar')) {
+            // Regenerate avatar if missing, invalid, or using old pravatar service
+            if (!isValidAvatarUrl(avatarUrl) || avatarUrl?.includes('pravatar')) {
               avatarUrl = await generateAvatar(
                 person.name,
                 person.gender,
