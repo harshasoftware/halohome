@@ -5,6 +5,17 @@
  */
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  checkRateLimit,
+  getClientIp,
+  buildIdentifier,
+  getRateLimitConfig,
+  getUserTier,
+  rateLimitHeaders,
+  RATE_LIMIT_ENDPOINTS,
+  type RateLimitResult,
+} from '../_shared/rate-limit.ts';
 
 const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
 
@@ -188,6 +199,70 @@ function buildContextFromProperties(properties: Record<string, unknown>): string
 // Create AG-UI event encoder
 function encodeEvent(event: Record<string, unknown>): string {
   return `data: ${JSON.stringify(event)}\n\n`;
+}
+
+/**
+ * Create an AG-UI error stream response for rate limiting
+ * Returns a streaming response with proper AG-UI error events
+ */
+function createRateLimitAGUIResponse(
+  rateLimitResult: RateLimitResult,
+  additionalHeaders: Record<string, string> = {}
+): Response {
+  const threadId = generateId();
+  const runId = generateId();
+  const messageId = generateId();
+  const timestamp = new Date().toISOString();
+
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
+  );
+
+  // Build the AG-UI event stream for rate limit error
+  const events = [
+    encodeEvent({
+      type: 'RUN_STARTED',
+      threadId,
+      runId,
+      timestamp,
+    }),
+    encodeEvent({
+      type: 'TEXT_MESSAGE_START',
+      messageId,
+      role: 'assistant',
+      timestamp,
+    }),
+    encodeEvent({
+      type: 'TEXT_MESSAGE_CONTENT',
+      messageId,
+      delta: `I'm currently receiving too many requests. Please wait ${retryAfterSeconds} seconds before trying again.`,
+      timestamp,
+    }),
+    encodeEvent({
+      type: 'TEXT_MESSAGE_END',
+      messageId,
+      timestamp,
+    }),
+    encodeEvent({
+      type: 'RUN_ERROR',
+      message: `Rate limit exceeded. Please retry after ${retryAfterSeconds} seconds.`,
+      code: 'RATE_LIMIT_EXCEEDED',
+      timestamp,
+    }),
+  ];
+
+  const body = events.join('');
+
+  return new Response(body, {
+    status: 429,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      ...additionalHeaders,
+      ...rateLimitHeaders(rateLimitResult),
+    },
+  });
 }
 
 // Call Perplexity API with tool support
@@ -422,6 +497,7 @@ Deno.serve(async (req) => {
     const pathname = url.pathname;
 
     // Handle /info endpoint for CopilotKit runtime sync
+    // Note: /info endpoint is excluded from rate limiting as it doesn't make external API calls
     if (pathname.endsWith('/info') || url.searchParams.get('info') === 'true') {
       console.log('Handling /info request');
       return new Response(
@@ -437,6 +513,30 @@ Deno.serve(async (req) => {
           },
         }
       );
+    }
+
+    // Initialize Supabase client for rate limiting
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate limit check BEFORE any Perplexity API calls
+    // This endpoint doesn't have user authentication, so we use IP-based limiting
+    const clientIp = getClientIp(req);
+    const identifier = buildIdentifier(null, clientIp); // Always anonymous for this endpoint
+    const userTier = getUserTier(null); // Always 'anonymous'
+    const rateLimitConfig = getRateLimitConfig(RATE_LIMIT_ENDPOINTS.COPILOT_RUNTIME, userTier);
+
+    const rateLimitResult = await checkRateLimit(
+      supabase,
+      identifier,
+      RATE_LIMIT_ENDPOINTS.COPILOT_RUNTIME,
+      rateLimitConfig
+    );
+
+    if (!rateLimitResult.allowed) {
+      console.warn(`[SECURITY] Rate limit exceeded for copilot-runtime. IP: ${clientIp}, Current: ${rateLimitResult.current}, Limit: ${rateLimitResult.limit}`);
+      return createRateLimitAGUIResponse(rateLimitResult, corsHeaders);
     }
 
     // Parse the request body for chat requests
@@ -506,6 +606,8 @@ Deno.serve(async (req) => {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        // Include rate limit headers in successful streaming responses
+        ...rateLimitHeaders(rateLimitResult),
       },
     });
 
