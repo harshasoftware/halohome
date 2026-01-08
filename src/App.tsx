@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import React, { lazy, Suspense } from "react";
 import { CopilotKit } from "@copilotkit/react-core";
 import ErrorBoundary from "./components/ErrorBoundary";
+import LazyErrorBoundary from "./components/LazyErrorBoundary";
 import { DatabaseProvider } from "./providers/DatabaseProvider";
 import { usePreventBrowserZoom } from "./hooks/usePreventBrowserZoom";
 
@@ -87,90 +88,90 @@ const App = () => (
 
                     {/* Lazy-loaded routes - Code Split for smaller initial bundle */}
                     <Route path="/guest" element={
-                      <ErrorBoundary componentName="Workspace">
+                      <LazyErrorBoundary componentName="Workspace">
                         <Workspace />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/payment/success" element={
-                      <ErrorBoundary componentName="PaymentSuccess">
+                      <LazyErrorBoundary componentName="PaymentSuccess">
                         <PaymentSuccess />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/astro-payment-success" element={
-                      <ErrorBoundary componentName="AstroPaymentSuccess">
+                      <LazyErrorBoundary componentName="AstroPaymentSuccess">
                         <AstroPaymentSuccess />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/ai-subscription" element={
-                      <ErrorBoundary componentName="AISubscription">
+                      <LazyErrorBoundary componentName="AISubscription">
                         <AISubscription />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/blog" element={
-                      <ErrorBoundary componentName="BlogIndex">
+                      <LazyErrorBoundary componentName="BlogIndex">
                         <BlogIndex />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/blog/scout-algorithm" element={
-                      <ErrorBoundary componentName="ScoutAlgorithmBlog">
+                      <LazyErrorBoundary componentName="ScoutAlgorithmBlog">
                         <ScoutAlgorithmBlog />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/blog/astrology-systems" element={
-                      <ErrorBoundary componentName="AstrologySystemsBlog">
+                      <LazyErrorBoundary componentName="AstrologySystemsBlog">
                         <AstrologySystemsBlog />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/blog/duo-mode" element={
-                      <ErrorBoundary componentName="DuoModeBlog">
+                      <LazyErrorBoundary componentName="DuoModeBlog">
                         <DuoModeBlog />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/blog/planetary-precision" element={
-                      <ErrorBoundary componentName="PlanetaryPrecisionBlog">
+                      <LazyErrorBoundary componentName="PlanetaryPrecisionBlog">
                         <PlanetaryPrecisionBlog />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/blog/methodology" element={
-                      <ErrorBoundary componentName="MethodologyBlog">
+                      <LazyErrorBoundary componentName="MethodologyBlog">
                         <MethodologyBlog />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/sample-report" element={
-                      <ErrorBoundary componentName="SampleReport">
+                      <LazyErrorBoundary componentName="SampleReport">
                         <SampleReport />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/benchmark" element={
-                      <ErrorBoundary componentName="Benchmark">
+                      <LazyErrorBoundary componentName="Benchmark">
                         <Benchmark />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/update-password" element={<Navigate to="/" replace />} />
                     <Route path="/share/:shareId" element={
-                      <ErrorBoundary componentName="SharePage">
+                      <LazyErrorBoundary componentName="SharePage">
                         <SharePage />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/s/:shortCode" element={
-                      <ErrorBoundary componentName="SharedGlobePage">
+                      <LazyErrorBoundary componentName="SharedGlobePage">
                         <SharedGlobePage />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/embed/:shortCode" element={
-                      <ErrorBoundary componentName="EmbedPage">
+                      <LazyErrorBoundary componentName="EmbedPage">
                         <EmbedPage />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/project/:projectId" element={
-                      <ErrorBoundary componentName="Workspace">
+                      <LazyErrorBoundary componentName="Workspace">
                         <Workspace defaultView="map" />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
                     <Route path="/project/:projectId/map" element={
-                      <ErrorBoundary componentName="Workspace">
+                      <LazyErrorBoundary componentName="Workspace">
                         <Workspace defaultView="map" />
-                      </ErrorBoundary>
+                      </LazyErrorBoundary>
                     } />
 
                     {/* Error routes - eagerly loaded */}
