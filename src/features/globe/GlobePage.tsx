@@ -569,7 +569,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   ]);
 
   // Favorite cities management
-  const { favorites, loading: favoritesLoading, isFavorite, toggleFavorite, removeFavorite } = useFavoriteCities();
+  const { favorites, loading: favoritesLoading, isFavorite, toggleFavorite, removeFavorite, removeMultipleFavorites } = useFavoriteCities();
 
   // --- Context Menu Action Handlers ---
   // (Defined here because they depend on birthData, relocateTo, enableLocalSpace, etc.)
@@ -1562,10 +1562,11 @@ const GlobePage: React.FC<GlobePageProps> = ({
         loading={favoritesLoading}
         onSelectFavorite={handleSelectFavorite}
         onRemoveFavorite={handleRemoveFavorite}
+        onRemoveMultipleFavorites={removeMultipleFavorites}
         onClose={panelStack.closeCurrent}
       />
     );
-  }, [favorites, favoritesLoading, removeFavorite, panelStack]);
+  }, [favorites, favoritesLoading, removeFavorite, removeMultipleFavorites, panelStack]);
 
   // Render function for ScoutPanel
   const renderScoutPanel = useCallback(() => {
@@ -2186,6 +2187,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
           onRemoveFavorite={(id, name) => {
             removeFavorite(id);
           }}
+          onRemoveMultipleFavorites={removeMultipleFavorites}
           onClose={() => setMobileFavoritesSheetOpen(false)}
         />
       )}
