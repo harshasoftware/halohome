@@ -194,6 +194,16 @@ const ORBITAL_ELEMENTS: Record<Planet, OrbitalElements> = {
     L0: 238.92881, Ldot: 145.20780,
     e0: 0.24882730, i0: 17.14175, omega0: 224.06891, Omega0: 110.30393
   },
+  // Chiron - centaur with 50-year orbit between Saturn and Uranus
+  Chiron: {
+    L0: 209.35, Ldot: 259.83,
+    e0: 0.37911, i0: 6.93, omega0: 339.56, Omega0: 209.38
+  },
+  // NorthNode - Mean Lunar Node (retrograde motion, ~18.6 year cycle)
+  NorthNode: {
+    L0: 125.04, Ldot: -6962.025,
+    e0: 0, i0: 5.145, omega0: 0, Omega0: 125.04
+  },
 };
 
 /**
