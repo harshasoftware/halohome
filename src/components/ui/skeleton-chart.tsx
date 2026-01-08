@@ -790,4 +790,184 @@ export function SkeletonScoutPanelContent({
   )
 }
 
+/**
+ * SkeletonCompatibilityStatsBar - Stats summary bar for CompatibilityPanel
+ * Shows line intersections and destinations count
+ */
+export interface SkeletonCompatibilityStatsBarProps {
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonCompatibilityStatsBar({
+  className,
+}: SkeletonCompatibilityStatsBarProps) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-4 p-3 rounded-xl bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800",
+        className
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <Skeleton className="w-4 h-4" />
+        <Skeleton className="h-4 w-28" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Skeleton className="w-4 h-4" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SkeletonCompatibilityLocationCard - Card showing a compatible location
+ * Matches the structure of LocationCard in CompatibilityPanel
+ */
+export interface SkeletonCompatibilityLocationCardProps {
+  /** Number of planet line tags per person */
+  personTagCount?: number
+  /** Number of theme badges */
+  themeCount?: number
+  /** Show interpretation text */
+  showInterpretation?: boolean
+  /** Show city info button */
+  showCityInfoButton?: boolean
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonCompatibilityLocationCard({
+  personTagCount = 3,
+  themeCount = 2,
+  showInterpretation = true,
+  showCityInfoButton = true,
+  className,
+}: SkeletonCompatibilityLocationCardProps) {
+  return (
+    <div
+      className={cn(
+        "w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700",
+        className
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* Rank Badge */}
+        <Skeleton className="flex-shrink-0 w-8 h-8 rounded-full" />
+
+        <div className="flex-1 min-w-0">
+          {/* Header: City name + Score badge */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              {/* City name + country */}
+              <Skeleton className="h-4 w-40" />
+              {/* Coordinates */}
+              <div className="flex items-center gap-1 mt-1">
+                <Skeleton className="w-3 h-3" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+            </div>
+            {/* Score badge */}
+            <Skeleton className="flex-shrink-0 h-7 w-14 rounded-full" />
+          </div>
+
+          {/* Planet lines for each person */}
+          <div className="mt-2 space-y-1">
+            {/* Person 1 (You) */}
+            <div className="flex items-center gap-1 flex-wrap">
+              <Skeleton className="h-3 w-8" />
+              {Array.from({ length: personTagCount }).map((_, i) => (
+                <Skeleton key={`p1-${i}`} className="h-5 w-14 rounded" />
+              ))}
+            </div>
+            {/* Person 2 (Partner) */}
+            <div className="flex items-center gap-1 flex-wrap">
+              <Skeleton className="h-3 w-12" />
+              {Array.from({ length: personTagCount }).map((_, i) => (
+                <Skeleton key={`p2-${i}`} className="h-5 w-14 rounded" />
+              ))}
+            </div>
+          </div>
+
+          {/* Theme badges */}
+          {themeCount > 0 && (
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              {Array.from({ length: themeCount }).map((_, i) => (
+                <Skeleton key={i} className="h-5 w-16 rounded-full" />
+              ))}
+            </div>
+          )}
+
+          {/* Interpretation text */}
+          {showInterpretation && (
+            <div className="mt-2 space-y-1">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          )}
+
+          {/* City Info Button */}
+          {showCityInfoButton && (
+            <Skeleton className="mt-3 h-9 w-full rounded-lg" />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SkeletonCompatibilityLocationCardList - List of compatibility location cards
+ */
+export interface SkeletonCompatibilityLocationCardListProps {
+  /** Number of cards to show */
+  count?: number
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonCompatibilityLocationCardList({
+  count = 5,
+  className,
+}: SkeletonCompatibilityLocationCardListProps) {
+  return (
+    <div className={cn("space-y-2", className)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonCompatibilityLocationCard
+          key={i}
+          // Vary slightly for visual interest
+          personTagCount={i % 2 === 0 ? 3 : 2}
+          themeCount={i % 3 === 0 ? 2 : 1}
+        />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * SkeletonCompatibilityPanelContent - Full skeleton for CompatibilityPanel content
+ */
+export interface SkeletonCompatibilityPanelContentProps {
+  /** Number of location cards to show */
+  locationCount?: number
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonCompatibilityPanelContent({
+  locationCount = 5,
+  className,
+}: SkeletonCompatibilityPanelContentProps) {
+  return (
+    <div className={cn("p-4 space-y-3", className)}>
+      {/* Stats summary bar */}
+      <SkeletonCompatibilityStatsBar />
+
+      {/* Location cards */}
+      <SkeletonCompatibilityLocationCardList count={locationCount} />
+    </div>
+  )
+}
+
 export default SkeletonScoreCard
