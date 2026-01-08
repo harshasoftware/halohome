@@ -311,7 +311,10 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleBatchDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                handleBatchDelete();
+              }}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
