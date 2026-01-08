@@ -49,6 +49,7 @@ import {
   SCOUT_LIST_VIRTUALIZATION_CONFIG,
   COUNTRY_SECTION_VIRTUALIZATION_CONFIG,
   getOverallCountrySectionExpandedHeight,
+  getCountrySectionExpandedHeight,
   COUNTRY_SECTION_HEADER_HEIGHT,
 } from './scout-panel-heights';
 
@@ -311,6 +312,30 @@ function getOverallCountryVirtualItemHeight(item: OverallCountryVirtualItem): nu
   return getOverallCountrySectionExpandedHeight(item.country.locations.length);
 }
 
+// ============================================================================
+// Virtual List Item Types for Category Countries View
+// ============================================================================
+
+/**
+ * Item type for virtualized Category Countries view.
+ * Each country section can be expanded/collapsed with dynamic height.
+ */
+interface CategoryCountryVirtualItem {
+  country: RankedCountryGroup;
+  isExpanded: boolean;
+}
+
+/**
+ * Get the height of a Category Country virtual item.
+ * Height depends on whether the section is expanded and how many locations it contains.
+ */
+function getCategoryCountryVirtualItemHeight(item: CategoryCountryVirtualItem): number {
+  if (!item.isExpanded) {
+    return COUNTRY_SECTION_HEADER_HEIGHT;
+  }
+  return getCountrySectionExpandedHeight(item.country.locations.length);
+}
+
 export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   planetaryLines,
   aspectLines,
@@ -343,6 +368,7 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   const overallTopScrollRef = useRef<HTMLDivElement>(null);
   const categoryTopScrollRef = useRef<HTMLDivElement>(null);
   const overallCountriesScrollRef = useRef<HTMLDivElement>(null);
+  const categoryCountriesScrollRef = useRef<HTMLDivElement>(null);
 
   const showMobileToast = useCallback((description: string) => {
     // Clear any existing timeout
@@ -613,6 +639,30 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     items: overallCountryVirtualItems,
     itemHeight: (index, item) => getOverallCountryVirtualItemHeight(item),
     containerRef: overallCountriesScrollRef,
+    overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+  });
+
+  // Build virtual items for Category Countries view
+  // Each item includes expansion state for dynamic height calculation
+  const categoryCountryVirtualItems = useMemo((): CategoryCountryVirtualItem[] => {
+    if (isOverallView || viewMode !== 'countries' || displayCountries.length === 0) {
+      return [];
+    }
+    return displayCountries.map(country => ({
+      country,
+      isExpanded: expandedCountries.has(country.country),
+    }));
+  }, [isOverallView, viewMode, displayCountries, expandedCountries]);
+
+  // Virtual list for Category Countries view
+  const {
+    virtualItems: categoryCountryVirtualListItems,
+    totalHeight: categoryCountryTotalHeight,
+  } = useVirtualList({
+    items: categoryCountryVirtualItems,
+    itemHeight: (index, item) => getCategoryCountryVirtualItemHeight(item),
+    containerRef: categoryCountriesScrollRef,
     overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
     minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
   });
@@ -1143,20 +1193,25 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
               </p>
             </div>
           ) : (
-            <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-              <div>
-                {displayCountries.map(country => (
-                  <CountrySection
-                    key={country.country}
-                    country={country}
-                    category={selectedCategory}
-                    isExpanded={expandedCountries.has(country.country)}
-                    onToggle={() => toggleCountry(country.country)}
-                    onCityClick={handleCityClick}
-                    onShowMarkers={onShowCountryMarkers}
-                  />
+            <div
+              ref={categoryCountriesScrollRef}
+              className="absolute inset-0 overflow-y-auto scrollbar-hide"
+            >
+              {/* Virtualized Category Countries list */}
+              <VirtualListContainer totalHeight={categoryCountryTotalHeight}>
+                {categoryCountryVirtualListItems.map(({ item, index, style }) => (
+                  <div key={item.country.country} style={style}>
+                    <CountrySection
+                      country={item.country}
+                      category={selectedCategory}
+                      isExpanded={item.isExpanded}
+                      onToggle={() => toggleCountry(item.country.country)}
+                      onCityClick={handleCityClick}
+                      onShowMarkers={onShowCountryMarkers}
+                    />
+                  </div>
                 ))}
-              </div>
+              </VirtualListContainer>
             </div>
           )
         )}
