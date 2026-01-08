@@ -145,6 +145,121 @@ export function getScoutCardItemHeight(
 }
 
 // ============================================================================
+// Country Section Heights
+// ============================================================================
+
+/**
+ * CountrySection and OverallCountrySection header (collapsed) height
+ * Structure: button with py-3.5 (14px each) + content line (~24px) + border (1px)
+ * Content: flag (text-base) + country name (text-sm) + badges + city count + chevron
+ */
+export const COUNTRY_SECTION_HEADER_HEIGHT = 56;
+
+/**
+ * Country section expanded content padding
+ * Container: px-4 pb-4 pt-1 space-y-2
+ */
+export const COUNTRY_SECTION_PADDING_TOP = 4; // pt-1
+export const COUNTRY_SECTION_PADDING_BOTTOM = 16; // pb-4
+export const COUNTRY_SECTION_CARD_GAP = 8; // space-y-2
+
+/**
+ * LocationCard height (used inside CountrySection)
+ * Same structure as RankedLocationCard - p-4 padding + header + influence pills + optional expand button
+ */
+export const LOCATION_CARD_BASE_HEIGHT = 130;
+export const LOCATION_CARD_WITH_EXPAND_HEIGHT = 170;
+
+/**
+ * Recommended virtual height for LocationCard
+ * Uses the "with expand button" height as most cards have multiple influences
+ */
+export const LOCATION_CARD_VIRTUAL_HEIGHT = LOCATION_CARD_WITH_EXPAND_HEIGHT;
+
+// ============================================================================
+// Country Section Height Calculator Functions
+// ============================================================================
+
+/**
+ * Calculate the total height of a CountrySection (collapsed)
+ */
+export function getCountrySectionCollapsedHeight(): number {
+  return COUNTRY_SECTION_HEADER_HEIGHT;
+}
+
+/**
+ * Calculate the total height of a CountrySection when expanded
+ * @param numLocations - Number of LocationCards in the section
+ * @param useExpandButtonHeight - Whether to use the taller card height (default true)
+ */
+export function getCountrySectionExpandedHeight(
+  numLocations: number,
+  useExpandButtonHeight: boolean = true
+): number {
+  const cardHeight = useExpandButtonHeight
+    ? LOCATION_CARD_WITH_EXPAND_HEIGHT
+    : LOCATION_CARD_BASE_HEIGHT;
+
+  // Header + top padding + cards with gaps + bottom padding
+  const cardsHeight = numLocations > 0
+    ? (numLocations * cardHeight) + ((numLocations - 1) * COUNTRY_SECTION_CARD_GAP)
+    : 0;
+
+  return (
+    COUNTRY_SECTION_HEADER_HEIGHT +
+    COUNTRY_SECTION_PADDING_TOP +
+    cardsHeight +
+    COUNTRY_SECTION_PADDING_BOTTOM
+  );
+}
+
+/**
+ * Calculate the total height of an OverallCountrySection when expanded
+ * @param numLocations - Number of OverallLocationCards in the section
+ * @param useExpandButtonHeight - Whether to use the taller card height (default true)
+ */
+export function getOverallCountrySectionExpandedHeight(
+  numLocations: number,
+  useExpandButtonHeight: boolean = true
+): number {
+  const cardHeight = useExpandButtonHeight
+    ? OVERALL_CARD_WITH_EXPAND_HEIGHT
+    : OVERALL_CARD_BASE_HEIGHT;
+
+  // Header + top padding + cards with gaps + bottom padding
+  const cardsHeight = numLocations > 0
+    ? (numLocations * cardHeight) + ((numLocations - 1) * COUNTRY_SECTION_CARD_GAP)
+    : 0;
+
+  return (
+    COUNTRY_SECTION_HEADER_HEIGHT +
+    COUNTRY_SECTION_PADDING_TOP +
+    cardsHeight +
+    COUNTRY_SECTION_PADDING_BOTTOM
+  );
+}
+
+/**
+ * Generic height calculator for country sections
+ * Determines height based on expansion state and number of locations
+ */
+export type CountrySectionType = 'category' | 'overall';
+
+export function getCountrySectionHeight(
+  type: CountrySectionType,
+  isExpanded: boolean,
+  numLocations: number
+): number {
+  if (!isExpanded) {
+    return COUNTRY_SECTION_HEADER_HEIGHT;
+  }
+
+  return type === 'category'
+    ? getCountrySectionExpandedHeight(numLocations)
+    : getOverallCountrySectionExpandedHeight(numLocations);
+}
+
+// ============================================================================
 // Virtualization Configuration
 // ============================================================================
 
@@ -156,4 +271,15 @@ export const SCOUT_LIST_VIRTUALIZATION_CONFIG = {
   minItemsForVirtualization: 10,
   /** Number of items to render outside visible area */
   overscan: 5,
+} as const;
+
+/**
+ * Configuration for country section virtualization
+ * Uses smaller overscan since sections are larger than individual cards
+ */
+export const COUNTRY_SECTION_VIRTUALIZATION_CONFIG = {
+  /** Minimum sections before virtualization activates */
+  minItemsForVirtualization: 5,
+  /** Number of sections to render outside visible area */
+  overscan: 2,
 } as const;

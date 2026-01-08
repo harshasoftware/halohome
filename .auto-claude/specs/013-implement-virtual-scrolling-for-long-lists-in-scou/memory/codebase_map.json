@@ -6,9 +6,9 @@
       "discovered_at": "2026-01-08T10:03:26.299366+00:00"
     },
     "src/features/globe/components/ScoutPanel.tsx": {
-      "description": "Large component (~1100 lines) with multiple list views: Top Locations (flat ranked list), Countries (collapsible sections). Has special items for non-authenticated users (SignUpPromptCard, BlurredCards). Uses viewMode state to switch between 'top' and 'countries' views.",
-      "category": "architecture",
-      "discovered_at": "2026-01-08T10:03:26.346919+00:00"
+      "description": "Category Top Locations list (lines ~1033-1073) now uses virtual scrolling with useVirtualList hook. Uses CategoryVirtualItem discriminated union type for mixed card types, getCategoryVirtualItemHeight function for variable heights, and VirtualListContainer for rendering. Ref: categoryTopScrollRef.",
+      "category": "virtualization",
+      "discovered_at": "2026-01-08T10:20:32.767301+00:00"
     },
     "src/hooks/useVirtualList.ts": {
       "description": "New useVirtualList hook created for virtualizing long lists. Supports fixed and variable heights, overscan, resize handling via ResizeObserver, scroll restoration, and binary search for efficient start index calculation. Returns virtualItems array with positioning info, totalHeight, startIndex, endIndex, and scrollToIndex/scrollToOffset functions.",
@@ -26,5 +26,5 @@
       "discovered_at": "2026-01-08T10:12:33.886930+00:00"
     }
   },
-  "last_updated": "2026-01-08T10:12:33.886938+00:00"
+  "last_updated": "2026-01-08T10:20:32.767310+00:00"
 }

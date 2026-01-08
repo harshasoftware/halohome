@@ -35,11 +35,35 @@
         }
       ],
       "status": "completed"
+    },
+    "2.2": {
+      "attempts": [
+        {
+          "session": 5,
+          "timestamp": "2026-01-08T15:47:04.843297",
+          "approach": "Implemented: Refactor the Overall view's Top Locations list (filteredOverallLocations.map) to use virtual scrolli",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "2.3": {
+      "attempts": [
+        {
+          "session": 6,
+          "timestamp": "2026-01-08T15:50:48.398161",
+          "approach": "Implemented: Refactor the Category view's Top Locations list (topLocations.map) to use virtual scrolling. This is",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [],
   "metadata": {
     "created_at": "2026-01-08T15:31:07.283704",
-    "last_updated": "2026-01-08T15:42:43.043593"
+    "last_updated": "2026-01-08T15:50:48.398166"
   }
 }

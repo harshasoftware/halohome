@@ -3,13 +3,13 @@
   "spec": "013-implement-virtual-scrolling-for-long-lists-in-scou",
   "state": "building",
   "subtasks": {
-    "completed": 3,
+    "completed": 5,
     "total": 13,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Virtualize ScoutPanel Top Locations View",
+    "current": "Virtualize ScoutPanel Countries View",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 5,
+    "number": 7,
     "started_at": "2026-01-08T15:31:07.284224"
   },
-  "last_update": "2026-01-08T15:42:56.997683"
+  "last_update": "2026-01-08T15:51:02.865498"
 }
