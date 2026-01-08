@@ -35,6 +35,7 @@ export interface UseFavoriteCitiesReturn {
   loadFavorites: () => Promise<void>;
   addFavorite: (data: FavoriteCityInput) => Promise<FavoriteCity | null>;
   removeFavorite: (id: string) => Promise<void>;
+  removeMultipleFavorites: (ids: string[]) => Promise<void>;
   updateFavoriteNotes: (id: string, notes: string) => Promise<void>;
 
   // Helpers
@@ -198,6 +199,36 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
     }
   }, [isGuest, favorites, saveGuestFavorites]);
 
+  // Remove multiple favorites at once
+  const removeMultipleFavorites = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+
+    // Optimistically update UI state first
+    const idsSet = new Set(ids);
+    setFavorites(prev => prev.filter(f => !idsSet.has(f.id)));
+
+    if (isGuest) {
+      // For guests, filter out all matching IDs and save to localStorage
+      const updated = favorites.filter(f => !idsSet.has(f.id));
+      saveGuestFavorites(updated);
+      return;
+    }
+
+    try {
+      // For authenticated users, use Supabase's .in() filter for batch delete
+      const { error } = await supabase
+        .from('favorite_cities')
+        .delete()
+        .in('id', ids);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Failed to remove multiple favorite cities:', error);
+      // Revert optimistic update on error by reloading favorites
+      loadFavorites();
+    }
+  }, [isGuest, favorites, saveGuestFavorites, loadFavorites]);
+
   // Update favorite notes
   const updateFavoriteNotes = useCallback(async (id: string, notes: string) => {
     if (isGuest) {
@@ -240,6 +271,7 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
     loadFavorites,
     addFavorite,
     removeFavorite,
+    removeMultipleFavorites,
     updateFavoriteNotes,
     isFavorite,
     getFavoriteByLocation,
