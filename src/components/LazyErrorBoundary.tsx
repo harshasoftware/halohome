@@ -21,6 +21,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
 import { isOnline, subscribeToNetworkChanges } from '@/lib/utils/network';
+import { analytics, AnalyticsEvent } from '@/lib/utils/eventConstants';
 
 /**
  * Maximum number of retry attempts before showing escalated message.
@@ -105,7 +106,18 @@ class LazyErrorBoundary extends Component<LazyErrorBoundaryProps, LazyErrorBound
       this.props.onError(error, errorInfo);
     }
 
-    // Track error in analytics (lazy import to avoid module loading conflicts)
+    // Track error in PostHog with detailed properties
+    analytics.capture(AnalyticsEvent.COMPONENT_LOAD_ERROR, {
+      error_message: error.message || 'Failed to load component',
+      component_stack: errorInfo.componentStack || '',
+      is_offline: !isOnline(),
+      retry_count: this.state.retryCount,
+      timestamp: new Date().toISOString(),
+      component_name: this.props.componentName || 'LazyComponent',
+      error_name: error.name || 'LazyLoadError',
+    });
+
+    // Track error in Firebase analytics (lazy import to avoid module loading conflicts)
     import('@/lib/analytics').then(({ trackError }) => {
       trackError(
         error.name || 'LazyLoadError',
