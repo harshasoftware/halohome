@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "003-add-batch-delete-to-favorites",
+  "state": "building",
+  "subtasks": {
+    "completed": 4,
+    "total": 7,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Mobile UI Implementation",
+    "id": null,
+    "total": 1
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 6,
+    "started_at": "2026-01-08T19:22:00.841106"
+  },
+  "last_update": "2026-01-08T19:34:02.135106"
+}
