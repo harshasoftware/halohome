@@ -1,16 +1,3 @@
-// Vite dev server refuses to statically import JS modules from /public.
-// We lazy-load the worker helpers at runtime and opt out of Vite import analysis.
-let __rayonStartWorkers;
-async function __getRayonStartWorkers() {
-    if (!__rayonStartWorkers) {
-        // Use a computed specifier so Vite doesn't try to treat /public files as ESM imports in dev.
-        const workerHelpersUrl = new URL('/wasm/workerHelpers.js', globalThis.location?.href ?? 'http://localhost').toString();
-        const mod = await import(/* @vite-ignore */ workerHelpersUrl);
-        __rayonStartWorkers = mod.startWorkers;
-    }
-    return __rayonStartWorkers;
-}
-
 let wasm;
 
 function addToExternrefTable0(obj) {
@@ -211,10 +198,6 @@ const PlanetaryPositionFinalization = (typeof FinalizationRegistry === 'undefine
 const ScoringConfigFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_scoringconfig_free(ptr >>> 0, 1));
-
-const wbg_rayon_PoolBuilderFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_wbg_rayon_poolbuilder_free(ptr >>> 0, 1));
 
 /**
  * Aspect types for planetary aspects
@@ -1020,28 +1003,6 @@ export function get_timezone_offset_hours(lat, lng, year, month, day, hour, minu
 }
 
 /**
- * @param {number} num_threads
- * @returns {Promise<any>}
- */
-export function initThreadPool(num_threads) {
-    const ret = wasm.initThreadPool(num_threads);
-    return ret;
-}
-
-/**
- * Initialize the Rayon thread pool for parallel processing.
- * Must be called before using parallel scout functions.
- * Requires COOP/COEP headers on the hosting server.
- * Returns a Promise that resolves when initialization is complete.
- * @param {number} num_threads
- * @returns {Promise<any>}
- */
-export function init_rayon_thread_pool(num_threads) {
-    const ret = wasm.init_rayon_thread_pool(num_threads);
-    return ret;
-}
-
-/**
  * Check if this longitude has the "all latitudes" horizon condition.
  *
  * This is the true degenerate case where |sin(δ)| ≈ 0 AND |cos(H)| ≈ 0,
@@ -1135,23 +1096,6 @@ export function scout_cities_fast(cities_json, lines_json, category, sort_mode, 
 }
 
 /**
- * WASM binding: Fast parallel city scoring (desktop with parallel support)
- * @param {any} cities_json
- * @param {any} lines_json
- * @param {LifeCategory} category
- * @param {SortMode} sort_mode
- * @param {any} config_json
- * @returns {any}
- */
-export function scout_cities_fast_parallel(cities_json, lines_json, category, sort_mode, config_json) {
-    const ret = wasm.scout_cities_fast_parallel(cities_json, lines_json, category, sort_mode, config_json);
-    if (ret[2]) {
-        throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
-}
-
-/**
  * Scout multiple cities and rank them for a category
  * @param {any} cities_json
  * @param {any} lines_json
@@ -1162,25 +1106,6 @@ export function scout_cities_fast_parallel(cities_json, lines_json, category, so
  */
 export function scout_cities_for_category(cities_json, lines_json, category, sort_mode, config_json) {
     const ret = wasm.scout_cities_for_category(cities_json, lines_json, category, sort_mode, config_json);
-    if (ret[2]) {
-        throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
-}
-
-/**
- * Parallel version of scout_cities_for_category using Rayon.
- * Requires `parallel` feature and proper COOP/COEP headers.
- * Falls back to sequential if parallel feature is not enabled.
- * @param {any} cities_json
- * @param {any} lines_json
- * @param {LifeCategory} category
- * @param {SortMode} sort_mode
- * @param {any} config_json
- * @returns {any}
- */
-export function scout_cities_for_category_parallel(cities_json, lines_json, category, sort_mode, config_json) {
-    const ret = wasm.scout_cities_for_category_parallel(cities_json, lines_json, category, sort_mode, config_json);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -1296,51 +1221,6 @@ export function ut_to_tt(jd_utc, year, month) {
     return ret;
 }
 
-export class wbg_rayon_PoolBuilder {
-    static __wrap(ptr) {
-        ptr = ptr >>> 0;
-        const obj = Object.create(wbg_rayon_PoolBuilder.prototype);
-        obj.__wbg_ptr = ptr;
-        wbg_rayon_PoolBuilderFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        wbg_rayon_PoolBuilderFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_wbg_rayon_poolbuilder_free(ptr, 0);
-    }
-    /**
-     * @returns {number}
-     */
-    numThreads() {
-        const ret = wasm.wbg_rayon_poolbuilder_numThreads(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    build() {
-        wasm.wbg_rayon_poolbuilder_build(this.__wbg_ptr);
-    }
-    /**
-     * @returns {number}
-     */
-    receiver() {
-        const ret = wasm.wbg_rayon_poolbuilder_receiver(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-}
-if (Symbol.dispose) wbg_rayon_PoolBuilder.prototype[Symbol.dispose] = wbg_rayon_PoolBuilder.prototype.free;
-
-/**
- * @param {number} receiver
- */
-export function wbg_rayon_start_worker(receiver) {
-    wasm.wbg_rayon_start_worker(receiver);
-}
-
 const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
 async function __wbg_load(module, imports) {
@@ -1428,14 +1308,6 @@ function __wbg_get_imports(memory) {
         const ret = arg0 == arg1;
         return ret;
     };
-    imports.wbg.__wbg___wbindgen_memory_a342e963fbcabd68 = function() {
-        const ret = wasm.memory;
-        return ret;
-    };
-    imports.wbg.__wbg___wbindgen_module_967adef62ea6cbf8 = function() {
-        const ret = __wbg_init.__wbindgen_wasm_module;
-        return ret;
-    };
     imports.wbg.__wbg___wbindgen_number_get_9619185a74197f95 = function(arg0, arg1) {
         const obj = arg1;
         const ret = typeof(obj) === 'number' ? obj : undefined;
@@ -1512,16 +1384,6 @@ function __wbg_get_imports(memory) {
         const ret = result;
         return ret;
     };
-    imports.wbg.__wbg_instanceof_Window_b5cf7783caa68180 = function(arg0) {
-        let result;
-        try {
-            result = arg0 instanceof Window;
-        } catch (_) {
-            result = false;
-        }
-        const ret = result;
-        return ret;
-    };
     imports.wbg.__wbg_isArray_51fd9e6422c0a395 = function(arg0) {
         const ret = Array.isArray(arg0);
         return ret;
@@ -1558,10 +1420,6 @@ function __wbg_get_imports(memory) {
         const ret = new Error();
         return ret;
     };
-    imports.wbg.__wbg_new_no_args_cb138f77cf6151ee = function(arg0, arg1) {
-        const ret = new Function(getStringFromWasm0(arg0, arg1));
-        return ret;
-    };
     imports.wbg.__wbg_next_138a17bbf04e926c = function(arg0) {
         const ret = arg0.next;
         return ret;
@@ -1589,28 +1447,6 @@ function __wbg_get_imports(memory) {
         const len1 = WASM_VECTOR_LEN;
         getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
         getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
-    };
-    imports.wbg.__wbg_startWorkers_2ca11761e08ff5d5 = function(arg0, arg1, arg2) {
-        // Returns a Promise (async worker setup), which wasm-bindgen-rayon supports.
-        return __getRayonStartWorkers().then((startWorkers) =>
-            startWorkers(arg0, arg1, wbg_rayon_PoolBuilder.__wrap(arg2))
-        );
-    };
-    imports.wbg.__wbg_static_accessor_GLOBAL_769e6b65d6557335 = function() {
-        const ret = typeof global === 'undefined' ? null : global;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_static_accessor_GLOBAL_THIS_60cf02db4de8e1c1 = function() {
-        const ret = typeof globalThis === 'undefined' ? null : globalThis;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_static_accessor_SELF_08f5a74c69739274 = function() {
-        const ret = typeof self === 'undefined' ? null : self;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_static_accessor_WINDOW_a8924b26aa92d024 = function() {
-        const ret = typeof window === 'undefined' ? null : window;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
     };
     imports.wbg.__wbg_value_57b7b035e117f7ee = function(arg0) {
         const ret = arg0.value;

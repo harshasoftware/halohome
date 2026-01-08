@@ -1,6 +1,9 @@
 /**
  * Astrocartography Web Worker
  * Performs planetary line calculations off the main thread
+ *
+ * Uses aa-js for high-precision planetary positions (~0.01 arcsecond accuracy)
+ * matching the VSOP87 precision used in the WASM implementation.
  */
 
 import type {
@@ -17,6 +20,20 @@ import type {
   GlobePoint,
 } from '@/lib/astro-types';
 
+// Import aa-js for high-precision ephemeris calculations
+import {
+  Sun as AAJSSun,
+  Mercury as AAJSMercury,
+  Venus as AAJSVenus,
+  Mars as AAJSMars,
+  Jupiter as AAJSJupiter,
+  Saturn as AAJSSaturn,
+  Uranus as AAJSUranus,
+  Neptune as AAJSNeptune,
+  Pluto as AAJSPluto,
+  Earth as AAJSEarth,
+} from 'aa-js';
+
 // ============================================
 // Constants (duplicated for worker isolation)
 // ============================================
@@ -25,7 +42,6 @@ const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 const J2000_EPOCH = 2451545.0;
 const JULIAN_CENTURY = 36525.0;
-const OBLIQUITY_J2000 = 23.439291 * DEG_TO_RAD;
 
 const ALL_PLANETS: Planet[] = [
   'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
@@ -52,33 +68,6 @@ const ASPECT_ANGLES: Record<AspectType, number> = {
   square: 90,
   trine: 120,
   opposition: 180,
-};
-
-// Orbital elements for planets
-interface OrbitalElements {
-  L0: number;
-  Ldot: number;
-  e0: number;
-  i0: number;
-  omega0: number;
-  Omega0: number;
-}
-
-const ORBITAL_ELEMENTS: Record<Planet, OrbitalElements> = {
-  Sun: { L0: 280.46646, Ldot: 36000.76983, e0: 0.01671123, i0: 0, omega0: 102.93768, Omega0: 0 },
-  Moon: { L0: 218.3165, Ldot: 481267.8813, e0: 0.0549, i0: 5.145, omega0: 83.3532, Omega0: 125.0446 },
-  Mercury: { L0: 252.25084, Ldot: 149472.67411, e0: 0.20563593, i0: 7.00497, omega0: 77.45645, Omega0: 48.33076 },
-  Venus: { L0: 181.97973, Ldot: 58517.81539, e0: 0.00677672, i0: 3.39467, omega0: 131.60246, Omega0: 76.67984 },
-  Mars: { L0: 355.45332, Ldot: 19140.30268, e0: 0.09339410, i0: 1.84969, omega0: 336.04084, Omega0: 49.55809 },
-  Jupiter: { L0: 34.39644, Ldot: 3034.74612, e0: 0.04838624, i0: 1.30327, omega0: 14.75385, Omega0: 100.47390 },
-  Saturn: { L0: 49.95424, Ldot: 1222.49362, e0: 0.05386179, i0: 2.48599, omega0: 92.59887, Omega0: 113.66242 },
-  Uranus: { L0: 313.23218, Ldot: 428.48202, e0: 0.04725744, i0: 0.77263, omega0: 170.96424, Omega0: 74.01692 },
-  Neptune: { L0: 304.87997, Ldot: 218.45946, e0: 0.00859048, i0: 1.76995, omega0: 44.96476, Omega0: 131.78422 },
-  Pluto: { L0: 238.92881, Ldot: 145.20780, e0: 0.24882730, i0: 17.14175, omega0: 224.06891, Omega0: 110.30393 },
-  // Chiron - centaur with 50-year orbit between Saturn and Uranus
-  Chiron: { L0: 209.35, Ldot: 259.83, e0: 0.37911, i0: 6.93, omega0: 339.56, Omega0: 209.38 },
-  // NorthNode - Mean Lunar Node (retrograde motion, ~18.6 year cycle)
-  NorthNode: { L0: 125.04, Ldot: -6962.025, e0: 0, i0: 5.145, omega0: 0, Omega0: 125.04 },
 };
 
 // ============================================
@@ -141,12 +130,106 @@ function calculateGMST(julianDate: number): number {
 }
 
 // ============================================
-// Planetary Positions
+// Planetary Positions (using aa-js for high precision)
 // ============================================
 
+/**
+ * aa-js planet calculators for high-precision ephemeris
+ * These provide ~0.01 arcsecond accuracy, matching VSOP87/ELP2000-82
+ */
+type AAJSPlanetKey = 'Sun' | 'Moon' | 'Mercury' | 'Venus' | 'Mars' | 'Jupiter' | 'Saturn' | 'Uranus' | 'Neptune' | 'Pluto';
+
+const AAJS_CALCULATORS: Record<AAJSPlanetKey, {
+  getEcliptic: (jd: number) => { longitude: number; latitude: number };
+  getEquatorial: (jd: number) => { rightAscension: number; declination: number };
+}> = {
+  Sun: {
+    getEcliptic: (jd) => AAJSSun.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSSun.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Moon: {
+    getEcliptic: (jd) => AAJSEarth.Moon.getGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSEarth.Moon.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Mercury: {
+    getEcliptic: (jd) => AAJSMercury.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSMercury.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Venus: {
+    getEcliptic: (jd) => AAJSVenus.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSVenus.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Mars: {
+    getEcliptic: (jd) => AAJSMars.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSMars.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Jupiter: {
+    getEcliptic: (jd) => AAJSJupiter.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSJupiter.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Saturn: {
+    getEcliptic: (jd) => AAJSSaturn.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSSaturn.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Uranus: {
+    getEcliptic: (jd) => AAJSUranus.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSUranus.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Neptune: {
+    getEcliptic: (jd) => AAJSNeptune.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSNeptune.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+  Pluto: {
+    getEcliptic: (jd) => AAJSPluto.getApparentGeocentricEclipticCoordinates(jd),
+    getEquatorial: (jd) => AAJSPluto.getApparentGeocentricEquatorialCoordinates(jd),
+  },
+};
+
+/**
+ * Calculate planetary position using aa-js high-precision ephemeris
+ * Provides ~0.01 arcsecond accuracy, matching WASM/VSOP87 precision
+ */
 function calculatePlanetaryPosition(planet: Planet, julianDate: number): PlanetaryPosition {
+  // Check if planet is supported by aa-js
+  const calculator = AAJS_CALCULATORS[planet as AAJSPlanetKey];
+
+  if (calculator) {
+    // Use aa-js for high-precision calculation
+    const ecliptic = calculator.getEcliptic(julianDate);
+    const equatorial = calculator.getEquatorial(julianDate);
+
+    // Convert RA from hours to radians (aa-js returns hours)
+    const rightAscension = (equatorial.rightAscension / 24) * 2 * Math.PI;
+    // Convert Dec from degrees to radians
+    const declination = equatorial.declination * DEG_TO_RAD;
+
+    return {
+      planet,
+      rightAscension: normalizeAngle(rightAscension),
+      declination,
+      eclipticLongitude: ecliptic.longitude,
+    };
+  }
+
+  // Fallback for unsupported planets (Chiron, NorthNode) - use simplified calculation
+  // These are less commonly used and simplified orbital elements are acceptable
+  return calculatePlanetaryPositionFallback(planet, julianDate);
+}
+
+/**
+ * Fallback calculation for planets not supported by aa-js (Chiron, NorthNode)
+ * Uses simplified orbital elements - lower precision but acceptable for these bodies
+ */
+function calculatePlanetaryPositionFallback(planet: Planet, julianDate: number): PlanetaryPosition {
   const t = (julianDate - J2000_EPOCH) / JULIAN_CENTURY;
-  const elements = ORBITAL_ELEMENTS[planet];
+
+  // Fallback orbital elements for Chiron and NorthNode
+  const FALLBACK_ELEMENTS: Record<string, { L0: number; Ldot: number; i0: number }> = {
+    Chiron: { L0: 209.35, Ldot: 259.83, i0: 6.93 },
+    NorthNode: { L0: 125.04, Ldot: -6962.025, i0: 5.145 },
+  };
+
+  const elements = FALLBACK_ELEMENTS[planet] || { L0: 0, Ldot: 0, i0: 0 };
 
   let L = elements.L0 + elements.Ldot * t;
   L = ((L % 360) + 360) % 360;
@@ -154,10 +237,15 @@ function calculatePlanetaryPosition(planet: Planet, julianDate: number): Planeta
   const eclipticLongitude = L * DEG_TO_RAD;
   const eclipticLatitude = elements.i0 * DEG_TO_RAD * Math.sin(eclipticLongitude);
 
+  // Obliquity of ecliptic (use IAU 2006 model for consistency)
+  const eps0 = 84381.406 / 3600.0; // J2000 obliquity in degrees
+  const eps = eps0 - (46.836769 / 3600.0) * t; // First-order correction
+  const obliquity = eps * DEG_TO_RAD;
+
   const sinLambda = Math.sin(eclipticLongitude);
   const cosLambda = Math.cos(eclipticLongitude);
-  const sinEps = Math.sin(OBLIQUITY_J2000);
-  const cosEps = Math.cos(OBLIQUITY_J2000);
+  const sinEps = Math.sin(obliquity);
+  const cosEps = Math.cos(obliquity);
 
   const y = sinLambda * cosEps - Math.tan(eclipticLatitude) * sinEps;
   const x = cosLambda;

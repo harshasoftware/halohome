@@ -1,8 +1,1 @@
-# Ignore generated files except what we need to commit
-*.wasm
-*.d.ts
-package.json
-
-# Keep the JS entry point and snippets for parallel WASM
-!astro_core.js
-!snippets/
+*
