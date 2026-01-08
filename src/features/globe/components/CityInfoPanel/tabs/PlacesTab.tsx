@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Star, MapPin, Clock, ChevronRight } from 'lucide-react';
 import { PlaceOfInterest, PlaceCategory, PLACE_CATEGORIES } from '@/types/cityInfo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useVirtualList } from '@/hooks/useVirtualList';
+import { VirtualListContainer } from '@/components/ui/virtual-list-container';
+import {
+  PLACE_CARD_ITEM_HEIGHT,
+  PLACES_LIST_VIRTUALIZATION_CONFIG,
+  PLACES_LIST_PADDING,
+} from './places-tab-heights';
 
 interface PlacesTabProps {
   places: PlaceOfInterest[];
@@ -22,6 +29,22 @@ export const PlacesTab: React.FC<PlacesTabProps> = ({
     'tourist_attraction',
     'museum',
   ]);
+
+  // Scroll container ref for virtualization
+  const placesScrollRef = useRef<HTMLDivElement>(null);
+
+  // Virtual list setup for places
+  const {
+    virtualItems: placesVirtualItems,
+    totalHeight: placesTotalHeight,
+  } = useVirtualList({
+    items: places,
+    itemHeight: PLACE_CARD_ITEM_HEIGHT,
+    containerRef: placesScrollRef,
+    ...PLACES_LIST_VIRTUALIZATION_CONFIG,
+    // Reset scroll when category changes cause places list to update
+    resetScrollOnItemsChange: true,
+  });
 
   const handleCategoryToggle = (category: PlaceCategory) => {
     let newCategories: PlaceCategory[];
@@ -69,7 +92,10 @@ export const PlacesTab: React.FC<PlacesTabProps> = ({
       </div>
 
       {/* Places List */}
-      <div className="">
+      <div
+        ref={placesScrollRef}
+        className="flex-1 overflow-y-auto scrollbar-hide"
+      >
         {loading ? (
           <div className="p-4 space-y-3">
             {[1, 2, 3, 4].map((i) => (
@@ -101,10 +127,29 @@ export const PlacesTab: React.FC<PlacesTabProps> = ({
             <p className="text-xs mt-1">Try selecting different categories</p>
           </div>
         ) : (
-          <div className="p-4 space-y-3">
-            {places.map((place) => (
-              <PlaceCard key={place.placeId} place={place} formatDistance={formatDistance} getPriceLevel={getPriceLevel} />
-            ))}
+          <div className="p-4">
+            <VirtualListContainer
+              totalHeight={placesTotalHeight + PLACES_LIST_PADDING}
+            >
+              {placesVirtualItems.map(({ item, index, style }) => (
+                <div
+                  key={item.placeId}
+                  style={{
+                    ...style,
+                    // Adjust for container padding - first item has no top padding
+                    top: (style.top as number),
+                    // Exclude gap from last item height for rendering
+                    paddingBottom: index < places.length - 1 ? 12 : 0,
+                  }}
+                >
+                  <PlaceCard
+                    place={item}
+                    formatDistance={formatDistance}
+                    getPriceLevel={getPriceLevel}
+                  />
+                </div>
+              ))}
+            </VirtualListContainer>
           </div>
         )}
       </div>

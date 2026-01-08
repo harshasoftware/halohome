@@ -1,0 +1,9 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "performance_optimizations",
+  "ideaId": "perf-004",
+  "rationale": "When a user clicks 'Find Cities' in Scout mode, potentially dozens of cities are rendered. Each city card has multiple elements (icon, text, badges). Without virtualization, scrolling through 50+ cities creates layout thrashing and jank.",
+  "category": "performance",
+  "performanceCategory": "rendering",
+  "impact": "medium"
+}

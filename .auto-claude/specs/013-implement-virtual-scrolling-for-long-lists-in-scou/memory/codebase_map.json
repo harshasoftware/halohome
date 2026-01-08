@@ -1,0 +1,30 @@
+{
+  "discovered_files": {
+    "src/lib/patterns/rendering.tsx": {
+      "description": "Existing VirtualList component with variable height support, overscan, and scroll restoration. Located in lib/patterns along with GUIDELINES.md that states 'Virtualize lists with 50+ items'.",
+      "category": "patterns",
+      "discovered_at": "2026-01-08T10:03:26.299366+00:00"
+    },
+    "src/features/globe/components/ScoutPanel.tsx": {
+      "description": "Category Top Locations list (lines ~1033-1073) now uses virtual scrolling with useVirtualList hook. Uses CategoryVirtualItem discriminated union type for mixed card types, getCategoryVirtualItemHeight function for variable heights, and VirtualListContainer for rendering. Ref: categoryTopScrollRef.",
+      "category": "virtualization",
+      "discovered_at": "2026-01-08T10:20:32.767301+00:00"
+    },
+    "src/hooks/useVirtualList.ts": {
+      "description": "New useVirtualList hook created for virtualizing long lists. Supports fixed and variable heights, overscan, resize handling via ResizeObserver, scroll restoration, and binary search for efficient start index calculation. Returns virtualItems array with positioning info, totalHeight, startIndex, endIndex, and scrollToIndex/scrollToOffset functions.",
+      "category": "hook",
+      "discovered_at": "2026-01-08T10:05:44.403585+00:00"
+    },
+    "src/components/ui/virtual-list-container.tsx": {
+      "description": "VirtualListContainer and VirtualListItem components for use with useVirtualList hook. Provides proper container structure with totalHeight spacer and absolute positioning for virtualized list items. Accepts className and innerClassName props for styling flexibility.",
+      "category": "component",
+      "discovered_at": "2026-01-08T10:08:56.157375+00:00"
+    },
+    "src/features/globe/components/scout-panel-heights.ts": {
+      "description": "Card height constants for ScoutPanel virtualization. Contains: BLURRED_RANKED_CARD_HEIGHT (130px), BLURRED_OVERALL_CARD_HEIGHT (130px), RANKED_CARD_WITH_EXPAND_HEIGHT (170px), OVERALL_CARD_WITH_EXPAND_HEIGHT (176px), SIGNUP_PROMPT_CARD_HEIGHT (200px). Also includes SCOUT_CARD_GAP (12px), pre-calculated *_ITEM_HEIGHT constants, and getScoutCardHeight/getScoutCardItemHeight helper functions.",
+      "category": "constants",
+      "discovered_at": "2026-01-08T10:12:33.886930+00:00"
+    }
+  },
+  "last_updated": "2026-01-08T10:20:32.767310+00:00"
+}

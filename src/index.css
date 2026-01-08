@@ -214,6 +214,69 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-400 dark:bg-slate-500;
   }
+
+  /* Hide scrollbar utility for cleaner mobile UI */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+}
+
+/* Mobile Touch Scroll Optimizations for Virtualized Lists */
+@layer utilities {
+  /*
+   * Optimized touch scrolling for virtualized lists in mobile bottom sheets.
+   * Ensures smooth momentum scrolling, proper overscroll behavior,
+   * and jank-free performance on iOS Safari and Android Chrome.
+   *
+   * Usage: Add to scroll containers within MobileScoutSheet and MobileCityInfoSheet
+   */
+  .touch-scroll-optimized {
+    /* Enable smooth momentum scrolling on iOS Safari */
+    -webkit-overflow-scrolling: touch;
+    /* Allow vertical panning for scroll containers */
+    touch-action: pan-y;
+    /* Contain overscroll to prevent page bounce on Android */
+    overscroll-behavior-y: contain;
+    /* GPU acceleration for smooth scrolling */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    /* Prevent accidental text selection during scroll */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /*
+   * For virtualized list items - hint browser for GPU compositing.
+   * Apply to items within VirtualListContainer for smoother scrolling.
+   */
+  .virtual-item {
+    /* Hint browser this element transforms frequently */
+    will-change: transform;
+    /* Create compositing layer for efficient rendering */
+    transform: translateZ(0);
+    /* Contain layout/paint to item boundary - reduces repaints */
+    contain: layout paint;
+  }
+}
+
+/* Mobile scroll container optimizations - applied globally to overflow-y-auto */
+@media (max-width: 768px) {
+  /* Apply momentum scrolling to all vertical scroll containers on mobile */
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Optimize touch interaction on virtualized lists */
+  [data-virtual-list="true"] {
+    contain: content;
+    will-change: scroll-position;
+  }
 }
 
 /* Safe area insets for PWA on notched devices */

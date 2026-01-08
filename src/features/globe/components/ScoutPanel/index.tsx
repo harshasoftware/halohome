@@ -37,6 +37,20 @@ import type { PlanetaryLine, AspectLine } from '@/lib/astro-types';
 import { useScoutStore } from '@/stores/scoutStore';
 import { useIsRealUser } from '@/stores/authStore';
 import { useAISubscription } from '../../ai/useAISubscription';
+import { useVirtualList } from '@/hooks/useVirtualList';
+import { VirtualListContainer } from '@/components/ui/virtual-list-container';
+import {
+  SIGNUP_PROMPT_ITEM_HEIGHT,
+  BLURRED_OVERALL_ITEM_HEIGHT,
+  BLURRED_RANKED_ITEM_HEIGHT,
+  OVERALL_CARD_ITEM_HEIGHT,
+  RANKED_CARD_ITEM_HEIGHT,
+  SCOUT_LIST_VIRTUALIZATION_CONFIG,
+  COUNTRY_SECTION_VIRTUALIZATION_CONFIG,
+  getOverallCountrySectionExpandedHeight,
+  getCountrySectionExpandedHeight,
+  COUNTRY_SECTION_HEADER_HEIGHT,
+} from '../scout-panel-heights';
 import { getCountryName, getCountryFlag, CATEGORY_ICONS, CATEGORY_COLORS } from './constants';
 import { LocationCard, RankedLocationCard, OverallLocationCard, CountrySection, OverallCountrySection, BlurredOverallCard, BlurredRankedCard, SignUpPromptCard, CategoryUpgradeModal } from './components';
 
@@ -127,6 +141,12 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
   // Mobile description toast - shows briefly when tab is tapped
   const [mobileToast, setMobileToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll container refs for virtual scrolling
+  const overallTopScrollRef = useRef<HTMLDivElement>(null);
+  const overallCountriesScrollRef = useRef<HTMLDivElement>(null);
+  const categoryTopScrollRef = useRef<HTMLDivElement>(null);
+  const categoryCountriesScrollRef = useRef<HTMLDivElement>(null);
 
   const showMobileToast = useCallback((description: string) => {
     // Clear any existing timeout
@@ -258,6 +278,236 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
     }
     return groups;
   }, [isOverallView, viewMode, filteredOverallLocations, selectedCountry]);
+
+  // ============================================================================
+  // Virtual List Setup for Performance
+  // ============================================================================
+
+  // Type definitions for virtualized items
+  type OverallVirtualItem =
+    | { type: 'signupPrompt'; remainingCount: number }
+    | { type: 'blurredOverall'; fakeCity: { name: string; country: string }; rank: number }
+    | { type: 'overallLocation'; location: OverallScoutLocation; rank: number };
+
+  type CategoryVirtualItem =
+    | { type: 'signupPrompt'; remainingCount: number; category: ScoutCategory }
+    | { type: 'blurredRanked'; fakeCity: { name: string; country: string }; rank: number }
+    | { type: 'rankedLocation'; location: ScoutLocation; rank: number; category: ScoutCategory };
+
+  type OverallCountryVirtualItem = {
+    country: OverallCountryGroup;
+    isExpanded: boolean;
+  };
+
+  type CategoryCountryVirtualItem = {
+    country: RankedCountryGroup;
+    isExpanded: boolean;
+  };
+
+  // Height calculator functions for virtual list
+  const getOverallVirtualItemHeight = useCallback((item: OverallVirtualItem): number => {
+    switch (item.type) {
+      case 'signupPrompt':
+        return SIGNUP_PROMPT_ITEM_HEIGHT;
+      case 'blurredOverall':
+        return BLURRED_OVERALL_ITEM_HEIGHT;
+      case 'overallLocation':
+        return OVERALL_CARD_ITEM_HEIGHT;
+    }
+  }, []);
+
+  const getCategoryVirtualItemHeight = useCallback((item: CategoryVirtualItem): number => {
+    switch (item.type) {
+      case 'signupPrompt':
+        return SIGNUP_PROMPT_ITEM_HEIGHT;
+      case 'blurredRanked':
+        return BLURRED_RANKED_ITEM_HEIGHT;
+      case 'rankedLocation':
+        return RANKED_CARD_ITEM_HEIGHT;
+    }
+  }, []);
+
+  const getOverallCountryVirtualItemHeight = useCallback((item: OverallCountryVirtualItem): number => {
+    if (!item.isExpanded) {
+      return COUNTRY_SECTION_HEADER_HEIGHT;
+    }
+    return getOverallCountrySectionExpandedHeight(item.country.locations.length);
+  }, []);
+
+  const getCategoryCountryVirtualItemHeight = useCallback((item: CategoryCountryVirtualItem): number => {
+    if (!item.isExpanded) {
+      return COUNTRY_SECTION_HEADER_HEIGHT;
+    }
+    return getCountrySectionExpandedHeight(item.country.locations.length);
+  }, []);
+
+  // Build combined list of items for virtualized Overall Top Locations
+  const overallVirtualItems = useMemo((): OverallVirtualItem[] => {
+    if (!isOverallView || viewMode !== 'top' || filteredOverallLocations.length === 0) {
+      return [];
+    }
+
+    const items: OverallVirtualItem[] = [];
+    const blurredCount = Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length);
+
+    // For non-authenticated users: signup prompt + blurred cards + real locations
+    if (!isAuthenticated) {
+      // 1. Signup prompt
+      items.push({ type: 'signupPrompt', remainingCount: blurredCount });
+
+      // 2. Blurred fake cards (premium content)
+      for (let i = 0; i < blurredCount; i++) {
+        items.push({
+          type: 'blurredOverall',
+          fakeCity: FAKE_CITIES[i],
+          rank: i + 1,
+        });
+      }
+
+      // 3. Real locations after the blurred ones
+      const realLocations = filteredOverallLocations.slice(FREE_LOCATION_LIMIT);
+      for (let i = 0; i < realLocations.length; i++) {
+        items.push({
+          type: 'overallLocation',
+          location: realLocations[i],
+          rank: FREE_LOCATION_LIMIT + i + 1,
+        });
+      }
+    } else {
+      // Authenticated: show all locations
+      for (let i = 0; i < filteredOverallLocations.length; i++) {
+        items.push({
+          type: 'overallLocation',
+          location: filteredOverallLocations[i],
+          rank: i + 1,
+        });
+      }
+    }
+
+    return items;
+  }, [isOverallView, viewMode, filteredOverallLocations, isAuthenticated]);
+
+  // Virtual list for Overall Top Locations
+  const {
+    virtualItems: overallVirtualListItems,
+    totalHeight: overallTotalHeight,
+  } = useVirtualList({
+    items: overallVirtualItems,
+    itemHeight: (index, item) => getOverallVirtualItemHeight(item),
+    containerRef: overallTopScrollRef,
+    overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    resetScrollOnItemsChange: true,
+  });
+
+  // Build combined list of items for virtualized Category Top Locations
+  const categoryVirtualItems = useMemo((): CategoryVirtualItem[] => {
+    if (isOverallView || viewMode !== 'top' || topLocations.length === 0) {
+      return [];
+    }
+
+    const items: CategoryVirtualItem[] = [];
+    const blurredCount = Math.min(FREE_LOCATION_LIMIT, topLocations.length);
+
+    // For non-authenticated users: signup prompt + blurred cards + real locations
+    if (!isAuthenticated) {
+      // 1. Signup prompt
+      items.push({ type: 'signupPrompt', remainingCount: blurredCount, category: selectedCategory });
+
+      // 2. Blurred fake cards (premium content)
+      for (let i = 0; i < blurredCount; i++) {
+        items.push({
+          type: 'blurredRanked',
+          fakeCity: FAKE_CITIES[i],
+          rank: i + 1,
+        });
+      }
+
+      // 3. Real locations after the blurred ones
+      const realLocations = topLocations.slice(FREE_LOCATION_LIMIT);
+      for (let i = 0; i < realLocations.length; i++) {
+        items.push({
+          type: 'rankedLocation',
+          location: realLocations[i],
+          rank: FREE_LOCATION_LIMIT + i + 1,
+          category: selectedCategory,
+        });
+      }
+    } else {
+      // Authenticated: show all locations
+      for (let i = 0; i < topLocations.length; i++) {
+        items.push({
+          type: 'rankedLocation',
+          location: topLocations[i],
+          rank: i + 1,
+          category: selectedCategory,
+        });
+      }
+    }
+
+    return items;
+  }, [isOverallView, viewMode, topLocations, isAuthenticated, selectedCategory]);
+
+  // Virtual list for Category Top Locations
+  const {
+    virtualItems: categoryVirtualListItems,
+    totalHeight: categoryTotalHeight,
+  } = useVirtualList({
+    items: categoryVirtualItems,
+    itemHeight: (index, item) => getCategoryVirtualItemHeight(item),
+    containerRef: categoryTopScrollRef,
+    overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    resetScrollOnItemsChange: true,
+  });
+
+  // Build virtual items for Overall Countries view
+  const overallCountryVirtualItems = useMemo((): OverallCountryVirtualItem[] => {
+    if (!isOverallView || viewMode !== 'countries' || overallCountryGroups.length === 0) {
+      return [];
+    }
+    return overallCountryGroups.map(country => ({
+      country,
+      isExpanded: expandedCountries.has(country.country),
+    }));
+  }, [isOverallView, viewMode, overallCountryGroups, expandedCountries]);
+
+  // Virtual list for Overall Countries view
+  const {
+    virtualItems: overallCountryVirtualListItems,
+    totalHeight: overallCountryTotalHeight,
+  } = useVirtualList({
+    items: overallCountryVirtualItems,
+    itemHeight: (index, item) => getOverallCountryVirtualItemHeight(item),
+    containerRef: overallCountriesScrollRef,
+    overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    resetScrollOnItemsChange: true,
+  });
+
+  // Build virtual items for Category Countries view
+  const categoryCountryVirtualItems = useMemo((): CategoryCountryVirtualItem[] => {
+    if (isOverallView || viewMode !== 'countries' || displayCountries.length === 0) {
+      return [];
+    }
+    return displayCountries.map(country => ({
+      country,
+      isExpanded: expandedCountries.has(country.country),
+    }));
+  }, [isOverallView, viewMode, displayCountries, expandedCountries]);
+
+  // Virtual list for Category Countries view
+  const {
+    virtualItems: categoryCountryVirtualListItems,
+    totalHeight: categoryCountryTotalHeight,
+  } = useVirtualList({
+    items: categoryCountryVirtualItems,
+    itemHeight: (index, item) => getCategoryCountryVirtualItemHeight(item),
+    containerRef: categoryCountriesScrollRef,
+    overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+    resetScrollOnItemsChange: true,
+  });
 
   // Toggle country expansion
   const toggleCountry = useCallback((country: string) => {
@@ -633,37 +883,31 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-                <div className="p-4 space-y-3">
-                  {/* For non-authenticated: show signup prompt first, then blurred top 5, then real locations */}
-                  {!isAuthenticated && filteredOverallLocations.length > 0 && (
-                    <>
-                      {/* Signup prompt at top */}
-                      <SignUpPromptCard
-                        remainingCount={Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length)}
-                        category="overall"
-                        isTopLocations
-                      />
-                      {/* Blurred fake top 5 (premium content) */}
-                      {FAKE_CITIES.slice(0, Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length)).map((fakeCity, idx) => (
-                        <BlurredOverallCard
-                          key={`blurred-${idx}`}
-                          fakeCity={fakeCity}
-                          rank={idx + 1}
+              <div ref={overallTopScrollRef} className="absolute inset-0 overflow-y-auto scrollbar-hide">
+                <VirtualListContainer totalHeight={overallTotalHeight} className="p-4">
+                  {overallVirtualListItems.map(({ item, index, style }) => (
+                    <div key={index} style={style} className="pr-4">
+                      {item.type === 'signupPrompt' ? (
+                        <SignUpPromptCard
+                          remainingCount={item.remainingCount}
+                          category="overall"
+                          isTopLocations
                         />
-                      ))}
-                    </>
-                  )}
-                  {/* Show all locations for authenticated, or locations after top 5 for non-authenticated */}
-                  {(isAuthenticated ? filteredOverallLocations : filteredOverallLocations.slice(FREE_LOCATION_LIMIT)).map((location, idx) => (
-                    <OverallLocationCard
-                      key={`${location.city.name}-${location.city.country}-${idx}`}
-                      location={location}
-                      rank={isAuthenticated ? idx + 1 : FREE_LOCATION_LIMIT + idx + 1}
-                      onClick={() => handleOverallCityClick(location)}
-                    />
+                      ) : item.type === 'blurredOverall' ? (
+                        <BlurredOverallCard
+                          fakeCity={item.fakeCity}
+                          rank={item.rank}
+                        />
+                      ) : (
+                        <OverallLocationCard
+                          location={item.location}
+                          rank={item.rank}
+                          onClick={() => handleOverallCityClick(item.location)}
+                        />
+                      )}
+                    </div>
                   ))}
-                </div>
+                </VirtualListContainer>
               </div>
             )
           ) : (
@@ -681,19 +925,20 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-                <div>
-                  {overallCountryGroups.map(country => (
-                    <OverallCountrySection
-                      key={country.country}
-                      country={country}
-                      isExpanded={expandedCountries.has(country.country)}
-                      onToggle={() => toggleCountry(country.country)}
-                      onCityClick={handleOverallCityClick}
-                      onShowMarkers={onShowCountryMarkers}
-                    />
+              <div ref={overallCountriesScrollRef} className="absolute inset-0 overflow-y-auto scrollbar-hide">
+                <VirtualListContainer totalHeight={overallCountryTotalHeight}>
+                  {overallCountryVirtualListItems.map(({ item, index, style }) => (
+                    <div key={item.country.country} style={style}>
+                      <OverallCountrySection
+                        country={item.country}
+                        isExpanded={item.isExpanded}
+                        onToggle={() => toggleCountry(item.country.country)}
+                        onCityClick={handleOverallCityClick}
+                        onShowMarkers={onShowCountryMarkers}
+                      />
+                    </div>
                   ))}
-                </div>
+                </VirtualListContainer>
               </div>
             )
           )
@@ -712,38 +957,32 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
               </p>
             </div>
           ) : (
-            <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-              <div className="p-4 space-y-3">
-                {/* For non-authenticated: show signup prompt first, then blurred top 5, then real locations */}
-                {!isAuthenticated && topLocations.length > 0 && (
-                  <>
-                    {/* Signup prompt at top */}
-                    <SignUpPromptCard
-                      remainingCount={Math.min(FREE_LOCATION_LIMIT, topLocations.length)}
-                      category={selectedCategory}
-                      isTopLocations
-                    />
-                    {/* Blurred fake top 5 (premium content) */}
-                    {FAKE_CITIES.slice(0, Math.min(FREE_LOCATION_LIMIT, topLocations.length)).map((fakeCity, idx) => (
-                      <BlurredRankedCard
-                        key={`blurred-${idx}`}
-                        fakeCity={fakeCity}
-                        rank={idx + 1}
+            <div ref={categoryTopScrollRef} className="absolute inset-0 overflow-y-auto scrollbar-hide">
+              <VirtualListContainer totalHeight={categoryTotalHeight} className="p-4">
+                {categoryVirtualListItems.map(({ item, index, style }) => (
+                  <div key={index} style={style} className="pr-4">
+                    {item.type === 'signupPrompt' ? (
+                      <SignUpPromptCard
+                        remainingCount={item.remainingCount}
+                        category={item.category}
+                        isTopLocations
                       />
-                    ))}
-                  </>
-                )}
-                {/* Show all locations for authenticated, or locations after top 5 for non-authenticated */}
-                {(isAuthenticated ? topLocations : topLocations.slice(FREE_LOCATION_LIMIT)).map((location, idx) => (
-                  <RankedLocationCard
-                    key={`${location.city.name}-${idx}`}
-                    location={location}
-                    rank={isAuthenticated ? idx + 1 : FREE_LOCATION_LIMIT + idx + 1}
-                    category={selectedCategory}
-                    onClick={() => handleCityClick(location)}
-                  />
+                    ) : item.type === 'blurredRanked' ? (
+                      <BlurredRankedCard
+                        fakeCity={item.fakeCity}
+                        rank={item.rank}
+                      />
+                    ) : (
+                      <RankedLocationCard
+                        location={item.location}
+                        rank={item.rank}
+                        category={item.category}
+                        onClick={() => handleCityClick(item.location)}
+                      />
+                    )}
+                  </div>
                 ))}
-              </div>
+              </VirtualListContainer>
             </div>
           )
         ) : (
@@ -761,20 +1000,21 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
               </p>
             </div>
           ) : (
-            <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-              <div>
-                {displayCountries.map(country => (
-                  <CountrySection
-                    key={country.country}
-                    country={country}
-                    category={selectedCategory}
-                    isExpanded={expandedCountries.has(country.country)}
-                    onToggle={() => toggleCountry(country.country)}
-                    onCityClick={handleCityClick}
-                    onShowMarkers={onShowCountryMarkers}
-                  />
+            <div ref={categoryCountriesScrollRef} className="absolute inset-0 overflow-y-auto scrollbar-hide">
+              <VirtualListContainer totalHeight={categoryCountryTotalHeight}>
+                {categoryCountryVirtualListItems.map(({ item, index, style }) => (
+                  <div key={item.country.country} style={style}>
+                    <CountrySection
+                      country={item.country}
+                      category={selectedCategory}
+                      isExpanded={item.isExpanded}
+                      onToggle={() => toggleCountry(item.country.country)}
+                      onCityClick={handleCityClick}
+                      onShowMarkers={onShowCountryMarkers}
+                    />
+                  </div>
                 ))}
-              </div>
+              </VirtualListContainer>
             </div>
           )
         )}
