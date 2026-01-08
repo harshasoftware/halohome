@@ -37,6 +37,15 @@ import { useAuthActions } from '@/hooks/useAuthSync';
 import { useGoogleOneTap } from '@/hooks/useGoogleOneTap';
 import { useAISubscription } from '../ai/useAISubscription';
 import { supabase } from '@/integrations/supabase/client';
+import { useVirtualList } from '@/hooks/useVirtualList';
+import { VirtualListContainer } from '@/components/ui/virtual-list-container';
+import {
+  SIGNUP_PROMPT_ITEM_HEIGHT,
+  BLURRED_OVERALL_ITEM_HEIGHT,
+  OVERALL_CARD_ITEM_HEIGHT,
+  SCOUT_LIST_PADDING,
+  SCOUT_LIST_VIRTUALIZATION_CONFIG,
+} from './scout-panel-heights';
 
 // Lucide icon mapping for categories
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -219,6 +228,33 @@ const FAKE_CITIES = [
   { name: 'Starfall Harbor', country: 'Luminara' },
 ];
 
+// ============================================================================
+// Virtual List Item Types for Overall Top Locations
+// ============================================================================
+
+/**
+ * Discriminated union for items in the virtualized Overall Top Locations list.
+ * Each type has a different height for accurate virtualization.
+ */
+type OverallVirtualItem =
+  | { type: 'signupPrompt'; remainingCount: number }
+  | { type: 'blurredOverall'; fakeCity: { name: string; country: string }; rank: number }
+  | { type: 'overallLocation'; location: OverallScoutLocation; rank: number };
+
+/**
+ * Get the height of an Overall virtual item (including gap spacing).
+ */
+function getOverallVirtualItemHeight(item: OverallVirtualItem): number {
+  switch (item.type) {
+    case 'signupPrompt':
+      return SIGNUP_PROMPT_ITEM_HEIGHT;
+    case 'blurredOverall':
+      return BLURRED_OVERALL_ITEM_HEIGHT;
+    case 'overallLocation':
+      return OVERALL_CARD_ITEM_HEIGHT;
+  }
+}
+
 export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   planetaryLines,
   aspectLines,
@@ -246,6 +282,9 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   // Mobile description toast - shows briefly when tab is tapped
   const [mobileToast, setMobileToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll container refs for virtualized lists
+  const overallTopScrollRef = useRef<HTMLDivElement>(null);
 
   const showMobileToast = useCallback((description: string) => {
     // Clear any existing timeout
@@ -359,6 +398,64 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     // Apply limit (top 5% of total cities, min 200)
     return locations.slice(0, limit);
   }, [isOverallView, overallLocations, selectedCountry, viewFilter]);
+
+  // Build combined list of items for virtualized Overall Top Locations
+  const overallVirtualItems = useMemo((): OverallVirtualItem[] => {
+    if (!isOverallView || viewMode !== 'top' || filteredOverallLocations.length === 0) {
+      return [];
+    }
+
+    const items: OverallVirtualItem[] = [];
+    const blurredCount = Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length);
+
+    // For non-authenticated users: signup prompt + blurred cards + real locations
+    if (!isAuthenticated) {
+      // 1. Signup prompt
+      items.push({ type: 'signupPrompt', remainingCount: blurredCount });
+
+      // 2. Blurred fake cards (premium content)
+      for (let i = 0; i < blurredCount; i++) {
+        items.push({
+          type: 'blurredOverall',
+          fakeCity: FAKE_CITIES[i],
+          rank: i + 1,
+        });
+      }
+
+      // 3. Real locations after the blurred ones
+      const realLocations = filteredOverallLocations.slice(FREE_LOCATION_LIMIT);
+      for (let i = 0; i < realLocations.length; i++) {
+        items.push({
+          type: 'overallLocation',
+          location: realLocations[i],
+          rank: FREE_LOCATION_LIMIT + i + 1,
+        });
+      }
+    } else {
+      // Authenticated: show all locations
+      for (let i = 0; i < filteredOverallLocations.length; i++) {
+        items.push({
+          type: 'overallLocation',
+          location: filteredOverallLocations[i],
+          rank: i + 1,
+        });
+      }
+    }
+
+    return items;
+  }, [isOverallView, viewMode, filteredOverallLocations, isAuthenticated]);
+
+  // Virtual list for Overall Top Locations
+  const {
+    virtualItems: overallVirtualListItems,
+    totalHeight: overallTotalHeight,
+  } = useVirtualList({
+    items: overallVirtualItems,
+    itemHeight: (index, item) => getOverallVirtualItemHeight(item),
+    containerRef: overallTopScrollRef,
+    overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+  });
 
   // Get unique countries for overall view (for country filter dropdown)
   const overallCountries = useMemo(() => {
@@ -752,36 +849,48 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-                <div className="p-4 space-y-3">
-                  {/* For non-authenticated: show signup prompt first, then blurred top 5, then real locations */}
-                  {!isAuthenticated && filteredOverallLocations.length > 0 && (
-                    <>
-                      {/* Signup prompt at top */}
-                      <SignUpPromptCard
-                        remainingCount={Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length)}
-                        category="overall"
-                        isTopLocations
-                      />
-                      {/* Blurred fake top 5 (premium content) */}
-                      {FAKE_CITIES.slice(0, Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length)).map((fakeCity, idx) => (
-                        <BlurredOverallCard
-                          key={`blurred-${idx}`}
-                          fakeCity={fakeCity}
-                          rank={idx + 1}
-                        />
-                      ))}
-                    </>
-                  )}
-                  {/* Show all locations for authenticated, or locations after top 5 for non-authenticated */}
-                  {(isAuthenticated ? filteredOverallLocations : filteredOverallLocations.slice(FREE_LOCATION_LIMIT)).map((location, idx) => (
-                    <OverallLocationCard
-                      key={`${location.city.name}-${location.city.country}-${idx}`}
-                      location={location}
-                      rank={isAuthenticated ? idx + 1 : FREE_LOCATION_LIMIT + idx + 1}
-                      onClick={() => handleOverallCityClick(location)}
-                    />
-                  ))}
+              <div
+                ref={overallTopScrollRef}
+                className="absolute inset-0 overflow-y-auto scrollbar-hide"
+              >
+                {/* Virtualized Overall Top Locations list */}
+                <div className="p-4">
+                  <VirtualListContainer totalHeight={overallTotalHeight}>
+                    {overallVirtualListItems.map(({ item, index, style }) => {
+                      // Render the appropriate card based on item type
+                      if (item.type === 'signupPrompt') {
+                        return (
+                          <div key="signup-prompt" style={style}>
+                            <SignUpPromptCard
+                              remainingCount={item.remainingCount}
+                              category="overall"
+                              isTopLocations
+                            />
+                          </div>
+                        );
+                      }
+                      if (item.type === 'blurredOverall') {
+                        return (
+                          <div key={`blurred-${item.rank}`} style={style}>
+                            <BlurredOverallCard
+                              fakeCity={item.fakeCity}
+                              rank={item.rank}
+                            />
+                          </div>
+                        );
+                      }
+                      // item.type === 'overallLocation'
+                      return (
+                        <div key={`${item.location.city.name}-${item.location.city.country}-${index}`} style={style}>
+                          <OverallLocationCard
+                            location={item.location}
+                            rank={item.rank}
+                            onClick={() => handleOverallCityClick(item.location)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </VirtualListContainer>
                 </div>
               </div>
             )

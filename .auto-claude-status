@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "013-implement-virtual-scrolling-for-long-lists-in-scou",
+  "state": "building",
+  "subtasks": {
+    "completed": 3,
+    "total": 13,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Virtualize ScoutPanel Top Locations View",
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 5,
+    "started_at": "2026-01-08T15:31:07.284224"
+  },
+  "last_update": "2026-01-08T15:42:56.997683"
+}

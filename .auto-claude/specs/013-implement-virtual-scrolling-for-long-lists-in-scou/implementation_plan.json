@@ -1,0 +1,255 @@
+{
+  "feature": "Implement virtual scrolling for long lists in Scout and Cities panels",
+  "description": "The ScoutPanel displays lists of cities grouped by country, and CityInfoPanel can show many nearby places/attractions. Large lists force the browser to render all DOM nodes even when only a fraction are visible. This implementation adds virtualization to improve performance.",
+  "created_at": "2026-01-08T09:33:36.742Z",
+  "updated_at": "2026-01-08T10:15:00.000Z",
+  "status": "in_progress",
+  "planStatus": "approved",
+  "workflow_type": "development",
+  "services_involved": [
+    "frontend"
+  ],
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Create Reusable Virtual List Hook",
+      "description": "Create a flexible useVirtualList hook that can handle both fixed and variable height items, and integrate with existing scroll containers",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "1.1",
+          "title": "Create useVirtualList hook",
+          "description": "Create a custom hook in src/hooks/useVirtualList.ts that calculates visible items based on scroll position, container height, and item heights. Should support: fixed heights, variable heights via estimator function, overscan for smooth scrolling, and scroll restoration.",
+          "status": "completed",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "Hook accepts items array, container ref, and item height config",
+            "Returns visible items slice with start/end indices",
+            "Supports both fixed and variable height modes",
+            "Includes overscan parameter (default 3-5 items)",
+            "Handles resize events gracefully"
+          ],
+          "notes": "Created useVirtualList hook at src/hooks/useVirtualList.ts with: fixed/variable height support, binary search for efficient start index calculation, overscan (default 5), ResizeObserver for resize handling, scroll restoration via initialScrollTop and scrollToIndex, height caching for variable heights, and minItemsForVirtualization option.",
+          "updated_at": "2026-01-08T10:05:37.580626+00:00"
+        },
+        {
+          "id": "1.2",
+          "title": "Create VirtualListContainer component",
+          "description": "Create a reusable VirtualListContainer component that wraps children with proper absolute positioning and total height calculation. Works with the useVirtualList hook.",
+          "status": "completed",
+          "estimated_effort": "small",
+          "acceptance_criteria": [
+            "Renders spacer div for total scroll height",
+            "Positions visible items absolutely",
+            "Accepts className for styling flexibility",
+            "Works with both desktop and mobile scroll contexts"
+          ],
+          "notes": "Created VirtualListContainer component at src/components/ui/virtual-list-container.tsx. Component provides: spacer div with totalHeight for scroll sizing, absolute positioning for children, className/innerClassName props for styling flexibility, and works with both desktop and mobile scroll contexts. Also added VirtualListItem helper component.",
+          "updated_at": "2026-01-08T10:08:49.338405+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Virtualize ScoutPanel Top Locations View",
+      "description": "Apply virtual scrolling to the flat list of ranked cities in ScoutPanel's 'Top Locations' view mode",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "2.1",
+          "title": "Measure and standardize location card heights",
+          "description": "Audit RankedLocationCard, OverallLocationCard, BlurredRankedCard, and BlurredOverallCard components to determine fixed heights or create height estimator. Cards need consistent heights for efficient virtualization.",
+          "status": "completed",
+          "estimated_effort": "small",
+          "acceptance_criteria": [
+            "Document measured heights for each card type",
+            "Ensure cards have fixed heights (avoid content-dependent sizing)",
+            "Create constants for SCOUT_CARD_HEIGHT values"
+          ],
+          "notes": "Created scout-panel-heights.ts with measured heights for all card types: BlurredRankedCard (130px), BlurredOverallCard (130px), RankedLocationCard (130px base / 170px with expand button), OverallLocationCard (136px base / 176px with expand button), SignUpPromptCard (200px). Also includes list spacing constants (12px gap, 16px padding), pre-calculated item heights with gaps, height estimator functions, and virtualization config.",
+          "updated_at": "2026-01-08T10:12:33.845239+00:00"
+        },
+        {
+          "id": "2.2",
+          "title": "Implement virtual scrolling for Overall Top Locations",
+          "description": "Refactor the Overall view's Top Locations list (filteredOverallLocations.map) to use virtual scrolling. This is the list at lines 777-784 in ScoutPanel.tsx.",
+          "status": "pending",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "Only visible OverallLocationCard items are rendered",
+            "Scroll behavior remains smooth (60fps)",
+            "SignUpPromptCard and BlurredOverallCard items handled correctly at top",
+            "Click handlers work correctly on virtualized items"
+          ]
+        },
+        {
+          "id": "2.3",
+          "title": "Implement virtual scrolling for Category Top Locations",
+          "description": "Refactor the Category view's Top Locations list (topLocations.map) to use virtual scrolling. This is the list at lines 856-864 in ScoutPanel.tsx.",
+          "status": "pending",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "Only visible RankedLocationCard items are rendered",
+            "Scroll behavior remains smooth",
+            "SignUpPromptCard and BlurredRankedCard handled correctly",
+            "Category switching doesn't break scroll position"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Virtualize ScoutPanel Countries View",
+      "description": "Apply virtual scrolling to the collapsible country sections in ScoutPanel's 'Countries' view mode",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "3.1",
+          "title": "Measure country section component heights",
+          "description": "Audit CountrySection and OverallCountrySection components to determine collapsed and expanded heights. Expanded sections contain nested city cards.",
+          "status": "pending",
+          "estimated_effort": "small",
+          "acceptance_criteria": [
+            "Document collapsed header height",
+            "Document expanded calculation (header + n * card height)",
+            "Create height calculator function for sections"
+          ]
+        },
+        {
+          "id": "3.2",
+          "title": "Implement virtual scrolling for Overall Countries view",
+          "description": "Refactor the overallCountryGroups.map at lines 805-814 to use virtualization. Must handle dynamic heights as sections expand/collapse.",
+          "status": "pending",
+          "estimated_effort": "large",
+          "acceptance_criteria": [
+            "Country sections virtualized correctly",
+            "Expand/collapse animations work smoothly",
+            "Height recalculates on expansion state change",
+            "Scroll position maintained during expand/collapse"
+          ]
+        },
+        {
+          "id": "3.3",
+          "title": "Implement virtual scrolling for Category Countries view",
+          "description": "Refactor the displayCountries.map at lines 885-895 to use virtualization. Similar to Overall countries but with different data structure.",
+          "status": "pending",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "Country sections virtualized correctly",
+            "Filter changes handled gracefully",
+            "onShowMarkers callback works with virtualized list"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Virtualize PlacesTab in CityInfoPanel",
+      "description": "Apply virtual scrolling to the places list in CityInfoPanel's PlacesTab component",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "4.1",
+          "title": "Measure PlaceCard component height",
+          "description": "Audit PlaceCard component to determine fixed height. Cards have photo, title, rating, badges - need consistent sizing.",
+          "status": "pending",
+          "estimated_effort": "small",
+          "acceptance_criteria": [
+            "Document PlaceCard height",
+            "Ensure consistent card height regardless of content",
+            "Create PLACE_CARD_HEIGHT constant"
+          ]
+        },
+        {
+          "id": "4.2",
+          "title": "Implement virtual scrolling for PlacesTab",
+          "description": "Refactor the places.map at line 105 in PlacesTab.tsx to use virtual scrolling. Container is the tab content scroll area.",
+          "status": "pending",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "Only visible PlaceCard items rendered",
+            "Category filter changes handled gracefully",
+            "Loading skeleton shows correct number of items",
+            "Works in both desktop panel and mobile sheet contexts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Testing and Optimization",
+      "description": "Test virtualization across all components, optimize performance, and handle edge cases",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "5.1",
+          "title": "Performance testing with large datasets",
+          "description": "Test all virtualized lists with 200+ items. Measure frame rate, memory usage, and scroll responsiveness. Compare before/after metrics.",
+          "status": "pending",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "60fps scroll performance maintained",
+            "DOM node count significantly reduced",
+            "No memory leaks during scroll",
+            "Initial render time improved"
+          ]
+        },
+        {
+          "id": "5.2",
+          "title": "Mobile testing and touch optimization",
+          "description": "Test virtualization in mobile bottom sheets. Ensure touch scrolling, momentum, and overscroll behavior work correctly.",
+          "status": "pending",
+          "estimated_effort": "medium",
+          "acceptance_criteria": [
+            "Touch scroll works in MobileScoutSheet",
+            "Touch scroll works in MobileCityInfoSheet",
+            "Momentum scrolling preserved",
+            "No jank on iOS Safari and Android Chrome"
+          ]
+        },
+        {
+          "id": "5.3",
+          "title": "Edge case handling",
+          "description": "Handle edge cases: empty lists, single item, rapid filter changes, window resize, tab switching, orientation changes.",
+          "status": "pending",
+          "estimated_effort": "small",
+          "acceptance_criteria": [
+            "Empty state renders correctly",
+            "Single item renders without issues",
+            "Filter changes don't cause scroll jumps",
+            "Resize events trigger recalculation",
+            "Tab switching preserves reasonable scroll state"
+          ]
+        }
+      ]
+    }
+  ],
+  "final_acceptance": [
+    "ScoutPanel Top Locations view renders only visible items (verified via React DevTools)",
+    "ScoutPanel Countries view renders only visible country sections",
+    "PlacesTab renders only visible place cards",
+    "All lists maintain 60fps scroll performance with 200+ items",
+    "Mobile bottom sheets work correctly with virtualization",
+    "No visual regressions in any list UI",
+    "TypeScript compilation passes with no errors",
+    "Build succeeds without warnings related to virtualization"
+  ],
+  "spec_file": "spec.md",
+  "technical_notes": {
+    "existing_patterns": "VirtualList in src/lib/patterns/rendering.tsx and VirtualizedList in src/lib/patterns/progressive.tsx provide existing implementations. The codebase GUIDELINES.md states 'Virtualize lists with 50+ items'.",
+    "key_components": [
+      "src/features/globe/components/ScoutPanel.tsx - Main scout panel with city lists",
+      "src/features/globe/components/CityInfoPanel/tabs/PlacesTab.tsx - Places list",
+      "src/lib/patterns/rendering.tsx - Existing VirtualList implementation",
+      "src/lib/patterns/progressive.tsx - Existing VirtualizedList implementation"
+    ],
+    "considerations": [
+      "ScoutPanel has multiple list types: flat ranked lists and collapsible country sections",
+      "CountrySection expansion changes section height dynamically",
+      "Mobile sheets have their own scroll containers",
+      "Must maintain click handlers and callbacks on virtualized items",
+      "SignUpPromptCard and BlurredCards are special items at list top for non-authenticated users"
+    ]
+  },
+  "last_updated": "2026-01-08T10:12:33.845264+00:00"
+}
