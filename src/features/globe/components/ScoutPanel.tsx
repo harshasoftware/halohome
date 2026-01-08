@@ -219,7 +219,7 @@ const FAKE_CITIES = [
   { name: 'Starfall Harbor', country: 'Luminara' },
 ];
 
-export const ScoutPanel: React.FC<ScoutPanelProps> = ({
+const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
   planetaryLines,
   aspectLines,
   onCityClick,
@@ -2006,5 +2006,7 @@ const SignUpPromptCard: React.FC<SignUpPromptCardProps> = ({
     </>
   );
 };
+
+export const ScoutPanel = React.memo(ScoutPanelComponent);
 
 export default ScoutPanel;

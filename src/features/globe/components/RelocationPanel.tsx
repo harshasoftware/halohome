@@ -51,7 +51,7 @@ interface RelocationPanelProps {
   onRecalculate?: () => void;
 }
 
-export const RelocationPanel: React.FC<RelocationPanelProps> = ({
+const RelocationPanelComponent: React.FC<RelocationPanelProps> = ({
   result,
   loading,
   error,
@@ -293,5 +293,7 @@ function getSignFromLongitude(longitude: number): { name: string; degree: number
   const degree = normalized % 30;
   return { name: signs[signIndex], degree };
 }
+
+export const RelocationPanel = React.memo(RelocationPanelComponent);
 
 export default RelocationPanel;

@@ -81,6 +81,47 @@ const checkPremiumFromDatabase = async (birthHash: string): Promise<{ hasPremium
   }
 };
 
+/**
+ * Server-side verification for premium tier access before report generation.
+ * Uses a fail-closed pattern - if verification fails, defaults to free tier (3 cities).
+ * This prevents localStorage manipulation from bypassing payment.
+ *
+ * @security This is the authoritative check for premium access - do not skip.
+ */
+const verifyPremiumTierAccess = async (
+  requestedTier: number,
+  birthDate: string,
+  birthTime: string,
+  birthLocation: string
+): Promise<{ verified: boolean; authorizedTier: number }> => {
+  // Free tier (3 cities) doesn't require verification
+  if (requestedTier <= 3) {
+    return { verified: true, authorizedTier: 3 };
+  }
+
+  try {
+    const birthHash = generateBirthHash(birthDate, birthTime, birthLocation);
+    const { hasPremium, tier: dbTier } = await checkPremiumFromDatabase(birthHash);
+
+    if (!hasPremium) {
+      // Not premium - fail closed to free tier
+      return { verified: false, authorizedTier: 3 };
+    }
+
+    // Verify requested tier doesn't exceed purchased tier
+    if (requestedTier > dbTier) {
+      return { verified: false, authorizedTier: dbTier };
+    }
+
+    // Verified! User has access to requested tier
+    return { verified: true, authorizedTier: requestedTier };
+  } catch (error) {
+    console.error('Premium verification failed:', error);
+    // Fail closed - return free tier on any error
+    return { verified: false, authorizedTier: 3 };
+  }
+};
+
 interface LineReportPanelProps {
   planetaryLines: PlanetaryLine[];
   zenithPoints: ZenithPoint[];
@@ -96,7 +137,7 @@ interface SelectedLine {
   lineType: LineType;
 }
 
-export const LineReportPanel: React.FC<LineReportPanelProps> = ({
+const LineReportPanelComponent: React.FC<LineReportPanelProps> = ({
   planetaryLines,
   zenithPoints,
   birthDate = 'Unknown',
@@ -114,6 +155,7 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
   const [sendEmail, setSendEmail] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false); // Server-side premium verification
 
   // Check premium status on mount and when birth data changes
   useEffect(() => {
@@ -271,7 +313,7 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
     }
   }, []);
 
-  // Generate report
+  // Generate report with server-side premium verification
   const handleGenerateReport = useCallback(async () => {
     if (selectedLines.length === 0) {
       toast.error('Please select at least one line');
@@ -286,6 +328,33 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
     setIsGenerating(true);
 
     try {
+      // Server-side verification for premium tiers (fail-closed pattern)
+      let verifiedCitiesPerLine = citiesPerLine;
+
+      if (citiesPerLine > 3) {
+        setIsVerifying(true);
+        const { verified, authorizedTier } = await verifyPremiumTierAccess(
+          citiesPerLine,
+          birthDate,
+          birthTime,
+          birthLocation
+        );
+        setIsVerifying(false);
+
+        if (!verified) {
+          // Verification failed - use authorized tier (which may be lower than requested)
+          if (authorizedTier < citiesPerLine) {
+            toast.error(`Premium access not verified. Generating report with ${authorizedTier} cities per line.`);
+            verifiedCitiesPerLine = authorizedTier;
+            // Update the UI state to reflect actual tier
+            setCitiesPerLine(authorizedTier);
+            // Clear invalid cache
+            localStorage.removeItem('astro_premium_unlock');
+            setPremiumTier(authorizedTier);
+          }
+        }
+      }
+
       // Get the actual line objects for selected lines
       const linesToExport = planetaryLines.filter(line =>
         selectedLines.some(s => s.planet === line.planet && s.lineType === line.lineType)
@@ -297,7 +366,7 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
         birthLocation,
         selectedLines: linesToExport,
         zenithPoints,
-        citiesPerLine,
+        citiesPerLine: verifiedCitiesPerLine, // Use server-verified tier
         returnBase64: sendEmail, // Get base64 data if we're sending email
       };
 
@@ -310,11 +379,12 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
         // Send the PDF via email
         await sendReportEmail(result, emailAddress);
       } else {
-        toast.success(`Report downloaded${citiesPerLine > 3 ? ` with ${citiesPerLine} cities per line` : ''}!`);
+        toast.success(`Report downloaded${verifiedCitiesPerLine > 3 ? ` with ${verifiedCitiesPerLine} cities per line` : ''}!`);
       }
     } catch (error) {
       console.error('Error generating report:', error);
       toast.error('Failed to generate report');
+      setIsVerifying(false);
     } finally {
       setIsGenerating(false);
     }
@@ -473,13 +543,18 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
               {/* Generate button */}
               <Button
                 onClick={handleGenerateReport}
-                disabled={selectedLines.length === 0 || isGenerating || isPurchasing || isSendingEmail}
+                disabled={selectedLines.length === 0 || isGenerating || isPurchasing || isSendingEmail || isVerifying}
                 className="w-full h-12"
               >
                 {isPurchasing ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Opening checkout...
+                  </span>
+                ) : isVerifying ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Verifying access...
                   </span>
                 ) : isGenerating || isSendingEmail ? (
                   <span className="flex items-center gap-2">
@@ -698,7 +773,7 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
           {/* Generate button */}
           <Button
             onClick={handleGenerateReport}
-            disabled={selectedLines.length === 0 || isGenerating || isPurchasing || isSendingEmail}
+            disabled={selectedLines.length === 0 || isGenerating || isPurchasing || isSendingEmail || isVerifying}
             size="lg"
             className="w-full h-11 text-base font-semibold rounded-xl"
           >
@@ -707,7 +782,12 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Opening checkout...
               </span>
-            ) : isGenerating || isSendingEmail ? (
+            ) : isVerifying ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Verifying access...
+                  </span>
+                ) : isGenerating || isSendingEmail ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 {isSendingEmail ? 'Sending email...' : 'Generating Report...'}
@@ -729,5 +809,7 @@ export const LineReportPanel: React.FC<LineReportPanelProps> = ({
     </>
   );
 };
+
+export const LineReportPanel = React.memo(LineReportPanelComponent);
 
 export default LineReportPanel;

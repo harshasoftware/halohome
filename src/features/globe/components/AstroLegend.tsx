@@ -70,7 +70,7 @@ const LINE_TYPE_DESCRIPTIONS: Record<LineType, string> = {
   DSC: 'Love, partnerships, others',
 };
 
-export const AstroLegend: React.FC<AstroLegendProps> = (props) => {
+const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
   const isMobile = useIsMobile();
   const [isMaximized, setIsMaximized] = useState(false);
 
@@ -662,5 +662,7 @@ export const AstroLegend: React.FC<AstroLegendProps> = (props) => {
     </Card>
   );
 };
+
+export const AstroLegend = React.memo(AstroLegendComponent);
 
 export default AstroLegend;

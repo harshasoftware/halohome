@@ -219,7 +219,7 @@ const LocationCard: React.FC<{
   );
 };
 
-export const CompatibilityPanel: React.FC<CompatibilityPanelProps> = ({
+const CompatibilityPanelComponent: React.FC<CompatibilityPanelProps> = ({
   analysis,
   mode,
   onModeChange,
@@ -436,5 +436,7 @@ export const CompatibilityPanel: React.FC<CompatibilityPanelProps> = ({
     </div>
   );
 };
+
+export const CompatibilityPanel = React.memo(CompatibilityPanelComponent);
 
 export default CompatibilityPanel;

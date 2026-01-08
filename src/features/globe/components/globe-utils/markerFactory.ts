@@ -3,7 +3,11 @@
  *
  * Centralized factory for creating marker HTML elements with consistent styling.
  * Used by MigrationGlobe's htmlElementCallback.
+ *
+ * @security Uses sanitization utilities to prevent XSS from user-controlled data
  */
+
+import { sanitizeUrl, sanitizeColor, sanitizeHtmlAttribute } from '@/lib/utils/sanitize';
 
 /**
  * Create a pending birth location marker (avatar with pulse animation)
@@ -67,8 +71,11 @@ export function createPartnerMarker(avatarUrl?: string): HTMLDivElement {
   el.style.pointerEvents = 'none';
   el.style.transform = 'translate(-50%, -50%)';
 
-  const avatarContent = avatarUrl
-    ? `<img src="${avatarUrl}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><svg style="width: 22px; height: 22px; color: white; display: none;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
+  // Sanitize avatar URL to prevent XSS
+  const safeAvatarUrl = sanitizeUrl(avatarUrl);
+
+  const avatarContent = safeAvatarUrl
+    ? `<img src="${safeAvatarUrl}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><svg style="width: 22px; height: 22px; color: white; display: none;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
     : `<svg style="width: 22px; height: 22px; color: white;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
 
   el.innerHTML = `
@@ -126,6 +133,10 @@ export function createParanMarker(color1: string, color2: string): HTMLDivElemen
   el.style.cursor = 'pointer';
   el.style.transform = 'translate(-50%, -50%)';
 
+  // Sanitize colors to prevent CSS injection
+  const safeColor1 = sanitizeColor(color1);
+  const safeColor2 = sanitizeColor(color2);
+
   el.innerHTML = `
     <div style="
       position: relative;
@@ -138,7 +149,7 @@ export function createParanMarker(color1: string, color2: string): HTMLDivElemen
       <div style="
         width: 12px;
         height: 12px;
-        background: linear-gradient(135deg, ${color1} 50%, ${color2} 50%);
+        background: linear-gradient(135deg, ${safeColor1} 50%, ${safeColor2} 50%);
         border-radius: 50%;
         border: 2px solid white;
         box-shadow: 0 1px 4px rgba(0,0,0,0.5);
@@ -255,11 +266,28 @@ export function createPersonMarker(
   el.style.cursor = 'pointer';
   el.style.pointerEvents = 'auto';
 
+  // Sanitize user-controlled inputs to prevent XSS
+  const safeAvatarUrl = sanitizeUrl(avatarUrl);
+  const safeName = sanitizeHtmlAttribute(name);
+  const safeInitial = safeName.charAt(0).toUpperCase();
+
   if (count > 1) {
-    el.innerHTML = `<div style="background-color: #FD6A02; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${count}</div>`;
-  } else {
+    // Use DOM methods instead of innerHTML for count display
+    const countDiv = document.createElement('div');
+    countDiv.style.backgroundColor = '#FD6A02';
+    countDiv.style.color = 'white';
+    countDiv.style.borderRadius = '50%';
+    countDiv.style.width = '32px';
+    countDiv.style.height = '32px';
+    countDiv.style.display = 'flex';
+    countDiv.style.alignItems = 'center';
+    countDiv.style.justifyContent = 'center';
+    countDiv.style.fontSize = '14px';
+    countDiv.textContent = String(count);
+    el.appendChild(countDiv);
+  } else if (safeAvatarUrl) {
     const img = new Image();
-    img.src = avatarUrl;
+    img.src = safeAvatarUrl;
     img.style.width = '24px';
     img.style.height = '24px';
     img.style.borderRadius = '50%';
@@ -274,11 +302,25 @@ export function createPersonMarker(
       fallback.style.alignItems = 'center';
       fallback.style.justifyContent = 'center';
       fallback.style.fontSize = '12px';
-      fallback.innerText = name.charAt(0).toUpperCase();
+      fallback.textContent = safeInitial;
       el.innerHTML = '';
       el.appendChild(fallback);
     };
     el.appendChild(img);
+  } else {
+    // No avatar URL - show initial
+    const fallback = document.createElement('div');
+    fallback.style.width = '24px';
+    fallback.style.height = '24px';
+    fallback.style.borderRadius = '50%';
+    fallback.style.backgroundColor = '#FD6A02';
+    fallback.style.color = 'white';
+    fallback.style.display = 'flex';
+    fallback.style.alignItems = 'center';
+    fallback.style.justifyContent = 'center';
+    fallback.style.fontSize = '12px';
+    fallback.textContent = safeInitial;
+    el.appendChild(fallback);
   }
 
   el.onclick = onClick;
@@ -309,39 +351,46 @@ export function createLineLabelMarker(
   el.style.transform = 'translate(-50%, -50%)';
   el.style.whiteSpace = 'nowrap';
 
-  // Get abbreviation for line type
-  const lineAbbrev = lineType === 'ASC' || lineType === 'DSC' || lineType === 'MC' || lineType === 'IC'
-    ? lineType
-    : lineType.substring(0, 3);
+  // Sanitize inputs to prevent XSS/CSS injection
+  const safePlanet = sanitizeHtmlAttribute(planet);
+  const safeLineType = sanitizeHtmlAttribute(lineType);
+  const safeColor = sanitizeColor(color);
 
-  el.innerHTML = `
-    <div style="
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(4px);
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid ${color};
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    ">
-      <div style="
-        width: 8px;
-        height: 8px;
-        background: ${color};
-        border-radius: 50%;
-        flex-shrink: 0;
-      "></div>
-      <span style="
-        color: white;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-      ">${planet} ${lineAbbrev}</span>
-    </div>
-  `;
+  // Get abbreviation for line type
+  const lineAbbrev = safeLineType === 'ASC' || safeLineType === 'DSC' || safeLineType === 'MC' || safeLineType === 'IC'
+    ? safeLineType
+    : safeLineType.substring(0, 3);
+
+  // Build DOM using safe methods instead of innerHTML with untrusted data
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.alignItems = 'center';
+  container.style.gap = '4px';
+  container.style.background = 'rgba(15, 23, 42, 0.85)';
+  container.style.backdropFilter = 'blur(4px)';
+  container.style.padding = '3px 8px';
+  container.style.borderRadius = '4px';
+  container.style.border = `1px solid ${safeColor}`;
+  container.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.4)';
+
+  const dot = document.createElement('div');
+  dot.style.width = '8px';
+  dot.style.height = '8px';
+  dot.style.background = safeColor;
+  dot.style.borderRadius = '50%';
+  dot.style.flexShrink = '0';
+
+  const label = document.createElement('span');
+  label.style.color = 'white';
+  label.style.fontSize = '11px';
+  label.style.fontWeight = '600';
+  label.style.letterSpacing = '0.3px';
+  label.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.5)';
+  label.textContent = `${safePlanet} ${lineAbbrev}`;
+
+  container.appendChild(dot);
+  container.appendChild(label);
+  el.appendChild(container);
 
   return el;
 }

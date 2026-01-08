@@ -39,7 +39,7 @@ interface RightPanelStackProps {
   footer?: React.ReactNode;
 }
 
-export const RightPanelStack: React.FC<RightPanelStackProps> = ({
+const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
   stack,
   currentIndex,
   onNavigateBack,
@@ -187,6 +187,8 @@ export const RightPanelStack: React.FC<RightPanelStackProps> = ({
     </div>
   );
 };
+
+export const RightPanelStack = React.memo(RightPanelStackComponent);
 
 /**
  * usePanelStack Hook - Re-exported from globeInteractionStore

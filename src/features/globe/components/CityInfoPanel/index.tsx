@@ -30,7 +30,7 @@ interface CityInfoPanelProps {
   hasBirthData?: boolean;
 }
 
-export const CityInfoPanel: React.FC<CityInfoPanelProps> = ({
+const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
   city,
   onClose,
   isMobile = false,
@@ -273,5 +273,7 @@ export const CityInfoPanel: React.FC<CityInfoPanelProps> = ({
     </div>
   );
 };
+
+export const CityInfoPanel = React.memo(CityInfoPanelComponent);
 
 export default CityInfoPanel;
