@@ -10,12 +10,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Heart, MapPin, Trash2, Navigation, Globe2 } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 import { toast } from 'sonner';
+import { FavoriteNoteEditor } from './FavoriteNoteEditor';
 
 interface FavoritesPanelContentProps {
   favorites: FavoriteCity[];
   loading: boolean;
   onSelectFavorite: (lat: number, lng: number, name: string) => void;
   onRemoveFavorite: (id: string, name: string) => void;
+  onUpdateNotes?: (id: string, notes: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -24,6 +26,7 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
   loading,
   onSelectFavorite,
   onRemoveFavorite,
+  onUpdateNotes,
   onClose,
 }) => {
   if (loading) {
@@ -73,9 +76,10 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
               key={fav.id}
               className="group relative rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
+              {/* Clickable header area for navigation */}
               <button
                 onClick={() => onSelectFavorite(fav.latitude, fav.longitude, fav.city_name)}
-                className="w-full p-3 text-left"
+                className="w-full p-3 pb-1 text-left"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -93,14 +97,28 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-mono">
                       {fav.latitude.toFixed(4)}°, {fav.longitude.toFixed(4)}°
                     </p>
-                    {fav.notes && (
-                      <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
-                        {fav.notes}
-                      </p>
-                    )}
                   </div>
                 </div>
               </button>
+
+              {/* Notes section - separate from navigation button */}
+              <div className="px-3 pb-3 pl-16">
+                {onUpdateNotes ? (
+                  <FavoriteNoteEditor
+                    id={fav.id}
+                    initialNotes={fav.notes || ''}
+                    onSave={async (id, notes) => {
+                      await onUpdateNotes(id, notes);
+                    }}
+                  />
+                ) : (
+                  fav.notes && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 line-clamp-2">
+                      {fav.notes}
+                    </p>
+                  )
+                )}
+              </div>
 
               {/* Actions */}
               <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
