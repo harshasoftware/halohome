@@ -970,4 +970,169 @@ export function SkeletonCompatibilityPanelContent({
   )
 }
 
+/**
+ * SkeletonMobileCompatibilityLocationCard - Mobile-optimized card for compatibility locations
+ * Larger touch targets and spacing for mobile sheets
+ */
+export interface SkeletonMobileCompatibilityLocationCardProps {
+  /** Number of planet line tags per person */
+  personTagCount?: number
+  /** Number of theme badges */
+  themeCount?: number
+  /** Show interpretation text */
+  showInterpretation?: boolean
+  /** Show city info button */
+  showCityInfoButton?: boolean
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonMobileCompatibilityLocationCard({
+  personTagCount = 3,
+  themeCount = 2,
+  showInterpretation = true,
+  showCityInfoButton = true,
+  className,
+}: SkeletonMobileCompatibilityLocationCardProps) {
+  return (
+    <div
+      className={cn(
+        "w-full p-4 rounded-xl border border-slate-200 dark:border-slate-700",
+        className
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* Rank Badge - larger for mobile */}
+        <Skeleton className="flex-shrink-0 w-10 h-10 rounded-full" />
+
+        <div className="flex-1 min-w-0">
+          {/* Header: City name + Score badge */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 space-y-1.5">
+              {/* City name + country */}
+              <Skeleton className="h-5 w-44" />
+              {/* Coordinates */}
+              <div className="flex items-center gap-1.5">
+                <Skeleton className="w-4 h-4" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+            {/* Score badge - larger for mobile */}
+            <Skeleton className="flex-shrink-0 h-8 w-16 rounded-full" />
+          </div>
+
+          {/* Planet lines for each person */}
+          <div className="mt-3 space-y-2">
+            {/* Person 1 (You) */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Skeleton className="h-4 w-10" />
+              {Array.from({ length: personTagCount }).map((_, i) => (
+                <Skeleton key={`p1-${i}`} className="h-6 w-16 rounded" />
+              ))}
+            </div>
+            {/* Person 2 (Partner) */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Skeleton className="h-4 w-14" />
+              {Array.from({ length: personTagCount }).map((_, i) => (
+                <Skeleton key={`p2-${i}`} className="h-6 w-16 rounded" />
+              ))}
+            </div>
+          </div>
+
+          {/* Theme badges */}
+          {themeCount > 0 && (
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              {Array.from({ length: themeCount }).map((_, i) => (
+                <Skeleton key={i} className="h-6 w-18 rounded-full" />
+              ))}
+            </div>
+          )}
+
+          {/* Interpretation text */}
+          {showInterpretation && (
+            <div className="mt-3 space-y-1.5">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          )}
+
+          {/* City Info Button - larger touch target */}
+          {showCityInfoButton && (
+            <Skeleton className="mt-4 h-11 w-full rounded-lg" />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SkeletonMobileCompatibilitySheet - Full skeleton for MobileCompatibilitySheet
+ * Includes header and content skeletons optimized for mobile bottom sheet
+ */
+export interface SkeletonMobileCompatibilitySheetProps {
+  /** Number of location cards to show */
+  locationCount?: number
+  /** Additional className */
+  className?: string
+}
+
+export function SkeletonMobileCompatibilitySheet({
+  locationCount = 4,
+  className,
+}: SkeletonMobileCompatibilitySheetProps) {
+  return (
+    <div className={cn("flex flex-col w-full h-full bg-white dark:bg-slate-900", className)}>
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Icon */}
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <div className="space-y-1.5">
+            {/* Title */}
+            <Skeleton className="h-5 w-32" />
+            {/* Partner names */}
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Mode selector */}
+          <Skeleton className="h-8 w-24 rounded-lg" />
+          {/* Close button */}
+          <Skeleton className="h-8 w-8 rounded-lg" />
+        </div>
+      </div>
+
+      {/* Content skeleton */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="p-4 space-y-3">
+          {/* Stats summary bar - pink themed */}
+          <div className="flex items-center gap-4 p-3 rounded-xl bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800">
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-5 h-5" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-5 h-5" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+          </div>
+
+          {/* Location cards - larger for mobile */}
+          <div className="space-y-3">
+            {Array.from({ length: locationCount }).map((_, i) => (
+              <SkeletonMobileCompatibilityLocationCard
+                key={i}
+                // Vary slightly for visual interest
+                personTagCount={i % 2 === 0 ? 3 : 2}
+                themeCount={i % 3 === 0 ? 2 : 1}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default SkeletonScoreCard

@@ -7,6 +7,7 @@
 import React, { Suspense, lazy, useState } from 'react';
 import { Users } from 'lucide-react';
 import { MobileBottomSheet } from './MobileBottomSheet';
+import { SkeletonMobileCompatibilitySheet } from '@/components/ui/skeleton-chart';
 import type { CompatibilityAnalysis, CompatibilityMode } from '../../hooks/useCompatibilityMode';
 import type { BirthChart } from '@/hooks/useBirthCharts';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
@@ -79,11 +80,7 @@ export const MobileCompatibilitySheet: React.FC<MobileCompatibilitySheetProps> =
       onToggleMaximize={() => setIsMaximized(!isMaximized)}
       onMaximizeChange={setMobileSheetMaximized}
     >
-      <Suspense fallback={
-        <div className="flex items-center justify-center p-8">
-          <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(255,255,255,0.1)', borderTopColor: 'rgba(255,255,255,0.5)' }} />
-        </div>
-      }>
+      <Suspense fallback={<SkeletonMobileCompatibilitySheet locationCount={3} />}>
         <CompatibilityPanel
           analysis={analysis}
           mode={mode}
