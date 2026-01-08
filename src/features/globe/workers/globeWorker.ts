@@ -1,10 +1,11 @@
-import { transformTreeToGlobeData } from '../utils/transformTree';
-import type { FamilyTree } from '@/types/familyTree';
+import { transformNodesToGlobeData } from '../utils/transformTree';
+import type { Node } from '@stubs/xyflow';
+import type { PersonData } from '@/types/familyTree';
 import type { PersonLocation, Migration as BaseMigration } from '../types/migration.d';
 
 // Types for messages
 interface WorkerRequest {
-  tree: FamilyTree;
+  nodes: Node<PersonData>[];
   filters: { gender: string; status: string };
   selectedYear: number | null;
 }
@@ -68,19 +69,19 @@ function filterGlobeData(
 }
 
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
-  const { tree, filters, selectedYear } = event.data;
+  const { nodes, filters, selectedYear } = event.data;
   // Include node data in the cache key so location updates are detected
-  const treeId = JSON.stringify(
-    tree.tree_data?.nodes?.map(n => ({
+  const cacheKey = JSON.stringify(
+    nodes?.map(n => ({
       id: n.id,
       // Include location data to detect coordinate changes
       locations: (n.data as { locations?: unknown[] })?.locations,
     }))
-  ) + JSON.stringify(tree.tree_data?.edges?.map(e => e.id));
+  );
 
-  if (treeId !== lastTreeId) {
-    lastGlobeData = await transformTreeToGlobeData(tree);
-    lastTreeId = treeId;
+  if (cacheKey !== lastTreeId) {
+    lastGlobeData = await transformNodesToGlobeData(nodes);
+    lastTreeId = cacheKey;
   }
   if (!lastGlobeData) {
     self.postMessage({ locations: [], migrations: [] });

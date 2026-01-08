@@ -66,6 +66,8 @@ export interface FamilyTree {
   id: string;
   name: string;
   is_public: boolean;
+  is_encrypted: boolean;
+  encryption_salt?: string | null;
   created_at: string;
   updated_at: string;
   is_permanent: boolean;
