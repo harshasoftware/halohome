@@ -1,0 +1,231 @@
+{
+  "feature": "Split ScoutPanel.tsx into manageable sub-components",
+  "description": "ScoutPanel.tsx is 2010 lines long and contains inline data structures (COUNTRY_NAMES mapping with 100+ entries), multiple sub-components defined inline, complex filtering logic, pagination, and UI rendering. The file has grown to handle city lists, country grouping, category filtering, authentication gating, and premium features all in one place.",
+  "created_at": "2026-01-08T09:34:44.057Z",
+  "updated_at": "2026-01-08T13:11:24.067Z",
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "workflow_type": "development",
+  "services_involved": [
+    "frontend"
+  ],
+  "spec_file": "spec.md",
+  "totalSubtasks": 14,
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Data & Constants Extraction",
+      "description": "Extract static data and utility functions to dedicated files",
+      "subtasks": [
+        {
+          "id": "1.1",
+          "title": "Create ScoutPanel directory structure",
+          "description": "Create ScoutPanel/ directory with index.tsx, components/, and supporting files following CityInfoPanel pattern",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/index.tsx",
+            "src/features/globe/components/ScoutPanel/components/",
+            "src/features/globe/components/ScoutPanel/constants.ts",
+            "src/features/globe/components/ScoutPanel/types.ts"
+          ],
+          "notes": "Created ScoutPanel/ directory structure following CityInfoPanel pattern. Files created: index.tsx (re-exports from original), components/index.ts (barrel export placeholder), constants.ts (placeholder), types.ts (placeholder). Commit: c07be37",
+          "updated_at": "2026-01-08T10:05:53.801033+00:00"
+        },
+        {
+          "id": "1.2",
+          "title": "Extract country data constants",
+          "description": "Move COUNTRY_NAMES (100+ entries), COUNTRY_CODES, getCountryName(), and getCountryFlag() to constants.ts",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/constants.ts"
+          ],
+          "notes": "Extracted COUNTRY_NAMES (100+ entries), COUNTRY_CODES, getCountryName(), and getCountryFlag() to ScoutPanel/constants.ts. Updated ScoutPanel.tsx to import from the new constants file. Commit: 5b0b8cc",
+          "updated_at": "2026-01-08T10:08:35.920023+00:00"
+        },
+        {
+          "id": "1.3",
+          "title": "Extract category styling constants",
+          "description": "Move CATEGORY_ICONS and CATEGORY_COLORS mappings to constants.ts",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/constants.ts"
+          ],
+          "notes": "Extracted CATEGORY_ICONS (7 category-to-icon mappings) and CATEGORY_COLORS (7 category styling definitions with selected/unselected/icon states) to ScoutPanel/constants.ts. Updated ScoutPanel.tsx to import from constants. Added required React and lucide-react imports to constants.ts. Commit: 000bad7",
+          "updated_at": "2026-01-08T10:11:16.909091+00:00"
+        },
+        {
+          "id": "1.4",
+          "title": "Create types file",
+          "description": "Extract ScoutMarker, ScoutPanelProps, ViewFilter, ViewMode, SelectedTab, and component prop interfaces to types.ts",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/types.ts"
+          ],
+          "notes": "Extracted 14 type definitions from ScoutPanel.tsx to ScoutPanel/types.ts: ScoutMarker, ScoutPanelProps, ViewFilter, ViewMode, SelectedTab, CategoryUpgradeModalProps, CountrySectionProps, OverallCountrySectionProps, LocationCardProps, RankedLocationCardProps, OverallLocationCardProps, BlurredOverallCardProps, BlurredRankedCardProps, SignUpPromptCardProps. Added re-export of ScoutMarker for backward compatibility. Commit: 7f71a5a",
+          "updated_at": "2026-01-08T10:14:25.098598+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Location Card Components",
+      "description": "Extract the three location card variants into separate component files",
+      "subtasks": [
+        {
+          "id": "2.1",
+          "title": "Extract LocationCard component",
+          "description": "Move LocationCard (~140 lines) to components/LocationCard.tsx - basic location card with expandable influences",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/LocationCard.tsx"
+          ],
+          "notes": "Extracted LocationCard (~140 lines) to components/LocationCard.tsx. Component includes: city name, distance, score badge, planetary influence pills, expandable influence details, and globe hover highlighting. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1842 to ~1700 lines. Commit: 29f885e",
+          "updated_at": "2026-01-08T10:17:09.021713+00:00"
+        },
+        {
+          "id": "2.2",
+          "title": "Extract RankedLocationCard component",
+          "description": "Move RankedLocationCard (~160 lines) to components/RankedLocationCard.tsx - card with rank badge for top locations view",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/RankedLocationCard.tsx"
+          ],
+          "notes": "Extracted RankedLocationCard (~165 lines) to components/RankedLocationCard.tsx. Component includes: rank badge with special styling for top 3, city name with country flag, beneficial/challenging badge, distance, score badge with color coding, planetary influence pills, and expandable influence details. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1700 to ~1535 lines. Commit: 51ad640",
+          "updated_at": "2026-01-08T10:20:04.777453+00:00"
+        },
+        {
+          "id": "2.3",
+          "title": "Extract OverallLocationCard component",
+          "description": "Move OverallLocationCard (~140 lines) to components/OverallLocationCard.tsx - card for cross-category ranking",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/OverallLocationCard.tsx"
+          ],
+          "notes": "Extracted OverallLocationCard (~162 lines) to components/OverallLocationCard.tsx. Component includes: rank badge with top 3 special styling (gold, silver, bronze), city name with country flag, beneficial/challenging category counts, distance, total score badge, expandable category pills showing all life areas. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1535 to ~1389 lines. Commit: 8a103cd",
+          "updated_at": "2026-01-08T10:23:26.987628+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Country Section Components",
+      "description": "Extract country grouping section components",
+      "subtasks": [
+        {
+          "id": "3.1",
+          "title": "Extract CountrySection component",
+          "description": "Move CountrySection (~70 lines) to components/CountrySection.tsx - country section for category view",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/CountrySection.tsx"
+          ],
+          "notes": "Extracted CountrySection (~90 lines) to components/CountrySection.tsx. Component includes: country header with flag and name, beneficial/challenging counts, expandable location list using LocationCard, and globe marker display on toggle. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1389 to ~1296 lines. Commit: 700e239",
+          "updated_at": "2026-01-08T10:27:52.924853+00:00"
+        },
+        {
+          "id": "3.2",
+          "title": "Extract OverallCountrySection component",
+          "description": "Move OverallCountrySection (~90 lines) to components/OverallCountrySection.tsx - country section for overall view",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/OverallCountrySection.tsx"
+          ],
+          "notes": "Extracted OverallCountrySection (~90 lines) to components/OverallCountrySection.tsx. Component includes: country header with flag and name, beneficial/challenging counts, expandable location list using OverallLocationCard, and globe marker display on toggle. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1296 to ~1204 lines. Commit: ccacf7d",
+          "updated_at": "2026-01-08T10:31:52.037444+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Auth & Premium Components",
+      "description": "Extract authentication gating and premium upgrade components",
+      "subtasks": [
+        {
+          "id": "4.1",
+          "title": "Extract BlurredCards components",
+          "description": "Move BlurredOverallCard (~55 lines) and BlurredRankedCard (~50 lines) to components/BlurredCards.tsx",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/BlurredCards.tsx"
+          ],
+          "notes": "Extracted BlurredOverallCard (~55 lines) and BlurredRankedCard (~50 lines) to components/BlurredCards.tsx. These are hack-proof placeholder cards shown to non-authenticated users with fake city data. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1204 to ~1095 lines. Commit: c3d9e25",
+          "updated_at": "2026-01-08T13:13:52.466083+00:00"
+        },
+        {
+          "id": "4.2",
+          "title": "Extract SignUpPromptCard component",
+          "description": "Move SignUpPromptCard (~100 lines) to components/SignUpPromptCard.tsx - auth gating prompt card",
+          "status": "completed",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/SignUpPromptCard.tsx"
+          ],
+          "notes": "Extracted SignUpPromptCard (~106 lines) to components/SignUpPromptCard.tsx. Component includes: auth gating prompt with Google One Tap and email authentication, lock icon badge, responsive styling. Updated barrel export in components/index.ts. Removed unused imports from ScoutPanel.tsx (AuthModal, useAuthActions, useGoogleOneTap, Mail, Button, Badge). ScoutPanel.tsx reduced from ~1095 to 981 lines. Commit: fd7bc73",
+          "updated_at": "2026-01-08T13:27:14.593149+00:00"
+        },
+        {
+          "id": "4.3",
+          "title": "Extract CategoryUpgradeModal component",
+          "description": "Move CategoryUpgradeModal (~180 lines) to components/CategoryUpgradeModal.tsx - premium upgrade modal",
+          "status": "pending",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/CategoryUpgradeModal.tsx"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Integration & Cleanup",
+      "description": "Wire up extracted components and remove old file",
+      "subtasks": [
+        {
+          "id": "5.1",
+          "title": "Create barrel export file",
+          "description": "Create components/index.ts to export all sub-components for clean imports",
+          "status": "pending",
+          "files": [
+            "src/features/globe/components/ScoutPanel/components/index.ts"
+          ],
+          "notes": ""
+        },
+        {
+          "id": "5.2",
+          "title": "Finalize main ScoutPanel component and remove old file",
+          "description": "Update index.tsx to import from extracted components, verify all imports work, remove old ScoutPanel.tsx, run build",
+          "status": "pending",
+          "files": [
+            "src/features/globe/components/ScoutPanel/index.tsx",
+            "src/features/globe/components/ScoutPanel.tsx"
+          ],
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "final_acceptance": [
+    "ScoutPanel.tsx is split into organized sub-components in ScoutPanel/ directory",
+    "No single file exceeds ~400 lines",
+    "All TypeScript types compile without errors",
+    "Application builds successfully (npm run build)",
+    "ScoutPanel functionality is unchanged (same behavior, styling)",
+    "Follows existing project patterns (CityInfoPanel directory structure)",
+    "Constants extracted from component files to dedicated constants.ts",
+    "Types extracted to dedicated types.ts"
+  ],
+  "implementation_notes": [
+    "Original ScoutPanel.tsx is 2010 lines with inline COUNTRY_NAMES (100+ entries), multiple sub-components",
+    "Following CityInfoPanel pattern: directory with index.tsx + components/ subdirectory",
+    "Some shared utilities (getRankStyle) can be extracted to reduce duplication",
+    "CATEGORY_INFO and SCOUT_CATEGORIES already exist in scout-utils.ts - reuse those",
+    "Main component still handles state management and filtering logic",
+    "Imports in the codebase will need to be updated from './ScoutPanel' to './ScoutPanel/index'"
+  ],
+  "qaSignOff": {
+    "status": "pending",
+    "issues": "",
+    "tests_passed": ""
+  },
+  "last_updated": "2026-01-08T13:27:14.593158+00:00",
+  "recoveryNote": "Task recovered from stuck state at 2026-01-08T13:11:24.067Z"
+}

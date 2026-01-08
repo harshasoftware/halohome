@@ -1,0 +1,33 @@
+{
+  "subtasks": {
+    "4.1": {
+      "attempts": [
+        {
+          "session": 1,
+          "timestamp": "2026-01-08T18:43:59.614960",
+          "approach": "Implemented: Move BlurredOverallCard (~55 lines) and BlurredRankedCard (~50 lines) to components/BlurredCards.tsx",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "4.2": {
+      "attempts": [
+        {
+          "session": 2,
+          "timestamp": "2026-01-08T18:57:22.213493",
+          "approach": "Implemented: Move SignUpPromptCard (~100 lines) to components/SignUpPromptCard.tsx - auth gating prompt card",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    }
+  },
+  "stuck_subtasks": [],
+  "metadata": {
+    "created_at": "2026-01-08T18:41:25.251180",
+    "last_updated": "2026-01-08T18:57:22.213501"
+  }
+}

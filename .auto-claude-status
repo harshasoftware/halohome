@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "016-split-scoutpanel-tsx-into-manageable-sub-component",
+  "state": "building",
+  "subtasks": {
+    "completed": 11,
+    "total": 14,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Auth & Premium Components",
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 3,
+    "started_at": "2026-01-08T18:41:25.251520"
+  },
+  "last_update": "2026-01-08T18:57:36.381183"
+}
