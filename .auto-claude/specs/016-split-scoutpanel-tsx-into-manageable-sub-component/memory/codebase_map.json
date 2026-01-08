@@ -1,0 +1,15 @@
+{
+  "discovered_files": {
+    "src/features/globe/components/ScoutPanel.tsx": {
+      "description": "2010-line component containing: COUNTRY_NAMES (100+ entries), CATEGORY_ICONS, CATEGORY_COLORS, and 9 inline sub-components (CategoryUpgradeModal, CountrySection, OverallCountrySection, LocationCard, RankedLocationCard, OverallLocationCard, BlurredOverallCard, BlurredRankedCard, SignUpPromptCard)",
+      "category": "architecture",
+      "discovered_at": "2026-01-08T10:03:43.884797+00:00"
+    },
+    "src/features/globe/components/ScoutPanel/": {
+      "description": "New directory structure created following CityInfoPanel pattern: index.tsx re-exports from original ScoutPanel.tsx for backward compatibility during incremental refactoring",
+      "category": "architecture",
+      "discovered_at": "2026-01-08T10:05:53.854748+00:00"
+    }
+  },
+  "last_updated": "2026-01-08T10:05:53.854762+00:00"
+}

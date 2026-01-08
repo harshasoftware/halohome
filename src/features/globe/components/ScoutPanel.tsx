@@ -37,6 +37,7 @@ import { useAuthActions } from '@/hooks/useAuthSync';
 import { useGoogleOneTap } from '@/hooks/useGoogleOneTap';
 import { useAISubscription } from '../ai/useAISubscription';
 import { supabase } from '@/integrations/supabase/client';
+import { getCountryName, getCountryFlag } from './ScoutPanel/constants';
 
 // Lucide icon mapping for categories
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -90,66 +91,6 @@ const CATEGORY_COLORS: Record<string, {
     unselected: 'bg-emerald-50 dark:bg-emerald-500/[0.08] border-emerald-200 dark:border-emerald-400/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/[0.15]',
     icon: 'text-emerald-500 dark:text-emerald-400',
   },
-};
-
-// ISO 3166-1 alpha-2 code to full country name mapping
-const COUNTRY_NAMES: Record<string, string> = {
-  'US': 'United States', 'GB': 'United Kingdom', 'CA': 'Canada', 'AU': 'Australia',
-  'DE': 'Germany', 'FR': 'France', 'IT': 'Italy', 'ES': 'Spain', 'PT': 'Portugal',
-  'NL': 'Netherlands', 'BE': 'Belgium', 'CH': 'Switzerland', 'AT': 'Austria',
-  'SE': 'Sweden', 'NO': 'Norway', 'DK': 'Denmark', 'FI': 'Finland', 'IS': 'Iceland',
-  'IE': 'Ireland', 'PL': 'Poland', 'CZ': 'Czech Republic', 'HU': 'Hungary',
-  'GR': 'Greece', 'TR': 'Turkey', 'RU': 'Russia', 'UA': 'Ukraine',
-  'JP': 'Japan', 'KR': 'South Korea', 'CN': 'China', 'TW': 'Taiwan', 'HK': 'Hong Kong',
-  'IN': 'India', 'TH': 'Thailand', 'VN': 'Vietnam', 'ID': 'Indonesia', 'PH': 'Philippines',
-  'SG': 'Singapore', 'MY': 'Malaysia', 'NZ': 'New Zealand',
-  'MX': 'Mexico', 'BR': 'Brazil', 'AR': 'Argentina', 'CL': 'Chile', 'CO': 'Colombia',
-  'PE': 'Peru', 'VE': 'Venezuela', 'EC': 'Ecuador', 'UY': 'Uruguay',
-  'ZA': 'South Africa', 'EG': 'Egypt', 'MA': 'Morocco', 'NG': 'Nigeria', 'KE': 'Kenya',
-  'IL': 'Israel', 'AE': 'United Arab Emirates', 'SA': 'Saudi Arabia', 'QA': 'Qatar',
-  'RO': 'Romania', 'BG': 'Bulgaria', 'HR': 'Croatia', 'SI': 'Slovenia', 'RS': 'Serbia',
-  'SK': 'Slovakia', 'LT': 'Lithuania', 'LV': 'Latvia', 'EE': 'Estonia',
-  'LU': 'Luxembourg', 'MT': 'Malta', 'CY': 'Cyprus', 'MC': 'Monaco',
-  'PK': 'Pakistan', 'BD': 'Bangladesh', 'LK': 'Sri Lanka', 'NP': 'Nepal', 'MM': 'Myanmar',
-  'KH': 'Cambodia', 'LA': 'Laos', 'AF': 'Afghanistan', 'IQ': 'Iraq', 'IR': 'Iran',
-  'SY': 'Syria', 'JO': 'Jordan', 'LB': 'Lebanon', 'KW': 'Kuwait', 'BH': 'Bahrain',
-  'OM': 'Oman', 'YE': 'Yemen', 'PS': 'Palestine', 'GE': 'Georgia', 'AM': 'Armenia',
-  'AZ': 'Azerbaijan', 'KZ': 'Kazakhstan', 'UZ': 'Uzbekistan', 'TM': 'Turkmenistan',
-  'TJ': 'Tajikistan', 'KG': 'Kyrgyzstan', 'MN': 'Mongolia',
-  'BO': 'Bolivia', 'PY': 'Paraguay', 'GY': 'Guyana', 'SR': 'Suriname',
-  'PA': 'Panama', 'CR': 'Costa Rica', 'NI': 'Nicaragua', 'HN': 'Honduras',
-  'SV': 'El Salvador', 'GT': 'Guatemala', 'BZ': 'Belize', 'CU': 'Cuba',
-  'DO': 'Dominican Republic', 'HT': 'Haiti', 'JM': 'Jamaica', 'TT': 'Trinidad and Tobago',
-  'PR': 'Puerto Rico', 'DZ': 'Algeria', 'TN': 'Tunisia', 'LY': 'Libya', 'SD': 'Sudan',
-  'ET': 'Ethiopia', 'GH': 'Ghana', 'CI': 'Ivory Coast', 'SN': 'Senegal', 'CM': 'Cameroon',
-  'UG': 'Uganda', 'TZ': 'Tanzania', 'ZW': 'Zimbabwe', 'ZM': 'Zambia', 'MW': 'Malawi',
-  'MZ': 'Mozambique', 'AO': 'Angola', 'CD': 'DR Congo', 'CG': 'Congo', 'RW': 'Rwanda',
-  'BY': 'Belarus', 'MD': 'Moldova', 'BA': 'Bosnia', 'ME': 'Montenegro', 'MK': 'North Macedonia',
-  'AL': 'Albania', 'XK': 'Kosovo', 'LI': 'Liechtenstein', 'AD': 'Andorra', 'SM': 'San Marino',
-  'VA': 'Vatican City', 'FO': 'Faroe Islands', 'GL': 'Greenland',
-  'BN': 'Brunei', 'MO': 'Macau', 'NC': 'New Caledonia', 'FJ': 'Fiji', 'PG': 'Papua New Guinea',
-};
-
-// Country name to ISO code (reverse mapping for backward compatibility)
-const COUNTRY_CODES: Record<string, string> = Object.fromEntries(
-  Object.entries(COUNTRY_NAMES).map(([code, name]) => [name, code])
-);
-
-// Get full country name from ISO code
-const getCountryName = (countryCode: string): string => {
-  return COUNTRY_NAMES[countryCode] || countryCode;
-};
-
-// Convert country code or name to flag emoji
-const getCountryFlag = (countryOrCode: string): string => {
-  // Check if it's already a 2-letter code
-  const code = countryOrCode.length === 2 ? countryOrCode : COUNTRY_CODES[countryOrCode];
-  if (!code) return '';
-  return code
-    .toUpperCase()
-    .split('')
-    .map(char => String.fromCodePoint(0x1F1E6 + char.charCodeAt(0) - 65))
-    .join('');
 };
 
 import {

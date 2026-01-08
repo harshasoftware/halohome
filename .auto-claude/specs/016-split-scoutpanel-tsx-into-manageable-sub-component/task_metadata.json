@@ -1,0 +1,9 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "code_quality",
+  "ideaId": "cq-005",
+  "rationale": "Like GlobePage.tsx, this component has grown beyond maintainable size. The inline COUNTRY_NAMES object alone is 35 lines of static data that should be extracted. Multiple concerns (data, business logic, UI) are mixed together, making the component hard to test and modify.",
+  "category": "refactoring",
+  "codeQualitySeverity": "major",
+  "priority": "high"
+}
