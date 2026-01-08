@@ -7,6 +7,16 @@
 
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  checkRateLimit,
+  getClientIp,
+  buildIdentifier,
+  getRateLimitConfig,
+  getUserTier,
+  rateLimitResponse,
+  rateLimitHeaders,
+  RATE_LIMIT_ENDPOINTS,
+} from '../_shared/rate-limit.ts';
 
 const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -623,6 +633,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ==========================================================================
+    // RATE LIMITING CHECK - Must happen BEFORE any expensive API calls
+    // ==========================================================================
+    const clientIp = getClientIp(req);
+    const rateLimitIdentifier = buildIdentifier(userId, clientIp);
+    const userTier = getUserTier(userId);
+    const rateLimitConfig = getRateLimitConfig(RATE_LIMIT_ENDPOINTS.ASTRO_AI_CHAT, userTier);
+
+    const rateLimitResult = await checkRateLimit(
+      supabase,
+      rateLimitIdentifier,
+      RATE_LIMIT_ENDPOINTS.ASTRO_AI_CHAT,
+      rateLimitConfig
+    );
+
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
+    // ==========================================================================
+
     // Get or create subscription
     let subscriptionId = providedSubId;
     let isNewSubscription = false;
@@ -721,8 +751,19 @@ Deno.serve(async (req) => {
           model: modelToUse,
           isNew: isNewSubscription,
         } : null,
+        rateLimit: {
+          remaining: rateLimitResult.remaining,
+          limit: rateLimitResult.limit,
+          resetAt: rateLimitResult.resetAt.toISOString(),
+        },
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          ...rateLimitHeaders(rateLimitResult),
+        },
+      }
     );
   } catch (error) {
     console.error('Error in astro-ai-chat:', error);
