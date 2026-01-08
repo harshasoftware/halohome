@@ -57,3 +57,68 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Comment on the cleanup function for documentation
 COMMENT ON FUNCTION cleanup_old_rate_limits(INTEGER) IS
   'Removes rate limit records older than specified hours. Default 24 hours. Returns count of deleted records.';
+
+-- Rate limit check function
+-- Atomically increments request counter and returns whether request is allowed
+-- Handles window reset automatically when window expires
+-- Returns JSON: { "allowed": boolean, "remaining": integer, "reset_at": timestamp }
+CREATE OR REPLACE FUNCTION check_rate_limit(
+  p_identifier TEXT,
+  p_endpoint TEXT,
+  p_max_requests INTEGER,
+  p_window_seconds INTEGER
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_window_start TIMESTAMPTZ;
+  v_request_count INTEGER;
+  v_reset_at TIMESTAMPTZ;
+  v_allowed BOOLEAN;
+  v_remaining INTEGER;
+  v_now TIMESTAMPTZ := now();
+  v_window_interval INTERVAL := (p_window_seconds || ' seconds')::INTERVAL;
+BEGIN
+  -- Use INSERT ... ON CONFLICT for atomic upsert
+  -- If record exists and window is still valid, increment counter
+  -- If window has expired, reset counter and window_start
+  INSERT INTO public.rate_limits (identifier, endpoint, request_count, window_start)
+  VALUES (p_identifier, p_endpoint, 1, v_now)
+  ON CONFLICT (identifier, endpoint) DO UPDATE
+  SET
+    request_count = CASE
+      -- Window expired: reset counter to 1
+      WHEN rate_limits.window_start + v_window_interval < v_now THEN 1
+      -- Window still valid: increment counter
+      ELSE rate_limits.request_count + 1
+    END,
+    window_start = CASE
+      -- Window expired: reset window_start to now
+      WHEN rate_limits.window_start + v_window_interval < v_now THEN v_now
+      -- Window still valid: keep existing window_start
+      ELSE rate_limits.window_start
+    END
+  RETURNING request_count, window_start INTO v_request_count, v_window_start;
+
+  -- Calculate reset_at (when the current window expires)
+  v_reset_at := v_window_start + v_window_interval;
+
+  -- Determine if request is allowed
+  v_allowed := v_request_count <= p_max_requests;
+
+  -- Calculate remaining requests (minimum 0)
+  v_remaining := GREATEST(0, p_max_requests - v_request_count);
+
+  -- Return JSON response
+  RETURN jsonb_build_object(
+    'allowed', v_allowed,
+    'remaining', v_remaining,
+    'reset_at', v_reset_at,
+    'current', v_request_count,
+    'limit', p_max_requests
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Comment on the check_rate_limit function for documentation
+COMMENT ON FUNCTION check_rate_limit(TEXT, TEXT, INTEGER, INTEGER) IS
+  'Atomically checks and increments rate limit counter. Returns JSON with allowed (bool), remaining (int), reset_at (timestamp), current (int), limit (int). Window resets automatically when expired.';
