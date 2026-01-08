@@ -42,7 +42,9 @@ import { VirtualListContainer } from '@/components/ui/virtual-list-container';
 import {
   SIGNUP_PROMPT_ITEM_HEIGHT,
   BLURRED_OVERALL_ITEM_HEIGHT,
+  BLURRED_RANKED_ITEM_HEIGHT,
   OVERALL_CARD_ITEM_HEIGHT,
+  RANKED_CARD_ITEM_HEIGHT,
   SCOUT_LIST_PADDING,
   SCOUT_LIST_VIRTUALIZATION_CONFIG,
 } from './scout-panel-heights';
@@ -255,6 +257,33 @@ function getOverallVirtualItemHeight(item: OverallVirtualItem): number {
   }
 }
 
+// ============================================================================
+// Virtual List Item Types for Category Top Locations
+// ============================================================================
+
+/**
+ * Discriminated union for items in the virtualized Category Top Locations list.
+ * Each type has a different height for accurate virtualization.
+ */
+type CategoryVirtualItem =
+  | { type: 'signupPrompt'; remainingCount: number; category: ScoutCategory }
+  | { type: 'blurredRanked'; fakeCity: { name: string; country: string }; rank: number }
+  | { type: 'rankedLocation'; location: ScoutLocation & { countryName: string }; rank: number; category: ScoutCategory };
+
+/**
+ * Get the height of a Category virtual item (including gap spacing).
+ */
+function getCategoryVirtualItemHeight(item: CategoryVirtualItem): number {
+  switch (item.type) {
+    case 'signupPrompt':
+      return SIGNUP_PROMPT_ITEM_HEIGHT;
+    case 'blurredRanked':
+      return BLURRED_RANKED_ITEM_HEIGHT;
+    case 'rankedLocation':
+      return RANKED_CARD_ITEM_HEIGHT;
+  }
+}
+
 export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   planetaryLines,
   aspectLines,
@@ -285,6 +314,7 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
 
   // Scroll container refs for virtualized lists
   const overallTopScrollRef = useRef<HTMLDivElement>(null);
+  const categoryTopScrollRef = useRef<HTMLDivElement>(null);
 
   const showMobileToast = useCallback((description: string) => {
     // Clear any existing timeout
@@ -453,6 +483,66 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     items: overallVirtualItems,
     itemHeight: (index, item) => getOverallVirtualItemHeight(item),
     containerRef: overallTopScrollRef,
+    overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+  });
+
+  // Build combined list of items for virtualized Category Top Locations
+  const categoryVirtualItems = useMemo((): CategoryVirtualItem[] => {
+    if (isOverallView || viewMode !== 'top' || topLocations.length === 0) {
+      return [];
+    }
+
+    const items: CategoryVirtualItem[] = [];
+    const blurredCount = Math.min(FREE_LOCATION_LIMIT, topLocations.length);
+
+    // For non-authenticated users: signup prompt + blurred cards + real locations
+    if (!isAuthenticated) {
+      // 1. Signup prompt
+      items.push({ type: 'signupPrompt', remainingCount: blurredCount, category: selectedCategory });
+
+      // 2. Blurred fake cards (premium content)
+      for (let i = 0; i < blurredCount; i++) {
+        items.push({
+          type: 'blurredRanked',
+          fakeCity: FAKE_CITIES[i],
+          rank: i + 1,
+        });
+      }
+
+      // 3. Real locations after the blurred ones
+      const realLocations = topLocations.slice(FREE_LOCATION_LIMIT);
+      for (let i = 0; i < realLocations.length; i++) {
+        items.push({
+          type: 'rankedLocation',
+          location: realLocations[i],
+          rank: FREE_LOCATION_LIMIT + i + 1,
+          category: selectedCategory,
+        });
+      }
+    } else {
+      // Authenticated: show all locations
+      for (let i = 0; i < topLocations.length; i++) {
+        items.push({
+          type: 'rankedLocation',
+          location: topLocations[i],
+          rank: i + 1,
+          category: selectedCategory,
+        });
+      }
+    }
+
+    return items;
+  }, [isOverallView, viewMode, topLocations, isAuthenticated, selectedCategory]);
+
+  // Virtual list for Category Top Locations
+  const {
+    virtualItems: categoryVirtualListItems,
+    totalHeight: categoryTotalHeight,
+  } = useVirtualList({
+    items: categoryVirtualItems,
+    itemHeight: (index, item) => getCategoryVirtualItemHeight(item),
+    containerRef: categoryTopScrollRef,
     overscan: SCOUT_LIST_VIRTUALIZATION_CONFIG.overscan,
     minItemsForVirtualization: SCOUT_LIST_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
   });
@@ -940,37 +1030,44 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
               </p>
             </div>
           ) : (
-            <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-              <div className="p-4 space-y-3">
-                {/* For non-authenticated: show signup prompt first, then blurred top 5, then real locations */}
-                {!isAuthenticated && topLocations.length > 0 && (
-                  <>
-                    {/* Signup prompt at top */}
-                    <SignUpPromptCard
-                      remainingCount={Math.min(FREE_LOCATION_LIMIT, topLocations.length)}
-                      category={selectedCategory}
-                      isTopLocations
-                    />
-                    {/* Blurred fake top 5 (premium content) */}
-                    {FAKE_CITIES.slice(0, Math.min(FREE_LOCATION_LIMIT, topLocations.length)).map((fakeCity, idx) => (
-                      <BlurredRankedCard
-                        key={`blurred-${idx}`}
-                        fakeCity={fakeCity}
-                        rank={idx + 1}
-                      />
-                    ))}
-                  </>
-                )}
-                {/* Show all locations for authenticated, or locations after top 5 for non-authenticated */}
-                {(isAuthenticated ? topLocations : topLocations.slice(FREE_LOCATION_LIMIT)).map((location, idx) => (
-                  <RankedLocationCard
-                    key={`${location.city.name}-${idx}`}
-                    location={location}
-                    rank={isAuthenticated ? idx + 1 : FREE_LOCATION_LIMIT + idx + 1}
-                    category={selectedCategory}
-                    onClick={() => handleCityClick(location)}
-                  />
-                ))}
+            <div ref={categoryTopScrollRef} className="absolute inset-0 overflow-y-auto scrollbar-hide">
+              <div className="p-4">
+                <VirtualListContainer totalHeight={categoryTotalHeight}>
+                  {categoryVirtualListItems.map(({ item, index, style }) => {
+                    if (item.type === 'signupPrompt') {
+                      return (
+                        <div key="signup-prompt" style={style}>
+                          <SignUpPromptCard
+                            remainingCount={item.remainingCount}
+                            category={item.category}
+                            isTopLocations
+                          />
+                        </div>
+                      );
+                    }
+                    if (item.type === 'blurredRanked') {
+                      return (
+                        <div key={`blurred-${item.rank}`} style={style}>
+                          <BlurredRankedCard
+                            fakeCity={item.fakeCity}
+                            rank={item.rank}
+                          />
+                        </div>
+                      );
+                    }
+                    // item.type === 'rankedLocation'
+                    return (
+                      <div key={`${item.location.city.name}-${index}`} style={style}>
+                        <RankedLocationCard
+                          location={item.location}
+                          rank={item.rank}
+                          category={item.category}
+                          onClick={() => handleCityClick(item.location)}
+                        />
+                      </div>
+                    );
+                  })}
+                </VirtualListContainer>
               </div>
             </div>
           )
