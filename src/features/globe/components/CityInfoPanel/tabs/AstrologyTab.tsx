@@ -5,7 +5,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sparkles, TrendingUp, ChevronDown, ChevronUp, Navigation, Loader2, Globe } from 'lucide-react';
+import { Sparkles, TrendingUp, ChevronDown, ChevronUp, Navigation, Globe } from 'lucide-react';
+import { SkeletonAstrologyAnalysis } from '@/components/ui/skeleton-chart';
 import { PLANET_COLORS } from '@/lib/astro-types';
 import type { LocationAnalysis, LineInfluence, InfluenceLevel } from '@/lib/location-line-utils';
 import { getInfluenceLevelColor } from '@/lib/location-line-utils';
@@ -130,12 +131,7 @@ export const AstrologyTab: React.FC<AstrologyTabProps> = ({ analysis, loading = 
   const [showAllLines, setShowAllLines] = useState(false);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-3" />
-        <p className="text-sm text-slate-500">Analyzing planetary influences...</p>
-      </div>
-    );
+    return <SkeletonAstrologyAnalysis />;
   }
 
   if (!analysis) {
