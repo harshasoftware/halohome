@@ -7,3 +7,4 @@
 
 // Phase 2: Location Card Components
 export { LocationCard } from './LocationCard';
+export { RankedLocationCard } from './RankedLocationCard';

@@ -3,23 +3,23 @@
   "spec": "016-split-scoutpanel-tsx-into-manageable-sub-component",
   "state": "building",
   "subtasks": {
-    "completed": 2,
+    "completed": 5,
     "total": 14,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Data & Constants Extraction",
+    "current": "Location Card Components",
     "id": null,
-    "total": 4
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 4,
+    "number": 7,
     "started_at": "2026-01-08T15:30:56.025571"
   },
-  "last_update": "2026-01-08T15:39:00.695066"
+  "last_update": "2026-01-08T15:47:32.061314"
 }

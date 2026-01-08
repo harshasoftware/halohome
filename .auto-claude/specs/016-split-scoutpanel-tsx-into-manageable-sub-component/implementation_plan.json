@@ -46,21 +46,23 @@
           "id": "1.3",
           "title": "Extract category styling constants",
           "description": "Move CATEGORY_ICONS and CATEGORY_COLORS mappings to constants.ts",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "src/features/globe/components/ScoutPanel/constants.ts"
           ],
-          "notes": ""
+          "notes": "Extracted CATEGORY_ICONS (7 category-to-icon mappings) and CATEGORY_COLORS (7 category styling definitions with selected/unselected/icon states) to ScoutPanel/constants.ts. Updated ScoutPanel.tsx to import from constants. Added required React and lucide-react imports to constants.ts. Commit: 000bad7",
+          "updated_at": "2026-01-08T10:11:16.909091+00:00"
         },
         {
           "id": "1.4",
           "title": "Create types file",
           "description": "Extract ScoutMarker, ScoutPanelProps, ViewFilter, ViewMode, SelectedTab, and component prop interfaces to types.ts",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "src/features/globe/components/ScoutPanel/types.ts"
           ],
-          "notes": ""
+          "notes": "Extracted 14 type definitions from ScoutPanel.tsx to ScoutPanel/types.ts: ScoutMarker, ScoutPanelProps, ViewFilter, ViewMode, SelectedTab, CategoryUpgradeModalProps, CountrySectionProps, OverallCountrySectionProps, LocationCardProps, RankedLocationCardProps, OverallLocationCardProps, BlurredOverallCardProps, BlurredRankedCardProps, SignUpPromptCardProps. Added re-export of ScoutMarker for backward compatibility. Commit: 7f71a5a",
+          "updated_at": "2026-01-08T10:14:25.098598+00:00"
         }
       ]
     },
@@ -73,11 +75,12 @@
           "id": "2.1",
           "title": "Extract LocationCard component",
           "description": "Move LocationCard (~140 lines) to components/LocationCard.tsx - basic location card with expandable influences",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "src/features/globe/components/ScoutPanel/components/LocationCard.tsx"
           ],
-          "notes": ""
+          "notes": "Extracted LocationCard (~140 lines) to components/LocationCard.tsx. Component includes: city name, distance, score badge, planetary influence pills, expandable influence details, and globe hover highlighting. Updated barrel export in components/index.ts. ScoutPanel.tsx reduced from ~1842 to ~1700 lines. Commit: 29f885e",
+          "updated_at": "2026-01-08T10:17:09.021713+00:00"
         },
         {
           "id": "2.2",
@@ -217,5 +220,5 @@
     "issues": "",
     "tests_passed": ""
   },
-  "last_updated": "2026-01-08T10:08:35.920034+00:00"
+  "last_updated": "2026-01-08T10:17:09.021726+00:00"
 }

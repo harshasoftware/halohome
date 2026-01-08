@@ -11,10 +11,15 @@
       "discovered_at": "2026-01-08T10:05:53.854748+00:00"
     },
     "src/features/globe/components/ScoutPanel/constants.ts": {
-      "description": "Contains country data constants: COUNTRY_NAMES (100+ ISO code to name mappings), COUNTRY_CODES (reverse mapping), getCountryName() and getCountryFlag() utility functions",
+      "description": "Now contains category styling constants: CATEGORY_ICONS (maps category names to Lucide icon components) and CATEGORY_COLORS (maps category names to selected/unselected/icon CSS class combinations for theming)",
       "category": "constants",
-      "discovered_at": "2026-01-08T10:08:35.947685+00:00"
+      "discovered_at": "2026-01-08T10:11:16.955747+00:00"
+    },
+    "src/features/globe/components/ScoutPanel/types.ts": {
+      "description": "Contains 14 type definitions extracted from ScoutPanel.tsx: ScoutMarker, ScoutPanelProps, ViewFilter, ViewMode, SelectedTab (core types), plus 9 component prop interfaces (CategoryUpgradeModalProps, CountrySectionProps, OverallCountrySectionProps, LocationCardProps, RankedLocationCardProps, OverallLocationCardProps, BlurredOverallCardProps, BlurredRankedCardProps, SignUpPromptCardProps). Also re-exports scout-utils types for convenience.",
+      "category": "types",
+      "discovered_at": "2026-01-08T10:14:25.129574+00:00"
     }
   },
-  "last_updated": "2026-01-08T10:08:35.947695+00:00"
+  "last_updated": "2026-01-08T10:14:25.129583+00:00"
 }
