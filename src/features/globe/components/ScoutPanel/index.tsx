@@ -1,22 +1,792 @@
 /**
  * ScoutPanel Component
+ * Displays scouted locations by life category with filtering
  *
- * Displays scouted locations by life category with filtering.
+ * Redesigned with glass morphism aesthetic matching the landing page
  *
  * This directory structure follows the CityInfoPanel pattern:
  * - index.tsx: Main component (this file)
  * - components/: Sub-components extracted from the main component
  * - constants.ts: Static data and constants
  * - types.ts: TypeScript type definitions
- *
- * During the refactoring process, this file re-exports from the original
- * ScoutPanel.tsx to maintain backward compatibility while sub-components
- * are extracted incrementally.
  */
 
-// Re-export from original ScoutPanel.tsx to maintain backward compatibility
-// This will be replaced with the refactored component in subtask 5.2
-export { ScoutPanel, default } from '../ScoutPanel.tsx';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  MapPin, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown, Filter,
+  Globe2, Trophy, List, LayoutGrid, Briefcase, Heart, Activity, Home,
+  Sparkles, DollarSign, Info, Navigation, Star, Lock, Building2
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { PlanetaryLine, AspectLine } from '@/lib/astro-types';
+import { useScoutStore } from '@/stores/scoutStore';
+import { useIsRealUser } from '@/stores/authStore';
+import { useAISubscription } from '../../ai/useAISubscription';
+import { getCountryName, getCountryFlag, CATEGORY_ICONS, CATEGORY_COLORS } from './constants';
+import { LocationCard, RankedLocationCard, OverallLocationCard, CountrySection, OverallCountrySection, BlurredOverallCard, BlurredRankedCard, SignUpPromptCard, CategoryUpgradeModal } from './components';
 
-// Export types (will be populated in subtask 1.4)
-export * from './types';
+import {
+  type ScoutCategory,
+  type ScoutAnalysis,
+  type ScoutLocation,
+  type CountryGroup,
+  type RankedCountryGroup,
+  type OverallScoutLocation,
+  type OverallCountryGroup,
+  SCOUT_CATEGORIES,
+  CATEGORY_INFO,
+  scoutLocationsForCategory,
+  scoutOverallLocations,
+  getCountriesFromAnalysis,
+  filterAnalysisByCountry,
+  getPlainLanguageInfluence,
+  groupOverallByCountry,
+  rankCountriesByScore,
+} from '../../utils/scout-utils';
+import type {
+  ScoutMarker,
+  ScoutPanelProps,
+  ViewFilter,
+  ViewMode,
+  SelectedTab,
+} from './types';
+
+// Re-export ScoutMarker for consumers importing from this file
+export type { ScoutMarker } from './types';
+import {
+  type PopulationTier,
+  POPULATION_TIERS,
+  POPULATION_TIER_ORDER,
+} from '../../utils/population-tiers';
+
+// Types imported from ./types.ts
+
+// Number of locations to show before requiring signup
+const FREE_LOCATION_LIMIT = 5;
+// Number of blurred placeholder locations to show as preview
+const BLURRED_PREVIEW_COUNT = 3;
+// Minimum locations to show (floor)
+const MIN_RANKED_LOCATIONS = 200;
+// Percentage of top cities to show
+const TOP_PERCENTAGE = 0.05;
+
+// Calculate location limit: top 5% of cities, but minimum 200
+const getLocationLimit = (totalCities: number): number => {
+  const fivePercent = Math.ceil(totalCities * TOP_PERCENTAGE);
+  return Math.max(fivePercent, MIN_RANKED_LOCATIONS);
+};
+
+// Fake city names for blurred preview (hack-proof - not real data)
+const FAKE_CITIES = [
+  { name: 'Aurelia Springs', country: 'Novaria' },
+  { name: 'Crystalline Bay', country: 'Veridian' },
+  { name: 'Emberstone Valley', country: 'Solanthia' },
+  { name: 'Moonhaven Ridge', country: 'Celestine' },
+  { name: 'Starfall Harbor', country: 'Luminara' },
+];
+
+export const ScoutPanel: React.FC<ScoutPanelProps> = ({
+  planetaryLines,
+  aspectLines,
+  onCityClick,
+  onShowCountryMarkers,
+}) => {
+  const [selectedTab, setSelectedTab] = useState<SelectedTab>('overall');
+  const [selectedCountry, setSelectedCountry] = useState<string>('all');
+  const [viewFilter, setViewFilter] = useState<ViewFilter>('beneficial');
+  const [viewMode, setViewMode] = useState<ViewMode>('top');
+  const [expandedCountries, setExpandedCountries] = useState<Set<string>>(new Set());
+
+  // Auth check for gating top locations (excludes anonymous users)
+  const isAuthenticated = useIsRealUser();
+
+  // Subscription check for gating categories
+  const { status: subscriptionStatus } = useAISubscription();
+  const isPaidUser = subscriptionStatus?.planType === 'starter' ||
+                     subscriptionStatus?.planType === 'pro' ||
+                     subscriptionStatus?.planType === 'credits';
+
+  // State for showing upgrade modal when clicking locked categories
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Mobile description toast - shows briefly when tab is tapped
+  const [mobileToast, setMobileToast] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showMobileToast = useCallback((description: string) => {
+    // Clear any existing timeout
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setMobileToast(description);
+    // Auto-hide after 2.5 seconds
+    toastTimeoutRef.current = setTimeout(() => {
+      setMobileToast(null);
+    }, 2500);
+  }, []);
+
+  // --- Scout results from store (computed by worker pool in GlobePage) ---
+  // Results are pre-computed at the page level so they persist even when this panel closes.
+  // The worker pool runs in parallel across all categories for fast computation.
+  const scoutProgress = useScoutStore((state) => state.progress);
+  const storeOverallResults = useScoutStore((state) => state.overallResults);
+  const storeCategoryResults = useScoutStore((state) => state.categoryResults);
+  const scoutBackend = useScoutStore((state) => state.backend);
+  const populationTier = useScoutStore((state) => state.populationTier);
+  const setPopulationTier = useScoutStore((state) => state.setPopulationTier);
+
+  const isOverallView = selectedTab === 'overall';
+  const selectedCategory = isOverallView ? 'career' : selectedTab; // fallback for category-specific code
+
+  // Get results from store
+  const overallLocations = storeOverallResults ?? [];
+  const analysis = isOverallView ? null : (storeCategoryResults.get(selectedTab as ScoutCategory) ?? null);
+
+  // Check if we're still computing (progress shown in AstroLoadingOverlay at page level)
+  const isComputing = scoutProgress.phase === 'initializing' || scoutProgress.phase === 'computing';
+
+  const backend = scoutBackend ?? 'typescript';
+
+  // Get filtered analysis based on country selection (only for category view)
+  const filteredAnalysis = useMemo(() => {
+    if (!analysis) return null;
+    if (selectedCountry === 'all') return analysis;
+    return filterAnalysisByCountry(analysis, selectedCountry);
+  }, [analysis, selectedCountry]);
+
+  // Get unique countries for filter dropdown
+  const countries = useMemo(() => {
+    if (!analysis) return [];
+    return getCountriesFromAnalysis(analysis);
+  }, [analysis]);
+
+  // Filter and rank countries by normalized score - for category view
+  const displayCountries = useMemo((): RankedCountryGroup[] => {
+    if (!filteredAnalysis) return [];
+    // Filter locations by view filter (good or avoid)
+    const filteredCountries = filteredAnalysis.countries.map(country => {
+      const filteredLocations = country.locations.filter(l => l.nature === viewFilter);
+      return {
+        ...country,
+        locations: filteredLocations,
+        beneficialCount: filteredLocations.filter(l => l.nature === 'beneficial').length,
+        challengingCount: filteredLocations.filter(l => l.nature === 'challenging').length,
+      };
+    }).filter(c => c.locations.length > 0);
+    // Rank by normalized score
+    return rankCountriesByScore(filteredCountries);
+  }, [filteredAnalysis, viewFilter]);
+
+  // Get locations sorted by score for "Top Locations" view - top 5% (min 200)
+  const topLocations = useMemo(() => {
+    if (!filteredAnalysis) return [];
+
+    // Count total cities across all countries (before view filter)
+    let totalCities = 0;
+    for (const country of filteredAnalysis.countries) {
+      totalCities += country.locations.length;
+    }
+
+    const allLocations: (ScoutLocation & { countryName: string })[] = [];
+    for (const country of filteredAnalysis.countries) {
+      for (const location of country.locations) {
+        // Filter by view filter (good or avoid)
+        if (location.nature !== viewFilter) continue;
+
+        allLocations.push({
+          ...location,
+          countryName: country.country,
+        });
+      }
+    }
+
+    // Sort by score descending, limit to top 5% of total cities (min 200)
+    const limit = getLocationLimit(totalCities);
+    return allLocations.sort((a, b) => b.overallScore - a.overallScore).slice(0, limit);
+  }, [filteredAnalysis, viewFilter]);
+
+  // Filter overall locations by country (for overall view) - top 5% (min 200)
+  const filteredOverallLocations = useMemo(() => {
+    if (!isOverallView) return [];
+
+    // Calculate limit based on total cities (before any filters)
+    const limit = getLocationLimit(overallLocations.length);
+
+    let locations = overallLocations;
+    if (selectedCountry !== 'all') {
+      locations = locations.filter(l => l.city.country === selectedCountry);
+    }
+    // Filter by view filter (good or avoid)
+    if (viewFilter === 'beneficial') {
+      locations = locations.filter(l => l.beneficialCategories > l.challengingCategories);
+    } else {
+      locations = locations.filter(l => l.challengingCategories > l.beneficialCategories);
+    }
+    // Apply limit (top 5% of total cities, min 200)
+    return locations.slice(0, limit);
+  }, [isOverallView, overallLocations, selectedCountry, viewFilter]);
+
+  // Get unique countries for overall view (for country filter dropdown)
+  const overallCountries = useMemo(() => {
+    if (!isOverallView) return [];
+    const countrySet = new Set(overallLocations.map(l => l.city.country));
+    return Array.from(countrySet).sort();
+  }, [isOverallView, overallLocations]);
+
+  // Group overall locations by country for Countries view
+  const overallCountryGroups = useMemo((): OverallCountryGroup[] => {
+    if (!isOverallView || viewMode !== 'countries') return [];
+    const groups = groupOverallByCountry(filteredOverallLocations);
+    // Filter by selected country if set
+    if (selectedCountry !== 'all') {
+      return groups.filter(g => g.country === selectedCountry);
+    }
+    return groups;
+  }, [isOverallView, viewMode, filteredOverallLocations, selectedCountry]);
+
+  // Toggle country expansion
+  const toggleCountry = useCallback((country: string) => {
+    setExpandedCountries(prev => {
+      const next = new Set(prev);
+      if (next.has(country)) {
+        next.delete(country);
+      } else {
+        next.add(country);
+      }
+      return next;
+    });
+  }, []);
+
+  // Handle city click
+  const handleCityClick = useCallback((location: ScoutLocation) => {
+    onCityClick?.(location.city.lat, location.city.lng, location.city.name);
+  }, [onCityClick]);
+
+  // Handle overall city click
+  const handleOverallCityClick = useCallback((location: OverallScoutLocation) => {
+    onCityClick?.(location.city.lat, location.city.lng, location.city.name);
+  }, [onCityClick]);
+
+  // Auto-show all markers on globe when in "Top Locations" mode
+  // Only show markers after all rankings are computed (not during computation)
+  useEffect(() => {
+    if (!onShowCountryMarkers) return;
+
+    // Don't show markers while computing - wait for complete results
+    if (isComputing) {
+      onShowCountryMarkers([]);
+      return;
+    }
+
+    // Only show markers in "Top Locations" mode
+    if (viewMode !== 'top') {
+      // Clear markers when switching to "By Country" mode
+      onShowCountryMarkers([]);
+      return;
+    }
+
+    // For overall view, show top 500 filtered locations as markers
+    if (isOverallView && filteredOverallLocations.length > 0) {
+      const markers: ScoutMarker[] = filteredOverallLocations.map(loc => ({
+        lat: loc.city.lat,
+        lng: loc.city.lng,
+        name: loc.city.name,
+        nature: loc.beneficialCategories > loc.challengingCategories ? 'beneficial' : 'challenging',
+      }));
+      onShowCountryMarkers(markers);
+      return;
+    }
+
+    // For category view, show top 500 locations as markers
+    if (!isOverallView && topLocations.length > 0) {
+      const markers: ScoutMarker[] = topLocations.map(loc => ({
+        lat: loc.city.lat,
+        lng: loc.city.lng,
+        name: loc.city.name,
+        nature: loc.nature,
+      }));
+      onShowCountryMarkers(markers);
+      return;
+    }
+  }, [viewMode, isOverallView, filteredOverallLocations, topLocations, onShowCountryMarkers, isComputing]);
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-[#0a0a0f]">
+      {/* Category Tabs - Horizontal Scroll with Glass Morphism */}
+      <div className="flex-shrink-0 border-b border-slate-200 dark:border-white/10">
+        <div className="relative flex items-center">
+          {/* Left Arrow */}
+          <button
+            onClick={() => {
+              const container = document.getElementById('scout-tabs-container');
+              if (container) container.scrollBy({ left: -150, behavior: 'smooth' });
+            }}
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors ml-2"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4 text-slate-600 dark:text-zinc-400" />
+          </button>
+
+          {/* Scrollable Tab Container */}
+          <div
+            id="scout-tabs-container"
+            className="flex gap-2 overflow-x-auto scrollbar-hide px-3 py-3 flex-1"
+          >
+            {/* Overall Tab - First */}
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0',
+                      'transition-all duration-300 ease-out',
+                      'border backdrop-blur-sm',
+                      isOverallView
+                        ? 'bg-slate-800 dark:bg-white/10 border-slate-700 dark:border-white/30 text-white shadow-lg'
+                        : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-slate-700 dark:hover:text-white hover:border-slate-300 dark:hover:border-white/20'
+                    )}
+                    onClick={() => {
+                      setSelectedTab('overall');
+                      setSelectedCountry('all');
+                      setExpandedCountries(new Set());
+                      setViewMode('top');
+                      // Show toast on mobile
+                      showMobileToast('Cities ranked by combined scores across all life categories');
+                    }}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    Overall
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="hidden md:block bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-medium border-0"
+                >
+                  Cities ranked by combined scores across all life categories
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Category Tabs - Gated for paid users */}
+            {SCOUT_CATEGORIES.map(cat => {
+              const info = CATEGORY_INFO[cat];
+              const isSelected = selectedTab === cat;
+              const IconComponent = CATEGORY_ICONS[cat];
+              const isLocked = !isPaidUser;
+              return (
+                <TooltipProvider key={cat} delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="flex-shrink-0"
+                        onClick={(e) => {
+                          if (isLocked) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowUpgradeModal(true);
+                          }
+                        }}
+                      >
+                        <button
+                          type="button"
+                          disabled={isLocked}
+                          aria-disabled={isLocked}
+                          className={cn(
+                            'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                            'transition-all duration-300 ease-out',
+                            'border backdrop-blur-sm',
+                            isLocked && 'opacity-60 cursor-not-allowed pointer-events-none',
+                            isSelected && !isLocked
+                              ? cn(CATEGORY_COLORS[cat]?.selected, 'shadow-lg')
+                              : CATEGORY_COLORS[cat]?.unselected
+                          )}
+                          onClick={() => {
+                            setSelectedTab(cat);
+                            setSelectedCountry('all');
+                            setExpandedCountries(new Set());
+                            setViewMode('top');
+                            // Show toast on mobile
+                            showMobileToast(info.description);
+                          }}
+                        >
+                          <IconComponent className={cn('h-4 w-4', isSelected ? '' : CATEGORY_COLORS[cat]?.icon)} />
+                          {info.label}
+                          {isLocked && <Lock className="h-3 w-3 ml-0.5" />}
+                        </button>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="hidden md:block bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-medium border-0 max-w-[220px]"
+                    >
+                      {info.description}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+          </div>
+
+          {/* Right Arrow */}
+          <button
+            onClick={() => {
+              const container = document.getElementById('scout-tabs-container');
+              if (container) container.scrollBy({ left: 150, behavior: 'smooth' });
+            }}
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors mr-2"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4 text-slate-600 dark:text-zinc-400" />
+          </button>
+        </div>
+
+        {/* Mobile description toast - shows briefly on tab tap */}
+        <AnimatePresence>
+          {mobileToast && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="px-4 pb-2">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                  <Info className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+                    {mobileToast}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Filters Row - Compact single row */}
+      <div className="flex-shrink-0 px-4 py-2 flex items-center gap-2 border-b border-slate-200 dark:border-white/5">
+        {/* View Mode Toggle - Compact segmented control */}
+        <div className="flex items-center bg-slate-100 dark:bg-white/[0.03] rounded-lg p-0.5 border border-slate-200 dark:border-white/10">
+          <button
+            className={cn(
+              'px-2 py-1 rounded-md text-[10px] font-medium transition-all',
+              viewMode === 'top'
+                ? 'bg-white dark:bg-white/10 text-slate-800 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400'
+            )}
+            onClick={() => setViewMode('top')}
+          >
+            <Trophy className="h-3 w-3 inline mr-1" />
+            Top
+          </button>
+          <button
+            className={cn(
+              'px-2 py-1 rounded-md text-[10px] font-medium transition-all',
+              viewMode === 'countries'
+                ? 'bg-white dark:bg-white/10 text-slate-800 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400'
+            )}
+            onClick={() => setViewMode('countries')}
+          >
+            <Globe2 className="h-3 w-3 inline mr-1" />
+            Countries
+          </button>
+        </div>
+
+        {/* City Size Filter - Population tier */}
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Select value={populationTier} onValueChange={(value) => setPopulationTier(value as PopulationTier)}>
+                  <SelectTrigger className="w-auto min-w-[80px] max-w-[110px] h-7 text-[10px] bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 px-2">
+                    <Building2 className="h-3 w-3 mr-1 opacity-60" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10">
+                    {POPULATION_TIER_ORDER.map(tier => (
+                      <SelectItem key={tier} value={tier} className="text-xs">
+                        <span className="font-medium">{POPULATION_TIERS[tier].label}</span>
+                        <span className="ml-1.5 text-slate-400 dark:text-slate-500">
+                          {POPULATION_TIERS[tier].approximateCities}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              className="hidden md:block bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-medium border-0"
+            >
+              Filter by city size: {POPULATION_TIERS[populationTier].description}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Country Filter - compact dropdown */}
+        {(isOverallView || viewMode === 'countries') && (
+          <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+            <SelectTrigger className="w-auto min-w-[100px] max-w-[180px] h-7 text-[10px] bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 px-2">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10">
+              <SelectItem value="all">All Countries</SelectItem>
+              {(isOverallView ? overallCountries : countries).map(country => (
+                <SelectItem key={country} value={country}>
+                  <span className="flex items-center gap-2">
+                    <span>{getCountryFlag(country)}</span>
+                    <span>{getCountryName(country)}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* View Filter - Good/Avoid toggle */}
+        <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-white/[0.03] rounded-lg p-0.5 border border-slate-200 dark:border-white/10">
+          <button
+            className={cn(
+              'px-2 py-1 rounded-md text-[10px] font-medium transition-all flex items-center gap-0.5',
+              viewFilter === 'beneficial'
+                ? 'bg-green-500/20 text-green-600 dark:text-green-400'
+                : 'text-slate-500 dark:text-slate-400'
+            )}
+            onClick={() => setViewFilter('beneficial')}
+          >
+            <ThumbsUp className="h-2.5 w-2.5" />
+            Good
+          </button>
+          <button
+            className={cn(
+              'px-2 py-1 rounded-md text-[10px] font-medium transition-all flex items-center gap-0.5',
+              viewFilter === 'challenging'
+                ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                : 'text-slate-500 dark:text-slate-400'
+            )}
+            onClick={() => setViewFilter('challenging')}
+          >
+            <ThumbsDown className="h-2.5 w-2.5" />
+            Avoid
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Summary - Compact inline version */}
+      <div className="flex-shrink-0 px-4 py-1.5 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+        {isOverallView ? (
+          viewMode === 'top' ? (
+            <>
+              <span>{isComputing ? '...' : filteredOverallLocations.length} locations · {filteredOverallLocations.filter(l => l.beneficialCategories > l.challengingCategories).length} good</span>
+              <span>{overallCountries.length} {overallCountries.length === 1 ? 'country' : 'countries'}</span>
+            </>
+          ) : (
+            <>
+              <span>{isComputing ? '...' : overallCountryGroups.length} countries ranked</span>
+              <span>{filteredOverallLocations.length} total cities</span>
+            </>
+          )
+        ) : (
+          <>
+            <span>{isComputing ? '...' : (filteredAnalysis?.totalBeneficial ?? 0)} beneficial · {isComputing ? '...' : (filteredAnalysis?.totalChallenging ?? 0)} challenging</span>
+            <span>{displayCountries.length} {displayCountries.length === 1 ? 'country' : 'countries'}</span>
+          </>
+        )}
+      </div>
+
+      {/* Location List */}
+      <div className="flex-1 min-h-0 relative">
+        {isOverallView ? (
+          // Overall View - Ranked by combined scores across all categories
+          viewMode === 'top' ? (
+            // Top Locations View (cities ranked) for Overall tab
+            !isComputing && filteredOverallLocations.length === 0 ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
+                <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+                  <Globe2 className="h-10 w-10 text-slate-400 dark:text-slate-600" />
+                </div>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  No locations found
+                </p>
+                <p className="text-xs text-slate-500 mt-2 max-w-[200px]">
+                  Try adjusting your filters or ensure your birth chart has planetary lines calculated.
+                </p>
+              </div>
+            ) : (
+              <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
+                <div className="p-4 space-y-3">
+                  {/* For non-authenticated: show signup prompt first, then blurred top 5, then real locations */}
+                  {!isAuthenticated && filteredOverallLocations.length > 0 && (
+                    <>
+                      {/* Signup prompt at top */}
+                      <SignUpPromptCard
+                        remainingCount={Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length)}
+                        category="overall"
+                        isTopLocations
+                      />
+                      {/* Blurred fake top 5 (premium content) */}
+                      {FAKE_CITIES.slice(0, Math.min(FREE_LOCATION_LIMIT, filteredOverallLocations.length)).map((fakeCity, idx) => (
+                        <BlurredOverallCard
+                          key={`blurred-${idx}`}
+                          fakeCity={fakeCity}
+                          rank={idx + 1}
+                        />
+                      ))}
+                    </>
+                  )}
+                  {/* Show all locations for authenticated, or locations after top 5 for non-authenticated */}
+                  {(isAuthenticated ? filteredOverallLocations : filteredOverallLocations.slice(FREE_LOCATION_LIMIT)).map((location, idx) => (
+                    <OverallLocationCard
+                      key={`${location.city.name}-${location.city.country}-${idx}`}
+                      location={location}
+                      rank={isAuthenticated ? idx + 1 : FREE_LOCATION_LIMIT + idx + 1}
+                      onClick={() => handleOverallCityClick(location)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          ) : (
+            // Countries View for Overall tab - grouped by country with normalized scoring
+            !isComputing && overallCountryGroups.length === 0 ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
+                <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+                  <Globe2 className="h-10 w-10 text-slate-400 dark:text-slate-600" />
+                </div>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  No countries found
+                </p>
+                <p className="text-xs text-slate-500 mt-2 max-w-[200px]">
+                  Try adjusting your filters or ensure your birth chart has planetary lines calculated.
+                </p>
+              </div>
+            ) : (
+              <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
+                <div>
+                  {overallCountryGroups.map(country => (
+                    <OverallCountrySection
+                      key={country.country}
+                      country={country}
+                      isExpanded={expandedCountries.has(country.country)}
+                      onToggle={() => toggleCountry(country.country)}
+                      onCityClick={handleOverallCityClick}
+                      onShowMarkers={onShowCountryMarkers}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          )
+        ) : viewMode === 'top' ? (
+          // Top Locations View - All locations ranked by score (category view)
+          !isComputing && topLocations.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
+              <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+                <MapPin className="h-10 w-10 text-slate-400 dark:text-slate-600" />
+              </div>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                No locations for {CATEGORY_INFO[selectedCategory]?.label || 'this category'}
+              </p>
+              <p className="text-xs text-slate-500 mt-2 max-w-[200px]">
+                Your chart may not have strong influences in this life area. Try another category.
+              </p>
+            </div>
+          ) : (
+            <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
+              <div className="p-4 space-y-3">
+                {/* For non-authenticated: show signup prompt first, then blurred top 5, then real locations */}
+                {!isAuthenticated && topLocations.length > 0 && (
+                  <>
+                    {/* Signup prompt at top */}
+                    <SignUpPromptCard
+                      remainingCount={Math.min(FREE_LOCATION_LIMIT, topLocations.length)}
+                      category={selectedCategory}
+                      isTopLocations
+                    />
+                    {/* Blurred fake top 5 (premium content) */}
+                    {FAKE_CITIES.slice(0, Math.min(FREE_LOCATION_LIMIT, topLocations.length)).map((fakeCity, idx) => (
+                      <BlurredRankedCard
+                        key={`blurred-${idx}`}
+                        fakeCity={fakeCity}
+                        rank={idx + 1}
+                      />
+                    ))}
+                  </>
+                )}
+                {/* Show all locations for authenticated, or locations after top 5 for non-authenticated */}
+                {(isAuthenticated ? topLocations : topLocations.slice(FREE_LOCATION_LIMIT)).map((location, idx) => (
+                  <RankedLocationCard
+                    key={`${location.city.name}-${idx}`}
+                    location={location}
+                    rank={isAuthenticated ? idx + 1 : FREE_LOCATION_LIMIT + idx + 1}
+                    category={selectedCategory}
+                    onClick={() => handleCityClick(location)}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        ) : (
+          // Countries View - Grouped by country
+          !isComputing && displayCountries.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-12">
+              <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+                <Globe2 className="h-10 w-10 text-slate-400 dark:text-slate-600" />
+              </div>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                No locations for {CATEGORY_INFO[selectedCategory]?.label || 'this category'}
+              </p>
+              <p className="text-xs text-slate-500 mt-2 max-w-[200px]">
+                Your chart may not have strong influences in this life area. Try another category.
+              </p>
+            </div>
+          ) : (
+            <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
+              <div>
+                {displayCountries.map(country => (
+                  <CountrySection
+                    key={country.country}
+                    country={country}
+                    category={selectedCategory}
+                    isExpanded={expandedCountries.has(country.country)}
+                    onToggle={() => toggleCountry(country.country)}
+                    onCityClick={handleCityClick}
+                    onShowMarkers={onShowCountryMarkers}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Category Upgrade Modal */}
+      <CategoryUpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+      />
+    </div>
+  );
+};
+
+export default ScoutPanel;
