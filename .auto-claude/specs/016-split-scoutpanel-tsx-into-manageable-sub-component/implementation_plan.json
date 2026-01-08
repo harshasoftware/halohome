@@ -155,11 +155,12 @@
           "id": "4.2",
           "title": "Extract SignUpPromptCard component",
           "description": "Move SignUpPromptCard (~100 lines) to components/SignUpPromptCard.tsx - auth gating prompt card",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "src/features/globe/components/ScoutPanel/components/SignUpPromptCard.tsx"
           ],
-          "notes": ""
+          "notes": "Extracted SignUpPromptCard (~106 lines) to components/SignUpPromptCard.tsx. Component includes: auth gating prompt with Google One Tap and email authentication, lock icon badge, responsive styling. Updated barrel export in components/index.ts. Removed unused imports from ScoutPanel.tsx (AuthModal, useAuthActions, useGoogleOneTap, Mail, Button, Badge). ScoutPanel.tsx reduced from ~1095 to 981 lines. Commit: fd7bc73",
+          "updated_at": "2026-01-08T13:27:14.593149+00:00"
         },
         {
           "id": "4.3",
@@ -225,6 +226,6 @@
     "issues": "",
     "tests_passed": ""
   },
-  "last_updated": "2026-01-08T13:13:52.466093+00:00",
+  "last_updated": "2026-01-08T13:27:14.593158+00:00",
   "recoveryNote": "Task recovered from stuck state at 2026-01-08T13:11:24.067Z"
 }

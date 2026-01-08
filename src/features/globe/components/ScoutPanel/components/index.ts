@@ -17,3 +17,4 @@ export { OverallCountrySection } from './OverallCountrySection';
 // Phase 4: Auth & Premium Components
 export { BlurredOverallCard, BlurredRankedCard } from './BlurredCards';
 export { SignUpPromptCard } from './SignUpPromptCard';
+export { CategoryUpgradeModal } from './CategoryUpgradeModal';
