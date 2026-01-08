@@ -9,7 +9,12 @@
       "description": "New directory structure created following CityInfoPanel pattern: index.tsx re-exports from original ScoutPanel.tsx for backward compatibility during incremental refactoring",
       "category": "architecture",
       "discovered_at": "2026-01-08T10:05:53.854748+00:00"
+    },
+    "src/features/globe/components/ScoutPanel/constants.ts": {
+      "description": "Contains country data constants: COUNTRY_NAMES (100+ ISO code to name mappings), COUNTRY_CODES (reverse mapping), getCountryName() and getCountryFlag() utility functions",
+      "category": "constants",
+      "discovered_at": "2026-01-08T10:08:35.947685+00:00"
     }
   },
-  "last_updated": "2026-01-08T10:05:53.854762+00:00"
+  "last_updated": "2026-01-08T10:08:35.947695+00:00"
 }

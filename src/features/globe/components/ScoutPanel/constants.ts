@@ -4,6 +4,75 @@
  * Static data and constants for the ScoutPanel component.
  */
 
+import React from 'react';
+import {
+  Briefcase,
+  Heart,
+  Activity,
+  Home,
+  Sparkles,
+  DollarSign,
+  LayoutGrid,
+} from 'lucide-react';
+
+/**
+ * Lucide icon mapping for categories
+ */
+export const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  career: Briefcase,
+  love: Heart,
+  health: Activity,
+  home: Home,
+  wellbeing: Sparkles,
+  wealth: DollarSign,
+  overall: LayoutGrid,
+};
+
+/**
+ * Category-specific colors for visual distinction
+ */
+export const CATEGORY_COLORS: Record<string, {
+  selected: string;
+  unselected: string;
+  icon: string;
+}> = {
+  overall: {
+    selected: 'bg-slate-700 dark:bg-white/15 border-slate-600 dark:border-white/30 text-white',
+    unselected: 'bg-slate-100 dark:bg-white/[0.03] border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.06]',
+    icon: 'text-slate-500 dark:text-slate-400',
+  },
+  career: {
+    selected: 'bg-blue-600 dark:bg-blue-500/30 border-blue-500 dark:border-blue-400/50 text-white',
+    unselected: 'bg-blue-50 dark:bg-blue-500/[0.08] border-blue-200 dark:border-blue-400/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-500/[0.15]',
+    icon: 'text-blue-500 dark:text-blue-400',
+  },
+  love: {
+    selected: 'bg-pink-500 dark:bg-pink-500/30 border-pink-400 dark:border-pink-400/50 text-white',
+    unselected: 'bg-pink-50 dark:bg-pink-500/[0.08] border-pink-200 dark:border-pink-400/20 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-500/[0.15]',
+    icon: 'text-pink-500 dark:text-pink-400',
+  },
+  health: {
+    selected: 'bg-green-600 dark:bg-green-500/30 border-green-500 dark:border-green-400/50 text-white',
+    unselected: 'bg-green-50 dark:bg-green-500/[0.08] border-green-200 dark:border-green-400/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-500/[0.15]',
+    icon: 'text-green-500 dark:text-green-400',
+  },
+  home: {
+    selected: 'bg-amber-500 dark:bg-amber-500/30 border-amber-400 dark:border-amber-400/50 text-white',
+    unselected: 'bg-amber-50 dark:bg-amber-500/[0.08] border-amber-200 dark:border-amber-400/20 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/[0.15]',
+    icon: 'text-amber-500 dark:text-amber-400',
+  },
+  wellbeing: {
+    selected: 'bg-purple-500 dark:bg-purple-500/30 border-purple-400 dark:border-purple-400/50 text-white',
+    unselected: 'bg-purple-50 dark:bg-purple-500/[0.08] border-purple-200 dark:border-purple-400/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-500/[0.15]',
+    icon: 'text-purple-500 dark:text-purple-400',
+  },
+  wealth: {
+    selected: 'bg-emerald-600 dark:bg-emerald-500/30 border-emerald-500 dark:border-emerald-400/50 text-white',
+    unselected: 'bg-emerald-50 dark:bg-emerald-500/[0.08] border-emerald-200 dark:border-emerald-400/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/[0.15]',
+    icon: 'text-emerald-500 dark:text-emerald-400',
+  },
+};
+
 /**
  * Country ISO code to full name mapping
  * Used for displaying country names in the UI
