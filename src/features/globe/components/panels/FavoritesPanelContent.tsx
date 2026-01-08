@@ -7,6 +7,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonFavoriteCard } from '@/components/ui/skeleton-card';
 import { Heart, MapPin, Trash2, Navigation, Globe2 } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 import { toast } from 'sonner';
@@ -28,8 +30,32 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8 h-64">
-        <div className="w-6 h-6 border-2 rounded-full animate-spin border-slate-200 border-t-purple-500" />
+      <div className="flex flex-col h-full">
+        {/* Header skeleton */}
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-5 h-5 rounded" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="ml-auto h-4 w-12" />
+          </div>
+        </div>
+
+        {/* Favorites list skeleton */}
+        <ScrollArea className="flex-1">
+          <div className="p-2 space-y-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonFavoriteCard key={i} className="border-slate-200 dark:border-white/10" />
+            ))}
+          </div>
+        </ScrollArea>
+
+        {/* Footer skeleton */}
+        <div className="px-4 py-3 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50">
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-4 h-4 rounded" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
       </div>
     );
   }
