@@ -6,6 +6,17 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.8.0';
+import {
+  checkRateLimit,
+  getClientIp,
+  buildIdentifier,
+  getRateLimitConfig,
+  getUserTier,
+  rateLimitResponse,
+  rateLimitHeaders,
+  RATE_LIMIT_ENDPOINTS,
+  type RateLimitResult,
+} from '../_shared/rate-limit.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -675,6 +686,38 @@ async function handleWebhook(req: Request): Promise<Response> {
   return new Response('OK', { status: 200 });
 }
 
+// Actions that create checkout sessions (stricter rate limits)
+const CHECKOUT_ACTIONS = [
+  'createSubscription',
+  'purchaseCredits',
+  'purchaseCreditsAnonymous',
+  'subscribeAnonymous',
+  'claimCredits',
+];
+
+// Actions that check status (more lenient rate limits)
+const STATUS_ACTIONS = [
+  'getStatus',
+  'getUsage',
+  'getStatusByEmail',
+  'getPlans',
+  'debug',
+];
+
+/**
+ * Helper function to add rate limit info to response body
+ */
+function addRateLimitToBody(body: Record<string, unknown>, result: RateLimitResult): Record<string, unknown> {
+  return {
+    ...body,
+    rateLimit: {
+      remaining: result.remaining,
+      limit: result.limit,
+      resetAt: result.resetAt.toISOString(),
+    },
+  };
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -682,6 +725,7 @@ Deno.serve(async (req) => {
   }
 
   // Handle Stripe webhooks (POST to /webhook path)
+  // NOTE: Webhook endpoint is excluded from rate limiting - it's called by Stripe
   const url = new URL(req.url);
   if (url.pathname.endsWith('/webhook') && req.method === 'POST') {
     return handleWebhook(req);
@@ -691,34 +735,68 @@ Deno.serve(async (req) => {
     const body: RequestBody = await req.json();
     const { action, userId, anonymousId, plan, creditPackage, successUrl, cancelUrl } = body;
 
+    // ==========================================================================
+    // RATE LIMITING CHECK - Must happen BEFORE any Stripe API calls
+    // Uses different limits for checkout actions vs status checks
+    // ==========================================================================
+    const clientIp = getClientIp(req);
+    const rateLimitIdentifier = buildIdentifier(userId, clientIp);
+    const userTier = getUserTier(userId);
+
+    // Determine which rate limit to use based on action type
+    const isCheckoutAction = CHECKOUT_ACTIONS.includes(action);
+    const endpoint = isCheckoutAction
+      ? RATE_LIMIT_ENDPOINTS.AI_SUBSCRIPTION_CHECKOUT
+      : RATE_LIMIT_ENDPOINTS.AI_SUBSCRIPTION;
+
+    const rateLimitConfig = getRateLimitConfig(endpoint, userTier);
+
+    const rateLimitResult = await checkRateLimit(
+      supabase,
+      rateLimitIdentifier,
+      endpoint,
+      rateLimitConfig
+    );
+
+    if (!rateLimitResult.allowed) {
+      console.log(`[SECURITY] Rate limit exceeded for ${endpoint}`, {
+        identifier: rateLimitIdentifier,
+        action,
+        limit: rateLimitResult.limit,
+        current: rateLimitResult.current,
+      });
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
+    // ==========================================================================
+
     switch (action) {
       case 'getStatus': {
         const status = await getSubscriptionStatus(userId, anonymousId);
         return new Response(
-          JSON.stringify({ status }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ status }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
       case 'getUsage': {
         if (!userId) {
           return new Response(
-            JSON.stringify({ error: 'userId required' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'userId required' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const history = await getUsageHistory(userId);
         return new Response(
-          JSON.stringify({ history }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ history }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
       case 'createSubscription': {
         if (!userId || !plan || !successUrl || !cancelUrl) {
           return new Response(
-            JSON.stringify({ error: 'Missing required parameters' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'Missing required parameters' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const { url: checkoutUrl } = await createSubscriptionCheckout(
@@ -729,16 +807,16 @@ Deno.serve(async (req) => {
           body.email // Pass email for Stripe autofill
         );
         return new Response(
-          JSON.stringify({ url: checkoutUrl }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ url: checkoutUrl }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
       case 'purchaseCredits': {
         if (!userId || !creditPackage || !successUrl || !cancelUrl) {
           return new Response(
-            JSON.stringify({ error: 'Missing required parameters' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'Missing required parameters' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const { url: checkoutUrl } = await createCreditCheckout(
@@ -748,8 +826,8 @@ Deno.serve(async (req) => {
           cancelUrl
         );
         return new Response(
-          JSON.stringify({ url: checkoutUrl }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ url: checkoutUrl }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
@@ -757,8 +835,8 @@ Deno.serve(async (req) => {
       case 'purchaseCreditsAnonymous': {
         if (!creditPackage || !successUrl || !cancelUrl) {
           return new Response(
-            JSON.stringify({ error: 'Missing required parameters' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'Missing required parameters' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const { url: anonCreditUrl } = await createAnonymousCreditCheckout(
@@ -767,16 +845,16 @@ Deno.serve(async (req) => {
           cancelUrl
         );
         return new Response(
-          JSON.stringify({ url: anonCreditUrl }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ url: anonCreditUrl }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
       case 'subscribeAnonymous': {
         if (!plan || !successUrl || !cancelUrl) {
           return new Response(
-            JSON.stringify({ error: 'Missing required parameters' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'Missing required parameters' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const { url: anonSubUrl } = await createAnonymousSubscriptionCheckout(
@@ -785,8 +863,8 @@ Deno.serve(async (req) => {
           cancelUrl
         );
         return new Response(
-          JSON.stringify({ url: anonSubUrl }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ url: anonSubUrl }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
@@ -794,14 +872,14 @@ Deno.serve(async (req) => {
         const { email } = body;
         if (!email) {
           return new Response(
-            JSON.stringify({ error: 'email required' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'email required' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const emailStatus = await getSubscriptionByEmail(email);
         return new Response(
-          JSON.stringify({ status: emailStatus }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ status: emailStatus }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
@@ -809,20 +887,20 @@ Deno.serve(async (req) => {
         const { email } = body;
         if (!userId || !email) {
           return new Response(
-            JSON.stringify({ error: 'userId and email required' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(addRateLimitToBody({ error: 'userId and email required' }, rateLimitResult)),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
         const claimResult = await claimCreditsByEmail(userId, email);
         return new Response(
-          JSON.stringify(claimResult),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody(claimResult, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
       case 'getPlans': {
         return new Response(
-          JSON.stringify({
+          JSON.stringify(addRateLimitToBody({
             subscriptions: Object.entries(PLANS).map(([key, plan]) => ({
               id: key,
               name: plan.name,
@@ -836,8 +914,8 @@ Deno.serve(async (req) => {
               price: pkg.price,
               credits: pkg.credits,
             })),
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
@@ -861,19 +939,19 @@ Deno.serve(async (req) => {
         }
 
         return new Response(
-          JSON.stringify({
+          JSON.stringify(addRateLimitToBody({
             config: configStatus,
             database: dbStatus,
             timestamp: new Date().toISOString(),
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          }, rateLimitResult)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }
 
       default:
         return new Response(
-          JSON.stringify({ error: 'Unknown action' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(addRateLimitToBody({ error: 'Unknown action' }, rateLimitResult)),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
     }
   } catch (error) {
