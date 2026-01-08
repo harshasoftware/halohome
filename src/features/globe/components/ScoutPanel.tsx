@@ -47,6 +47,9 @@ import {
   RANKED_CARD_ITEM_HEIGHT,
   SCOUT_LIST_PADDING,
   SCOUT_LIST_VIRTUALIZATION_CONFIG,
+  COUNTRY_SECTION_VIRTUALIZATION_CONFIG,
+  getOverallCountrySectionExpandedHeight,
+  COUNTRY_SECTION_HEADER_HEIGHT,
 } from './scout-panel-heights';
 
 // Lucide icon mapping for categories
@@ -284,6 +287,30 @@ function getCategoryVirtualItemHeight(item: CategoryVirtualItem): number {
   }
 }
 
+// ============================================================================
+// Virtual List Item Types for Overall Countries View
+// ============================================================================
+
+/**
+ * Item type for virtualized Overall Countries view.
+ * Each country section can be expanded/collapsed with dynamic height.
+ */
+interface OverallCountryVirtualItem {
+  country: OverallCountryGroup;
+  isExpanded: boolean;
+}
+
+/**
+ * Get the height of an Overall Country virtual item.
+ * Height depends on whether the section is expanded and how many locations it contains.
+ */
+function getOverallCountryVirtualItemHeight(item: OverallCountryVirtualItem): number {
+  if (!item.isExpanded) {
+    return COUNTRY_SECTION_HEADER_HEIGHT;
+  }
+  return getOverallCountrySectionExpandedHeight(item.country.locations.length);
+}
+
 export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   planetaryLines,
   aspectLines,
@@ -315,6 +342,7 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
   // Scroll container refs for virtualized lists
   const overallTopScrollRef = useRef<HTMLDivElement>(null);
   const categoryTopScrollRef = useRef<HTMLDivElement>(null);
+  const overallCountriesScrollRef = useRef<HTMLDivElement>(null);
 
   const showMobileToast = useCallback((description: string) => {
     // Clear any existing timeout
@@ -564,6 +592,30 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
     }
     return groups;
   }, [isOverallView, viewMode, filteredOverallLocations, selectedCountry]);
+
+  // Build virtual items for Overall Countries view
+  // Each item includes expansion state for dynamic height calculation
+  const overallCountryVirtualItems = useMemo((): OverallCountryVirtualItem[] => {
+    if (!isOverallView || viewMode !== 'countries' || overallCountryGroups.length === 0) {
+      return [];
+    }
+    return overallCountryGroups.map(country => ({
+      country,
+      isExpanded: expandedCountries.has(country.country),
+    }));
+  }, [isOverallView, viewMode, overallCountryGroups, expandedCountries]);
+
+  // Virtual list for Overall Countries view
+  const {
+    virtualItems: overallCountryVirtualListItems,
+    totalHeight: overallCountryTotalHeight,
+  } = useVirtualList({
+    items: overallCountryVirtualItems,
+    itemHeight: (index, item) => getOverallCountryVirtualItemHeight(item),
+    containerRef: overallCountriesScrollRef,
+    overscan: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.overscan,
+    minItemsForVirtualization: COUNTRY_SECTION_VIRTUALIZATION_CONFIG.minItemsForVirtualization,
+  });
 
   // Toggle country expansion
   const toggleCountry = useCallback((country: string) => {
@@ -999,19 +1051,24 @@ export const ScoutPanel: React.FC<ScoutPanelProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-                <div>
-                  {overallCountryGroups.map(country => (
-                    <OverallCountrySection
-                      key={country.country}
-                      country={country}
-                      isExpanded={expandedCountries.has(country.country)}
-                      onToggle={() => toggleCountry(country.country)}
-                      onCityClick={handleOverallCityClick}
-                      onShowMarkers={onShowCountryMarkers}
-                    />
+              <div
+                ref={overallCountriesScrollRef}
+                className="absolute inset-0 overflow-y-auto scrollbar-hide"
+              >
+                {/* Virtualized Overall Countries list */}
+                <VirtualListContainer totalHeight={overallCountryTotalHeight}>
+                  {overallCountryVirtualListItems.map(({ item, index, style }) => (
+                    <div key={item.country.country} style={style}>
+                      <OverallCountrySection
+                        country={item.country}
+                        isExpanded={item.isExpanded}
+                        onToggle={() => toggleCountry(item.country.country)}
+                        onCityClick={handleOverallCityClick}
+                        onShowMarkers={onShowCountryMarkers}
+                      />
+                    </div>
                   ))}
-                </div>
+                </VirtualListContainer>
               </div>
             )
           )
