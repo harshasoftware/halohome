@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "019-graceful-error-recovery",
+  "spec": "017-interactive-onboarding-tutorial",
   "state": "building",
   "subtasks": {
-    "completed": 3,
-    "total": 10,
+    "completed": 4,
+    "total": 16,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "PostHog Error Logging Integration",
+    "current": "Welcome Modal Component",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 4,
-    "started_at": "2026-01-08T20:44:06.906720"
+    "number": 5,
+    "started_at": "2026-01-09T06:54:29.561718"
   },
-  "last_update": "2026-01-08T20:49:31.699615"
+  "last_update": "2026-01-09T07:01:57.215716"
 }
