@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/hooks/useAuth-context';
 import { useIsRealUser } from '@/stores/authStore';
 import { useFavoriteCities } from '@/hooks/useFavoriteCities';
+import { useGoogleOneTap } from '@/hooks/useGoogleOneTap';
 import { AuthModal } from './AuthModal';
 import { toast } from 'sonner';
 import { User, LogOut, ChevronDown, Star, Crown, Mail, Save, MapPin, Sparkles } from 'lucide-react';
@@ -43,8 +44,8 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  // Note: Google One Tap auto-shows via AuthProvider for non-logged-in users
-  // For explicit button clicks, we use OAuth redirect (more reliable than FedCM)
+  // Google One Tap - disabled auto-show, trigger manually on button click
+  const { showPrompt: showOneTap, isAvailable: oneTapAvailable } = useGoogleOneTap({ disabled: true });
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -58,9 +59,16 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
 
-    // Always use OAuth redirect for explicit sign-in button clicks
-    // One Tap is better suited for automatic prompts, not button clicks
-    // This avoids FedCM issues and provides a more reliable sign-in experience
+    // Try Google One Tap first (shows popup instead of redirect)
+    if (oneTapAvailable) {
+      showOneTap();
+      // One Tap handles sign-in via callback in useGoogleOneTap
+      // Reset state after short delay - if One Tap fails, user can click again
+      setTimeout(() => setIsSigningIn(false), 1000);
+      return;
+    }
+
+    // Fallback to OAuth redirect if One Tap not available
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error('Failed to sign in with Google');
