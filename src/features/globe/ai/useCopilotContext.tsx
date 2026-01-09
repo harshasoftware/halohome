@@ -7,7 +7,8 @@
 
 import { useCopilotReadable, useCopilotAction } from '@copilotkit/react-core';
 import { useMemo, useEffect, useState, useRef } from 'react';
-import type { Planet, PlanetaryLine, PlanetaryPosition, NatalChartResult, NatalChartSettings, AspectLine, ParanLine } from '@/lib/astro-types';
+import type { Planet, PlanetaryLine, PlanetaryPosition, NatalChartResult, NatalChartSettings, AspectLine, ParanLine, LineType } from '@/lib/astro-types';
+import { PlanetFocusCard, ModeChangeCard, VisibilityToggleCard } from './components';
 import type { LocationAnalysis } from '@/lib/location-line-utils';
 import type { ZoneAnalysis } from './types';
 
@@ -66,15 +67,37 @@ export interface CopilotContextData {
   partnerAspectLines: AspectLine[];
   partnerParanLines: ParanLine[];
   partnerNatalChartResult: NatalChartResult | null;
+
+  // Visibility state (for AI to know current UI state)
+  visibilityState?: {
+    planets: Record<string, boolean>;
+    lineTypes: Record<string, boolean>;
+    aspects: boolean;
+    parans: boolean;
+    zenith: boolean;
+    labels: boolean;
+  };
 }
 
 export interface CopilotActions {
+  // Existing actions
   onHighlightLine?: (planet: Planet, lineType: 'ASC' | 'DSC' | 'MC' | 'IC') => void;
   onClearHighlight?: () => void;
   onZoomToLocation?: (lat: number, lng: number, altitude?: number) => void;
   onAnalyzeLocation?: (lat: number, lng: number) => void;
   onTogglePlanet?: (planet: Planet) => void;
   onRelocateTo?: (lat: number, lng: number, name?: string) => void;
+
+  // Phase 1: Globe Control Actions
+  onReturnToStandard?: () => void;
+  onEnableLocalSpace?: (lat: number, lng: number, name?: string) => void;
+  onHideAllPlanets?: () => void;
+  onShowAllPlanets?: () => void;
+  onToggleLineType?: (lineType: LineType, visible: boolean) => void;
+  onToggleAspects?: (visible: boolean) => void;
+  onToggleParans?: (visible: boolean) => void;
+  onToggleZenith?: (visible: boolean) => void;
+  onToggleLabels?: (visible: boolean) => void;
 }
 
 // Track initialization globally to prevent race conditions
@@ -269,6 +292,16 @@ export function useCopilotContext(data: CopilotContextData, actions: CopilotActi
             }))
           : null,
       } : { enabled: false },
+
+      // Current visibility state (so AI knows what's currently visible)
+      visibilityState: data.visibilityState ? {
+        planets: data.visibilityState.planets,
+        lineTypes: data.visibilityState.lineTypes,
+        aspects: data.visibilityState.aspects,
+        parans: data.visibilityState.parans,
+        zenith: data.visibilityState.zenith,
+        labels: data.visibilityState.labels,
+      } : null,
     };
   }, [isReady, data]);
 
@@ -412,6 +445,208 @@ export function useCopilotContext(data: CopilotContextData, actions: CopilotActi
         actions.onRelocateTo(latitude, longitude, locationName);
       }
       return `Relocated chart to ${locationName || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`}`;
+    },
+  });
+
+  // ============================================
+  // Phase 1: New Globe Control Actions
+  // ============================================
+
+  // Switch astro mode (standard/relocated/localSpace)
+  useCopilotAction({
+    name: 'switchAstroMode',
+    description: 'Switch the astrocartography viewing mode. Standard shows lines from birth location, Relocated shows how your chart changes at a new location, LocalSpace shows azimuth lines radiating from an origin point.',
+    parameters: [
+      {
+        name: 'mode',
+        type: 'string',
+        description: 'The mode to switch to: standard (birth location), relocated (new location perspective), or localSpace (azimuth lines from origin)',
+        required: true,
+        enum: ['standard', 'relocated', 'localSpace'],
+      },
+      {
+        name: 'latitude',
+        type: 'number',
+        description: 'Latitude for relocated or localSpace mode (required for those modes)',
+        required: false,
+      },
+      {
+        name: 'longitude',
+        type: 'number',
+        description: 'Longitude for relocated or localSpace mode (required for those modes)',
+        required: false,
+      },
+      {
+        name: 'locationName',
+        type: 'string',
+        description: 'Name of the location (optional, for display)',
+        required: false,
+      },
+    ],
+    render: ({ status, args }) => (
+      <ModeChangeCard
+        mode={args.mode as 'standard' | 'relocated' | 'localSpace'}
+        locationName={args.locationName}
+        status={status === 'inProgress' ? 'executing' : status === 'complete' ? 'complete' : 'error'}
+      />
+    ),
+    handler: async ({ mode, latitude, longitude, locationName }) => {
+      if (!isReady) return 'Not ready';
+
+      if (mode === 'standard') {
+        actions.onReturnToStandard?.();
+        return 'Switched to standard mode (birth location)';
+      } else if (mode === 'relocated' && latitude !== undefined && longitude !== undefined) {
+        actions.onRelocateTo?.(latitude, longitude, locationName);
+        return `Switched to relocated mode at ${locationName || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`}`;
+      } else if (mode === 'localSpace' && latitude !== undefined && longitude !== undefined) {
+        actions.onEnableLocalSpace?.(latitude, longitude, locationName);
+        return `Switched to local space mode at ${locationName || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`}`;
+      }
+      return 'Invalid mode or missing coordinates';
+    },
+  });
+
+  // Show only one planet (hide all others)
+  useCopilotAction({
+    name: 'showOnlyPlanet',
+    description: "Show only a specific planet's lines on the map, hiding all other planets. Useful for focusing analysis on one planet at a time.",
+    parameters: [
+      {
+        name: 'planet',
+        type: 'string',
+        description: 'The planet to show (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, Chiron, NorthNode)',
+        required: true,
+      },
+    ],
+    render: ({ status, args }) => (
+      <PlanetFocusCard
+        planet={args.planet}
+        status={status === 'inProgress' ? 'executing' : status === 'complete' ? 'complete' : 'error'}
+      />
+    ),
+    handler: async ({ planet }) => {
+      if (!isReady) return 'Not ready';
+
+      // First hide all planets, then show only the target
+      actions.onHideAllPlanets?.();
+      // Small delay to ensure hide completes
+      await new Promise(resolve => setTimeout(resolve, 50));
+      actions.onTogglePlanet?.(planet as Planet);
+
+      return `Now showing only ${planet} lines`;
+    },
+  });
+
+  // Show all planets
+  useCopilotAction({
+    name: 'showAllPlanets',
+    description: 'Show all planetary lines on the map. Use this to reset visibility after focusing on specific planets.',
+    parameters: [],
+    handler: async () => {
+      if (!isReady) return 'Not ready';
+      actions.onShowAllPlanets?.();
+      return 'All planetary lines are now visible';
+    },
+  });
+
+  // Hide all planets
+  useCopilotAction({
+    name: 'hideAllPlanets',
+    description: 'Hide all planetary lines on the map. Useful for clearing the view before showing specific lines.',
+    parameters: [],
+    handler: async () => {
+      if (!isReady) return 'Not ready';
+      actions.onHideAllPlanets?.();
+      return 'All planetary lines are now hidden';
+    },
+  });
+
+  // Toggle specific line types (MC, IC, ASC, DSC)
+  useCopilotAction({
+    name: 'toggleLineType',
+    description: 'Show or hide a specific line type across all planets. MC (Midheaven) = career/public image, IC (Imum Coeli) = home/roots, ASC (Ascendant) = personality/self, DSC (Descendant) = relationships/partnerships.',
+    parameters: [
+      {
+        name: 'lineType',
+        type: 'string',
+        description: 'The line type to toggle: MC, IC, ASC, or DSC',
+        required: true,
+        enum: ['MC', 'IC', 'ASC', 'DSC'],
+      },
+      {
+        name: 'visible',
+        type: 'boolean',
+        description: 'Whether to show (true) or hide (false) this line type',
+        required: true,
+      },
+    ],
+    render: ({ status, args }) => (
+      <VisibilityToggleCard
+        feature={`${args.lineType} Lines`}
+        visible={args.visible}
+        status={status === 'inProgress' ? 'executing' : status === 'complete' ? 'complete' : 'error'}
+      />
+    ),
+    handler: async ({ lineType, visible }) => {
+      if (!isReady) return 'Not ready';
+      actions.onToggleLineType?.(lineType as LineType, visible);
+      return `${lineType} lines are now ${visible ? 'visible' : 'hidden'}`;
+    },
+  });
+
+  // Toggle advanced line features
+  useCopilotAction({
+    name: 'toggleAdvancedLines',
+    description: 'Show or hide advanced astrological line features: aspects (planetary relationship lines), parans (latitude circles where two planets cross), zenith (points where planets culminate overhead), or labels (line identification text).',
+    parameters: [
+      {
+        name: 'feature',
+        type: 'string',
+        description: 'The feature to toggle: aspects, parans, zenith, or labels',
+        required: true,
+        enum: ['aspects', 'parans', 'zenith', 'labels'],
+      },
+      {
+        name: 'visible',
+        type: 'boolean',
+        description: 'Whether to show (true) or hide (false) this feature',
+        required: true,
+      },
+    ],
+    render: ({ status, args }) => {
+      const featureNames: Record<string, string> = {
+        aspects: 'Aspect Lines',
+        parans: 'Paran Lines',
+        zenith: 'Zenith Points',
+        labels: 'Line Labels',
+      };
+      return (
+        <VisibilityToggleCard
+          feature={featureNames[args.feature] || args.feature}
+          visible={args.visible}
+          status={status === 'inProgress' ? 'executing' : status === 'complete' ? 'complete' : 'error'}
+        />
+      );
+    },
+    handler: async ({ feature, visible }) => {
+      if (!isReady) return 'Not ready';
+
+      switch (feature) {
+        case 'aspects':
+          actions.onToggleAspects?.(visible);
+          break;
+        case 'parans':
+          actions.onToggleParans?.(visible);
+          break;
+        case 'zenith':
+          actions.onToggleZenith?.(visible);
+          break;
+        case 'labels':
+          actions.onToggleLabels?.(visible);
+          break;
+      }
+      return `${feature} are now ${visible ? 'visible' : 'hidden'}`;
     },
   });
 

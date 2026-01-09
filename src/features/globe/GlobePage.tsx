@@ -774,6 +774,47 @@ const GlobePage: React.FC<GlobePageProps> = ({
     storeTogglePlanet(planet); // Update store's visibility (for local space mode)
   }, [togglePlanet, storeTogglePlanet]);
 
+  // ============================================
+  // AI Chat Visibility Setters
+  // These wrap the toggle functions to set specific visibility states
+  // ============================================
+
+  // Set a specific line type visibility (for AI actions)
+  const handleSetLineTypeVisibility = useCallback((lineType: import('@/lib/astro-types').LineType, visible: boolean) => {
+    // Only toggle if current state doesn't match desired state
+    if (visibility.lineTypes[lineType] !== visible) {
+      toggleLineType(lineType);
+    }
+  }, [visibility.lineTypes, toggleLineType]);
+
+  // Set aspects visibility (for AI actions)
+  const handleSetAspectsVisibility = useCallback((visible: boolean) => {
+    if (visibility.aspects !== visible) {
+      toggleAspects();
+    }
+  }, [visibility.aspects, toggleAspects]);
+
+  // Set parans visibility (for AI actions)
+  const handleSetParansVisibility = useCallback((visible: boolean) => {
+    if (visibility.parans !== visible) {
+      toggleParans();
+    }
+  }, [visibility.parans, toggleParans]);
+
+  // Set zenith visibility (for AI actions)
+  const handleSetZenithVisibility = useCallback((visible: boolean) => {
+    if (visibility.zenith !== visible) {
+      toggleZenithPoints();
+    }
+  }, [visibility.zenith, toggleZenithPoints]);
+
+  // Set labels visibility (for AI actions)
+  const handleSetLabelsVisibility = useCallback((visible: boolean) => {
+    if (visibility.lineLabels !== visible) {
+      toggleLineLabels();
+    }
+  }, [visibility.lineLabels, toggleLineLabels]);
+
   // --- Calculate partner's astrocartography lines (for compatibility mode) ---
   // Memoize partner birth data to prevent recalculating on every render
   const partnerBirthData = useMemo(() => {
@@ -2052,6 +2093,23 @@ const GlobePage: React.FC<GlobePageProps> = ({
             onTogglePlanet={handleTogglePlanet}
             onRelocateTo={relocateTo}
             onReturnToStandard={returnToStandard}
+            // Phase 1: New Globe Control Actions
+            visibilityState={{
+              planets: visibility.planets,
+              lineTypes: visibility.lineTypes,
+              aspects: visibility.aspects,
+              parans: visibility.parans,
+              zenith: visibility.zenith,
+              labels: visibility.lineLabels,
+            }}
+            onEnableLocalSpace={enableLocalSpace}
+            onHideAllPlanets={hideAllPlanets}
+            onShowAllPlanets={showAllPlanets}
+            onToggleLineType={handleSetLineTypeVisibility}
+            onToggleAspects={handleSetAspectsVisibility}
+            onToggleParans={handleSetParansVisibility}
+            onToggleZenith={handleSetZenithVisibility}
+            onToggleLabels={handleSetLabelsVisibility}
             isOpen={showAstroChat}
             onToggle={handleToggleAstroChat}
             askLocationContext={askAILocation}

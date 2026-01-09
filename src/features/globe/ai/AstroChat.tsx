@@ -43,7 +43,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useChatHistory } from '@/hooks/useChatHistory';
 import { getLineInterpretation, getLineOneLiner } from './line-interpretations';
 import { UpgradePromptCard } from './UpgradePromptCard';
-import type { Planet, PlanetaryLine, PlanetaryPosition, NatalChartResult, NatalChartSettings, AspectLine, ParanLine, RelocationChartResult } from '@/lib/astro-types';
+import type { Planet, PlanetaryLine, PlanetaryPosition, NatalChartResult, NatalChartSettings, AspectLine, ParanLine, RelocationChartResult, LineType } from '@/lib/astro-types';
 import type { LocationAnalysis } from '@/lib/location-line-utils';
 import type { AstroAIContext, LineInterpretation, ZoneAnalysis } from './types';
 
@@ -98,6 +98,16 @@ interface AstroChatProps {
   // Relocation chart data
   relocationChartResult?: RelocationChartResult | null;
 
+  // Visibility state (for AI context)
+  visibilityState?: {
+    planets: Record<string, boolean>;
+    lineTypes: Record<string, boolean>;
+    aspects: boolean;
+    parans: boolean;
+    zenith: boolean;
+    labels: boolean;
+  };
+
   // Actions
   onHighlightLine?: (planet: Planet, lineType: 'ASC' | 'DSC' | 'MC' | 'IC') => void;
   onClearHighlight?: () => void;
@@ -106,6 +116,16 @@ interface AstroChatProps {
   onTogglePlanet?: (planet: Planet) => void;
   onRelocateTo?: (lat: number, lng: number, name?: string) => void;
   onReturnToStandard?: () => void;
+
+  // Phase 1: New Globe Control Actions
+  onEnableLocalSpace?: (lat: number, lng: number, name?: string) => void;
+  onHideAllPlanets?: () => void;
+  onShowAllPlanets?: () => void;
+  onToggleLineType?: (lineType: LineType, visible: boolean) => void;
+  onToggleAspects?: (visible: boolean) => void;
+  onToggleParans?: (visible: boolean) => void;
+  onToggleZenith?: (visible: boolean) => void;
+  onToggleLabels?: (visible: boolean) => void;
 
   // UI state
   isOpen?: boolean;
@@ -533,6 +553,8 @@ export const AstroChat: React.FC<AstroChatProps> = ({
   partnerNatalChartResult,
   // Relocation chart data
   relocationChartResult,
+  // Visibility state
+  visibilityState,
   // Actions
   onHighlightLine,
   onClearHighlight,
@@ -541,6 +563,15 @@ export const AstroChat: React.FC<AstroChatProps> = ({
   onTogglePlanet,
   onRelocateTo,
   onReturnToStandard,
+  // Phase 1: New Globe Control Actions
+  onEnableLocalSpace,
+  onHideAllPlanets,
+  onShowAllPlanets,
+  onToggleLineType,
+  onToggleAspects,
+  onToggleParans,
+  onToggleZenith,
+  onToggleLabels,
   isOpen = false,
   onToggle,
   className = '',
@@ -673,6 +704,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       partnerAspectLines,
       partnerParanLines,
       partnerNatalChartResult: partnerNatalChartResult || null,
+      visibilityState,
     },
     {
       onHighlightLine,
@@ -681,6 +713,16 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       onAnalyzeLocation,
       onTogglePlanet,
       onRelocateTo,
+      // Phase 1: New Globe Control Actions
+      onReturnToStandard,
+      onEnableLocalSpace,
+      onHideAllPlanets,
+      onShowAllPlanets,
+      onToggleLineType,
+      onToggleAspects,
+      onToggleParans,
+      onToggleZenith,
+      onToggleLabels,
     }
   );
 
