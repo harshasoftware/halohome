@@ -13,6 +13,11 @@ export enum AnalyticsEvent {
   ERROR_OCCURRED = 'error_occurred',
   SESSION_RECORDED = 'session_recorded', // For explicit session recording events
   COMPONENT_LOAD_ERROR = 'component_load_error', // For lazy-load component failures
+  // Tutorial events
+  TUTORIAL_STARTED = 'tutorial_started',
+  TUTORIAL_COMPLETED = 'tutorial_completed',
+  TUTORIAL_SKIPPED = 'tutorial_skipped',
+  TUTORIAL_STEP_VIEWED = 'tutorial_step_viewed',
   // Add more as needed
 }
 

@@ -195,3 +195,17 @@ export {
   useScoutActions,
 } from './scoutStore';
 export type { ScoutComputationPhase, ScoutProgress } from './scoutStore';
+
+// ============================================
+// Tutorial Store
+// ============================================
+export { useTutorialStore } from './tutorialStore';
+export {
+  useIsTutorialActive,
+  useCurrentTutorialStep,
+  useTutorialCompleted,
+  useTutorialSkipped,
+  useShowWelcomeModal,
+  useTutorialLoading,
+  useShouldShowTutorial,
+} from './tutorialStore';
