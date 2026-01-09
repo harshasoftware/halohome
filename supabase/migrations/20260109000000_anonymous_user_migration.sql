@@ -2,6 +2,9 @@
 -- Description: Creates a function to migrate data from anonymous users to permanent accounts
 -- when they sign up via Google One Tap (which creates a new user instead of linking)
 
+-- Drop existing function if it exists (required when changing return type)
+DROP FUNCTION IF EXISTS public.migrate_anonymous_user_data(UUID, UUID);
+
 -- Function to migrate all user data from an anonymous account to a permanent account
 CREATE OR REPLACE FUNCTION public.migrate_anonymous_user_data(
   old_user_id UUID,
