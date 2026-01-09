@@ -735,8 +735,51 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           )}
         </div>
 
-        {/* Right: Upgrade, Theme, Account */}
+        {/* Right: Scout Progress, Upgrade, Theme, Account */}
         <div className="flex items-center gap-2">
+          {/* Scout Progress Indicator - shows when computing */}
+          {scoutProgress?.phase === 'computing' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700">
+                  <div className="relative w-5 h-5">
+                    <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="text-amber-200 dark:text-amber-900"
+                      />
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        className="text-amber-500"
+                        strokeDasharray={`${2 * Math.PI * 8}`}
+                        strokeDashoffset={`${2 * Math.PI * 8 * (1 - scoutProgress.percent / 100)}`}
+                        style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
+                      />
+                    </svg>
+                    <Telescope className="absolute inset-0 w-3 h-3 m-auto text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300 tabular-nums">
+                    {Math.round(scoutProgress.percent)}%
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Scouting locations...</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           {/* Upgrade Button - only show when logged in */}
           {isRealUser && (
             <Tooltip>
