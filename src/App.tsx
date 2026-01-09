@@ -32,7 +32,7 @@ const SampleReport = lazy(() => import("./pages/SampleReport"));
 const BlogIndex = lazy(() => import("./pages/BlogIndex"));
 const Benchmark = lazy(() => import("./pages/Benchmark"));
 
-// CopilotKit runtime URL - Supabase Edge Function
+// CopilotKit runtime URL - Supabase Edge Function with AG-UI protocol
 const COPILOT_RUNTIME_URL = "https://eypsystctqwvphvcrmxb.supabase.co/functions/v1/copilot-runtime";
 
 // Configure React Query caching for reduced network requests
@@ -71,14 +71,23 @@ const ZoomPrevention = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// CopilotKit wrapper with custom AG-UI runtime
+const CopilotKitWithAuth = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <CopilotKit runtimeUrl={COPILOT_RUNTIME_URL}>
+      {children}
+    </CopilotKit>
+  );
+};
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" storageKey="themodernfamily-ui-theme">
     <ZoomPrevention>
       <DatabaseProvider>
-        <CopilotKit runtimeUrl={COPILOT_RUNTIME_URL}>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <AuthProvider>
+              <CopilotKitWithAuth>
                 <Toaster />
                 <ErrorBoundary componentName="Routes">
                   <Suspense fallback={<RouteLoader />}>
@@ -178,12 +187,12 @@ const App = () => (
                     <Route path="/project/:projectId/settings" element={<NotFound />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </Suspense>
+                  </Suspense>
                 </ErrorBoundary>
-              </AuthProvider>
-            </TooltipProvider>
-          </QueryClientProvider>
-        </CopilotKit>
+              </CopilotKitWithAuth>
+            </AuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
       </DatabaseProvider>
     </ZoomPrevention>
   </ThemeProvider>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  Sparkles,
+  Bot,
   Heart,
   Hexagon,
   FileDown,
@@ -198,7 +198,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
       {/* AI Guide */}
       {hasBirthData && onToggleAIChat && (
         <ActionButton
-          icon={<Sparkles className="w-4 h-4" />}
+          icon={<Bot className="w-4 h-4" />}
           label="AI Guide"
           onClick={onToggleAIChat}
           isExpanded={isExpanded}

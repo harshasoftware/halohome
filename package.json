@@ -17,9 +17,9 @@
     "benchmark": "node benchmark/server.mjs"
   },
   "dependencies": {
-    "@copilotkit/react-core": "^1.4.8",
-    "@copilotkit/react-ui": "^1.4.8",
-    "@copilotkit/runtime": "^1.4.8",
+    "@copilotkit/react-core": "^1.50.1",
+    "@copilotkit/react-ui": "^1.50.1",
+    "@copilotkit/runtime": "^1.50.1",
     "@dicebear/collection": "^9.2.3",
     "@dicebear/core": "^9.2.3",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",

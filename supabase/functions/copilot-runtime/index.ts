@@ -1,7 +1,7 @@
 /**
  * CopilotKit Runtime Edge Function
- * Implements CopilotKit's AG-UI protocol for agentic communications
- * Uses Perplexity API (OpenAI-compatible) for intelligent astrocartography responses
+ * Implements full AG-UI protocol for CopilotKit v1.50+ agent support
+ * Uses Perplexity API for intelligent astrocartography responses
  */
 
 import { corsHeaders } from '../_shared/cors.ts';
@@ -19,7 +19,7 @@ import {
 
 const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
 
-// System prompt for astrocartography AI
+// System prompt for astrocartography AI agent
 const SYSTEM_PROMPT = `You are an expert astrocartography guide helping users understand their planetary lines and find ideal locations. You have deep knowledge of:
 
 1. ASTROCARTOGRAPHY LINES:
@@ -140,8 +140,8 @@ const TOOLS = [
   },
 ];
 
-// Frontend actions for /info endpoint
-const FRONTEND_ACTIONS = TOOLS.map(tool => ({
+// Convert tools to AG-UI actions format for /info endpoint
+const ACTIONS = TOOLS.map(tool => ({
   name: tool.function.name,
   description: tool.function.description,
   parameters: Object.entries(tool.function.parameters.properties || {}).map(([name, prop]: [string, any]) => ({
@@ -152,39 +152,54 @@ const FRONTEND_ACTIONS = TOOLS.map(tool => ({
   })),
 }));
 
-// Define the default agent
-const AGENTS = [
-  {
-    id: 'default',
+// AG-UI Agent definition for CopilotKit v1.50+
+const AGENTS = {
+  default: {
     name: 'default',
-    description: 'Astrocartography AI guide that helps users understand their planetary lines and find ideal locations',
+    description: 'Astrocartography AI agent powered by Perplexity that helps users understand their planetary lines and find ideal locations worldwide.',
   },
-];
+};
 
-interface Message {
-  role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string;
-  tool_calls?: any[];
-  tool_call_id?: string;
+// ============================================================================
+// Types
+// ============================================================================
+
+interface AGUIMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content?: string;
+  name?: string;
+  toolCallId?: string;
 }
 
-interface CopilotKitRequest {
-  messages: Message[];
-  actions?: any[];
-  properties?: Record<string, unknown>;
+interface RunAgentInput {
   threadId?: string;
   runId?: string;
+  agentId?: string;
+  messages?: AGUIMessage[];
+  tools?: any[];
+  context?: Record<string, unknown>;
+  forwardedProps?: Record<string, unknown>;
+  state?: Record<string, unknown>;
 }
 
-// Generate a unique ID
+// ============================================================================
+// Utilities
+// ============================================================================
+
 function generateId(): string {
   return crypto.randomUUID();
 }
 
-// Build context message from CopilotKit properties (readable values)
-function buildContextFromProperties(properties: Record<string, unknown>): string {
+function encodeEvent(event: Record<string, unknown>): string {
+  return `data: ${JSON.stringify(event)}\n\n`;
+}
+
+function buildContextFromState(state: Record<string, unknown> | undefined): string {
+  if (!state) return '';
+
   const parts: string[] = [];
-  for (const [key, value] of Object.entries(properties)) {
+  for (const [key, value] of Object.entries(state)) {
     if (value !== null && value !== undefined) {
       if (typeof value === 'object') {
         parts.push(`${key}: ${JSON.stringify(value)}`);
@@ -196,77 +211,16 @@ function buildContextFromProperties(properties: Record<string, unknown>): string
   return parts.length > 0 ? `\n\nCURRENT USER CONTEXT:\n${parts.join('\n')}` : '';
 }
 
-// Create AG-UI event encoder
-function encodeEvent(event: Record<string, unknown>): string {
-  return `data: ${JSON.stringify(event)}\n\n`;
+// ============================================================================
+// Perplexity API
+// ============================================================================
+
+interface PerplexityMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
 }
 
-/**
- * Create an AG-UI error stream response for rate limiting
- * Returns a streaming response with proper AG-UI error events
- */
-function createRateLimitAGUIResponse(
-  rateLimitResult: RateLimitResult,
-  additionalHeaders: Record<string, string> = {}
-): Response {
-  const threadId = generateId();
-  const runId = generateId();
-  const messageId = generateId();
-  const timestamp = new Date().toISOString();
-
-  const retryAfterSeconds = Math.max(
-    1,
-    Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
-  );
-
-  // Build the AG-UI event stream for rate limit error
-  const events = [
-    encodeEvent({
-      type: 'RUN_STARTED',
-      threadId,
-      runId,
-      timestamp,
-    }),
-    encodeEvent({
-      type: 'TEXT_MESSAGE_START',
-      messageId,
-      role: 'assistant',
-      timestamp,
-    }),
-    encodeEvent({
-      type: 'TEXT_MESSAGE_CONTENT',
-      messageId,
-      delta: `I'm currently receiving too many requests. Please wait ${retryAfterSeconds} seconds before trying again.`,
-      timestamp,
-    }),
-    encodeEvent({
-      type: 'TEXT_MESSAGE_END',
-      messageId,
-      timestamp,
-    }),
-    encodeEvent({
-      type: 'RUN_ERROR',
-      message: `Rate limit exceeded. Please retry after ${retryAfterSeconds} seconds.`,
-      code: 'RATE_LIMIT_EXCEEDED',
-      timestamp,
-    }),
-  ];
-
-  const body = events.join('');
-
-  return new Response(body, {
-    status: 429,
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      ...additionalHeaders,
-      ...rateLimitHeaders(rateLimitResult),
-    },
-  });
-}
-
-// Call Perplexity API with tool support
-async function callPerplexityWithTools(messages: Message[]): Promise<{
+async function callPerplexity(messages: PerplexityMessage[]): Promise<{
   content: string;
   toolCalls: Array<{ id: string; name: string; arguments: Record<string, any> }>;
 }> {
@@ -274,7 +228,7 @@ async function callPerplexityWithTools(messages: Message[]): Promise<{
     throw new Error('PERPLEXITY_API_KEY not configured');
   }
 
-  // Note: Perplexity's sonar models support tool calling via OpenAI-compatible API
+  // Try with tools first
   const response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
     headers: {
@@ -296,7 +250,7 @@ async function callPerplexityWithTools(messages: Message[]): Promise<{
     const error = await response.text();
     console.error('Perplexity API error with tools:', response.status, error);
 
-    // Always retry without tools on any error (tool calling may not be fully supported)
+    // Fallback without tools
     console.log('Retrying without tools...');
     const fallbackResponse = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -315,7 +269,6 @@ async function callPerplexityWithTools(messages: Message[]): Promise<{
 
     if (!fallbackResponse.ok) {
       const fallbackError = await fallbackResponse.text();
-      console.error('Fallback also failed:', fallbackResponse.status, fallbackError);
       throw new Error(`Perplexity API error: ${fallbackResponse.status} - ${fallbackError.slice(0, 200)}`);
     }
 
@@ -341,83 +294,79 @@ async function callPerplexityWithTools(messages: Message[]): Promise<{
   };
 }
 
-// Stream AG-UI events for a chat response
-async function* streamAGUIEvents(
-  messages: Message[],
-  properties: Record<string, unknown>,
-  threadId: string,
-): AsyncGenerator<string> {
-  const runId = generateId();
+// ============================================================================
+// AG-UI Event Stream
+// ============================================================================
+
+async function* streamAGUIEvents(input: RunAgentInput): AsyncGenerator<string> {
+  const threadId = input.threadId || generateId();
+  const runId = input.runId || generateId();
   const messageId = generateId();
 
-  // Emit RUN_STARTED event
+  // Emit RunStartedEvent
   yield encodeEvent({
-    type: 'RUN_STARTED',
+    type: 'RunStartedEvent',
     threadId,
     runId,
-    timestamp: new Date().toISOString(),
   });
 
   try {
     // Build messages for Perplexity
-    const contextMessage = buildContextFromProperties(properties);
+    const contextMessage = buildContextFromState(input.state || input.forwardedProps);
 
-    // Filter to only include roles Perplexity supports (system, user, assistant)
-    // and strip any tool-related fields
-    const userAssistantMessages = messages
-      .filter(m => m.role === 'user' || m.role === 'assistant')
-      .map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content || '',
-      }));
-
-    const perplexityMessages: Message[] = [
+    // Convert AG-UI messages to Perplexity format
+    const perplexityMessages: PerplexityMessage[] = [
       {
         role: 'system',
         content: SYSTEM_PROMPT + contextMessage,
       },
-      ...userAssistantMessages,
     ];
 
-    // Get response from Perplexity with tool support
-    const { content, toolCalls } = await callPerplexityWithTools(perplexityMessages);
+    // Add conversation history
+    if (input.messages) {
+      for (const msg of input.messages) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          perplexityMessages.push({
+            role: msg.role,
+            content: msg.content || '',
+          });
+        }
+      }
+    }
 
-    // Emit tool calls first (ActionExecution events)
+    // Call Perplexity
+    const { content, toolCalls } = await callPerplexity(perplexityMessages);
+
+    // Emit tool calls as ToolCallEvents
     for (const toolCall of toolCalls) {
-      const actionId = generateId();
-
-      // ActionExecutionStart
+      // ToolCallStartEvent
       yield encodeEvent({
-        type: 'ACTION_EXECUTION_START',
-        actionExecutionId: actionId,
-        actionName: toolCall.name,
-        timestamp: new Date().toISOString(),
+        type: 'ToolCallStartEvent',
+        toolCallId: toolCall.id,
+        toolCallName: toolCall.name,
       });
 
-      // ActionExecutionArgs
+      // ToolCallArgsEvent
       yield encodeEvent({
-        type: 'ACTION_EXECUTION_ARGS',
-        actionExecutionId: actionId,
-        args: JSON.stringify(toolCall.arguments),
-        timestamp: new Date().toISOString(),
+        type: 'ToolCallArgsEvent',
+        toolCallId: toolCall.id,
+        delta: JSON.stringify(toolCall.arguments),
       });
 
-      // ActionExecutionEnd
+      // ToolCallEndEvent
       yield encodeEvent({
-        type: 'ACTION_EXECUTION_END',
-        actionExecutionId: actionId,
-        timestamp: new Date().toISOString(),
+        type: 'ToolCallEndEvent',
+        toolCallId: toolCall.id,
       });
     }
 
-    // Emit text message if there's content
+    // Emit text message
     if (content) {
-      // TEXT_MESSAGE_START
+      // TextMessageStartEvent
       yield encodeEvent({
-        type: 'TEXT_MESSAGE_START',
+        type: 'TextMessageStartEvent',
         messageId,
         role: 'assistant',
-        timestamp: new Date().toISOString(),
       });
 
       // Stream content in chunks
@@ -427,64 +376,105 @@ async function* streamAGUIEvents(
         chunk += (i === 0 ? '' : ' ') + words[i];
         if (chunk.length > 50 || i === words.length - 1) {
           yield encodeEvent({
-            type: 'TEXT_MESSAGE_CONTENT',
+            type: 'TextMessageContentEvent',
             messageId,
             delta: chunk,
-            timestamp: new Date().toISOString(),
           });
           chunk = '';
         }
       }
 
-      // TEXT_MESSAGE_END
+      // TextMessageEndEvent
       yield encodeEvent({
-        type: 'TEXT_MESSAGE_END',
+        type: 'TextMessageEndEvent',
         messageId,
-        timestamp: new Date().toISOString(),
       });
     }
 
-    // Emit RUN_FINISHED event
+    // Emit RunFinishedEvent
     yield encodeEvent({
-      type: 'RUN_FINISHED',
+      type: 'RunFinishedEvent',
       threadId,
       runId,
-      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
     console.error('Error in AG-UI stream:', error);
 
-    // Emit error as text message
+    // Emit error message
     yield encodeEvent({
-      type: 'TEXT_MESSAGE_START',
+      type: 'TextMessageStartEvent',
       messageId,
       role: 'assistant',
-      timestamp: new Date().toISOString(),
     });
 
     yield encodeEvent({
-      type: 'TEXT_MESSAGE_CONTENT',
+      type: 'TextMessageContentEvent',
       messageId,
       delta: `I apologize, but I encountered an error: ${error.message}`,
-      timestamp: new Date().toISOString(),
     });
 
     yield encodeEvent({
-      type: 'TEXT_MESSAGE_END',
+      type: 'TextMessageEndEvent',
       messageId,
-      timestamp: new Date().toISOString(),
     });
 
-    // Emit RUN_ERROR event
+    // Emit RunErrorEvent
     yield encodeEvent({
-      type: 'RUN_ERROR',
+      type: 'RunErrorEvent',
       message: error.message,
       code: 'INTERNAL_ERROR',
-      timestamp: new Date().toISOString(),
     });
   }
 }
+
+// ============================================================================
+// Rate Limit Response
+// ============================================================================
+
+function createRateLimitResponse(
+  rateLimitResult: RateLimitResult,
+  additionalHeaders: Record<string, string> = {}
+): Response {
+  const threadId = generateId();
+  const runId = generateId();
+  const messageId = generateId();
+
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
+  );
+
+  const events = [
+    encodeEvent({ type: 'RunStartedEvent', threadId, runId }),
+    encodeEvent({ type: 'TextMessageStartEvent', messageId, role: 'assistant' }),
+    encodeEvent({
+      type: 'TextMessageContentEvent',
+      messageId,
+      delta: `I'm currently receiving too many requests. Please wait ${retryAfterSeconds} seconds before trying again.`
+    }),
+    encodeEvent({ type: 'TextMessageEndEvent', messageId }),
+    encodeEvent({
+      type: 'RunErrorEvent',
+      message: `Rate limit exceeded. Please retry after ${retryAfterSeconds} seconds.`,
+      code: 'RATE_LIMIT_EXCEEDED',
+    }),
+  ];
+
+  return new Response(events.join(''), {
+    status: 429,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      ...additionalHeaders,
+      ...rateLimitHeaders(rateLimitResult),
+    },
+  });
+}
+
+// ============================================================================
+// Main Handler
+// ============================================================================
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -496,15 +486,14 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const pathname = url.pathname;
 
-    // Handle /info endpoint for CopilotKit runtime sync
-    // Note: /info endpoint is excluded from rate limiting as it doesn't make external API calls
+    // Handle /info endpoint for AG-UI agent discovery
     if (pathname.endsWith('/info') || url.searchParams.get('info') === 'true') {
-      console.log('Handling /info request');
+      console.log('Handling /info request - returning agent info');
       return new Response(
         JSON.stringify({
-          actions: FRONTEND_ACTIONS,
+          version: '1.50.1',
           agents: AGENTS,
-          sdkVersion: '1.50.1',
+          actions: ACTIONS,
         }),
         {
           headers: {
@@ -520,11 +509,10 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Rate limit check BEFORE any Perplexity API calls
-    // This endpoint doesn't have user authentication, so we use IP-based limiting
+    // Rate limit check
     const clientIp = getClientIp(req);
-    const identifier = buildIdentifier(null, clientIp); // Always anonymous for this endpoint
-    const userTier = getUserTier(null); // Always 'anonymous'
+    const identifier = buildIdentifier(null, clientIp);
+    const userTier = getUserTier(null);
     const rateLimitConfig = getRateLimitConfig(RATE_LIMIT_ENDPOINTS.COPILOT_RUNTIME, userTier);
 
     const rateLimitResult = await checkRateLimit(
@@ -535,22 +523,22 @@ Deno.serve(async (req) => {
     );
 
     if (!rateLimitResult.allowed) {
-      console.warn(`[SECURITY] Rate limit exceeded for copilot-runtime. IP: ${clientIp}, Current: ${rateLimitResult.current}, Limit: ${rateLimitResult.limit}`);
-      return createRateLimitAGUIResponse(rateLimitResult, corsHeaders);
+      console.warn(`[SECURITY] Rate limit exceeded for copilot-runtime. IP: ${clientIp}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
 
-    // Parse the request body for chat requests
-    let body: CopilotKitRequest;
+    // Parse request body
+    let body: RunAgentInput;
     try {
-      body = await req.json() as CopilotKitRequest;
+      body = await req.json() as RunAgentInput;
     } catch {
-      // Empty body or invalid JSON - return info response
+      // Empty body - return info
       console.log('Empty/invalid body, returning info');
       return new Response(
         JSON.stringify({
-          actions: FRONTEND_ACTIONS,
+          version: '1.50.1',
           agents: AGENTS,
-          sdkVersion: '1.50.1',
+          actions: ACTIONS,
         }),
         {
           headers: {
@@ -561,16 +549,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { messages, properties = {}, threadId = generateId() } = body;
-
-    // If no messages, CopilotKit might be requesting runtime info
-    if (!messages || messages.length === 0) {
+    // If no messages, return info
+    if (!body.messages || body.messages.length === 0) {
       console.log('No messages, returning info');
       return new Response(
         JSON.stringify({
-          actions: FRONTEND_ACTIONS,
+          version: '1.50.1',
           agents: AGENTS,
-          sdkVersion: '1.50.1',
+          actions: ACTIONS,
         }),
         {
           headers: {
@@ -581,15 +567,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Processing chat request with', messages.length, 'messages');
-    console.log('Properties:', JSON.stringify(properties));
+    console.log('Processing AG-UI run request:', {
+      agentId: body.agentId,
+      threadId: body.threadId,
+      messageCount: body.messages?.length,
+    });
 
-    // Create a readable stream for AG-UI events
+    // Create AG-UI event stream
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
         try {
-          for await (const event of streamAGUIEvents(messages, properties, threadId)) {
+          for await (const event of streamAGUIEvents(body)) {
             controller.enqueue(encoder.encode(event));
           }
           controller.close();
@@ -606,7 +595,6 @@ Deno.serve(async (req) => {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        // Include rate limit headers in successful streaming responses
         ...rateLimitHeaders(rateLimitResult),
       },
     });

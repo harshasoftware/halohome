@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   MessageSquare,
-  Sparkles,
   MapPin,
   Navigation,
   Compass,
@@ -33,6 +32,7 @@ import {
   Heart,
   Plane,
   Home,
+  Bot,
 } from 'lucide-react';
 import { useAISubscription } from './useAISubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -579,7 +579,9 @@ export const AstroChat: React.FC<AstroChatProps> = ({
   }, []);
 
   // Auth and chat history
+  // Note: user exists for anonymous sessions too, check is_anonymous for real auth
   const { user, signInWithGoogle } = useAuth();
+  const isAuthenticated = user && !user.is_anonymous;
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailInput, setEmailInput] = useState('');
@@ -631,7 +633,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
   };
 
   // Use saved messages if authenticated and have a conversation, otherwise use local
-  const messages: ChatMessage[] = user && currentConversation
+  const messages: ChatMessage[] = isAuthenticated && currentConversation
     ? savedMessages.map(m => ({
         id: m.id,
         role: m.role as 'user' | 'assistant',
@@ -642,7 +644,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       }))
     : localMessages;
 
-  const setMessages = user && currentConversation
+  const setMessages = isAuthenticated && currentConversation
     ? () => {} // Messages are managed by useChatHistory
     : setLocalMessages;
 
@@ -684,7 +686,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
 
   // Create a new conversation when user logs in and has birth data
   useEffect(() => {
-    if (user && !currentConversation && birthData && isOpen) {
+    if (isAuthenticated && !currentConversation && birthData && isOpen) {
       createConversation({
         date: birthData.date,
         time: birthData.time,
@@ -693,7 +695,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
         longitude: birthData.longitude,
       });
     }
-  }, [user, currentConversation, birthData, isOpen, createConversation]);
+  }, [isAuthenticated, currentConversation, birthData, isOpen, createConversation]);
 
   // Scroll to bottom when messages change or loading state changes
   useEffect(() => {
@@ -702,7 +704,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
 
   // Handle new conversation
   const handleNewConversation = async () => {
-    if (!user || !birthData) return;
+    if (!isAuthenticated || !birthData) return;
     await createConversation({
       date: birthData.date,
       time: birthData.time,
@@ -790,7 +792,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
     setIsLoading(true);
 
     // Add user message locally or to database
-    if (user && currentConversation) {
+    if (isAuthenticated && currentConversation) {
       await addMessage({ role: 'user', content: userMessage });
     } else {
       const userMsgId = Date.now().toString();
@@ -807,7 +809,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
     try {
       // Fetch related context from past conversations (semantic search)
       let relatedContext: string | null = null;
-      if (user) {
+      if (isAuthenticated) {
         relatedContext = await getRelatedContext(userMessage);
       }
 
@@ -995,7 +997,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       }
 
       // Add assistant response locally or to database
-      if (user && currentConversation) {
+      if (isAuthenticated && currentConversation) {
         await addMessage({
           role: 'assistant',
           content: data.message,
@@ -1014,7 +1016,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       console.error('Perplexity AI error:', err);
       // Add error message
       const errorContent = `I'm having trouble connecting to the AI service. Please try again in a moment. (${err instanceof Error ? err.message : 'Unknown error'})`;
-      if (user && currentConversation) {
+      if (isAuthenticated && currentConversation) {
         await addMessage({ role: 'assistant', content: errorContent });
       } else {
         setLocalMessages(prev => [...prev, {
@@ -1051,7 +1053,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       <CardHeader className="pb-2 flex-shrink-0 flex flex-row items-center justify-between border-b border-slate-200 dark:border-slate-800">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-slate-800 dark:bg-slate-700 flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
+            <Bot className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
             <span>Astro Guide</span>
@@ -1060,7 +1062,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
         </CardTitle>
         <div className="flex items-center gap-1">
           {/* Usage indicator with upgrade button */}
-          {user && (
+          {isAuthenticated && (
             <button
               onClick={() => setShowUpgradePanel(!showUpgradePanel)}
               className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] transition-colors ${
@@ -1075,12 +1077,12 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               {subscriptionStatus?.hasSonarProAccess ? (
                 <Crown className="w-3 h-3 text-amber-500 ml-0.5" />
               ) : (
-                <Sparkles className="w-3 h-3 text-amber-500 ml-0.5" />
+                <Bot className="w-3 h-3 text-amber-500 ml-0.5" />
               )}
             </button>
           )}
           {/* History button (only for authenticated users) */}
-          {user && (
+          {isAuthenticated && (
             <Button
               variant="ghost"
               size="icon"
@@ -1098,8 +1100,8 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       </CardHeader>
 
       {/* Upgrade panel - proactive upgrade options */}
-      {showUpgradePanel && user && (
-        <div className="border-b border-slate-200 dark:border-slate-800 p-3 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50">
+      {showUpgradePanel && isAuthenticated && (
+        <div className="border-b border-slate-200 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-800/50">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Upgrade Your Plan</span>
             <Button
@@ -1119,7 +1121,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       )}
 
       {/* History panel */}
-      {showHistory && user && !showUpgradePanel && (
+      {showHistory && isAuthenticated && !showUpgradePanel && (
         <div className="border-b border-slate-200 dark:border-slate-800 p-2 bg-slate-50 dark:bg-slate-800/50">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Conversations</span>
@@ -1187,14 +1189,14 @@ export const AstroChat: React.FC<AstroChatProps> = ({
             <div className="py-2">
               {/* Header */}
               <div className="text-center mb-4">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10 flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-amber-500" />
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-500/20 dark:bg-amber-500/10 flex items-center justify-center">
+                  <Bot className="w-7 h-7 text-amber-500" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-1">
                   Your Personal Astro Guide
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Discover the best places on Earth for you
+                  {isAuthenticated ? 'Discover the best places on Earth for you' : 'Sign in to ask questions about your chart'}
                 </p>
               </div>
 
@@ -1213,7 +1215,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                     <button
                       key={item.label}
                       onClick={() => {
-                        if (!user) {
+                        if (!isAuthenticated) {
                           toast.error('Sign in required', {
                             description: 'Please sign in to ask questions.',
                             action: { label: 'Sign In', onClick: handleGoogleSignIn },
@@ -1248,7 +1250,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                     <button
                       key={item.line}
                       onClick={() => {
-                        if (!user) {
+                        if (!isAuthenticated) {
                           toast.error('Sign in required', {
                             description: 'Please sign in to explore line meanings.',
                             action: { label: 'Sign In', onClick: handleGoogleSignIn },
@@ -1270,7 +1272,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               </div>
 
               {/* Ask anything prompt */}
-              <div className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/30 dark:to-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                     <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400" />
@@ -1287,14 +1289,14 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               </div>
 
               {/* Proactive upgrade prompt for free tier users */}
-              {user && subscriptionStatus && subscriptionStatus.planType === 'free' && (
+              {isAuthenticated && subscriptionStatus && subscriptionStatus.planType === 'free' && (
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <button
                     onClick={() => setShowUpgradePanel(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-medium text-sm transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-medium text-sm transition-colors"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>Unlock Unlimited Questions</span>
+                    <span>Get More Questions</span>
                   </button>
                   <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2">
                     {subscriptionStatus.questionsLimit - subscriptionStatus.questionsUsed} free questions remaining
@@ -1337,7 +1339,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                         {(msg as typeof msg & { isUpgradePrompt?: boolean }).isUpgradePrompt && (
                           <Button
                             size="sm"
-                            className="mt-2 h-7 text-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                            className="mt-2 h-7 text-xs bg-amber-500 hover:bg-amber-600"
                             onClick={() => navigate('/ai-subscription')}
                           >
                             <Crown className="w-3 h-3 mr-1" />
@@ -1393,7 +1395,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
 
       {/* Input - Auth gated */}
       <div className="p-3 flex-shrink-0 border-t border-slate-200 dark:border-slate-800">
-        {user ? (
+        {isAuthenticated ? (
           <div className="flex gap-2">
             <input
               type="text"
@@ -1419,8 +1421,11 @@ export const AstroChat: React.FC<AstroChatProps> = ({
           </div>
         ) : (
           <div className="py-2">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 text-center">
-              Sign in to chat with the AI astrologer
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-1 text-center font-medium">
+              Sign in to unlock 5 free questions
+            </p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3 text-center">
+              Subscribe for unlimited access
             </p>
             {!showEmailForm ? (
               <div className="flex flex-col gap-2">

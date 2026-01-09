@@ -81,7 +81,7 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
       </div>
 
       {/* Traveler Plan - Most Popular */}
-      <Card className="relative overflow-hidden border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/5 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/10">
+      <Card className="relative overflow-hidden border-2 border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10">
         <div className="absolute top-0 right-0">
           <div className="bg-amber-500 text-black text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">
             Most Popular

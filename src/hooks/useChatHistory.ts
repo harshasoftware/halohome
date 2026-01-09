@@ -243,6 +243,8 @@ export function useChatHistory(): UseChatHistoryReturn {
   }, []);
 
   // Search chat history semantically
+  // Note: This feature requires the search_chat_history RPC function and pgvector extension
+  // If not available, it gracefully returns empty results
   const searchChatHistory = useCallback(async (
     query: string,
     matchCount: number = 5
@@ -255,7 +257,11 @@ export function useChatHistory(): UseChatHistoryReturn {
         body: { content: query, return_embedding: true },
       });
 
-      if (embeddingError) throw embeddingError;
+      if (embeddingError) {
+        // Embedding generation failed - silently return empty
+        console.debug('Embedding generation not available:', embeddingError.message);
+        return [];
+      }
       if (!embeddingResponse?.embedding) return [];
 
       // Then search using the embedding
@@ -266,10 +272,15 @@ export function useChatHistory(): UseChatHistoryReturn {
         similarity_threshold: 0.7,
       });
 
-      if (error) throw error;
+      if (error) {
+        // RPC function not available or vector extension issue - silently return empty
+        console.debug('Chat history search not available:', error.message);
+        return [];
+      }
       return data || [];
     } catch (error) {
-      console.error('Failed to search chat history:', error);
+      // Catch-all for any unexpected errors - don't crash the app
+      console.debug('Chat history search error:', error);
       return [];
     }
   }, [user]);
