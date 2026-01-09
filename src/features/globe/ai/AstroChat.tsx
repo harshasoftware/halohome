@@ -29,6 +29,10 @@ import {
   Zap,
   Crown,
   Mail,
+  Briefcase,
+  Heart,
+  Plane,
+  Home,
 } from 'lucide-react';
 import { useAISubscription } from './useAISubscription';
 import { supabase } from '@/integrations/supabase/client';
@@ -1178,40 +1182,108 @@ export const AstroChat: React.FC<AstroChatProps> = ({
       {/* Messages */}
       <div className="flex-1 min-h-0 overflow-y-auto p-3">
         <div className="space-y-3">
-          {/* Welcome message */}
+          {/* Welcome message - Interactive empty state */}
           {messages.length === 0 && (
-            <div className="text-center py-4">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Compass className="w-6 h-6 text-slate-600 dark:text-slate-300" />
+            <div className="py-2">
+              {/* Header */}
+              <div className="text-center mb-4">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10 flex items-center justify-center">
+                  <Sparkles className="w-7 h-7 text-amber-500" />
+                </div>
+                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-1">
+                  Your Personal Astro Guide
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Discover the best places on Earth for you
+                </p>
               </div>
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-                Explore Your Cosmic Map
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                Ask me about your astrocartography lines, best locations for different life areas, or what a specific line means.
-              </p>
-              <div className="flex flex-wrap gap-1.5 justify-center mb-4">
-                {['Sun MC', 'Venus DSC', 'Jupiter ASC'].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    className="text-[10px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    onClick={() => {
-                      if (!user) {
-                        toast.error('Sign in required', {
-                          description: 'Please sign in to explore planetary line meanings.',
-                          action: {
-                            label: 'Sign In',
-                            onClick: () => handleGoogleSignIn(),
-                          },
-                        });
-                        return;
-                      }
-                      setInputValue(`What does ${suggestion} mean?`);
-                    }}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
+
+              {/* Quick Action Cards */}
+              <div className="space-y-2 mb-4">
+                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+                  Popular Questions
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { icon: Briefcase, label: 'Career hotspots', query: 'What are the best cities for my career success?', color: 'text-blue-500' },
+                    { icon: Heart, label: 'Love & romance', query: 'Where are my most romantic locations for relationships?', color: 'text-rose-500' },
+                    { icon: Plane, label: 'Travel destinations', query: 'What are the best travel destinations for me based on my chart?', color: 'text-emerald-500' },
+                    { icon: Home, label: 'Best place to live', query: 'Where should I relocate for overall happiness and success?', color: 'text-purple-500' },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => {
+                        if (!user) {
+                          toast.error('Sign in required', {
+                            description: 'Please sign in to ask questions.',
+                            action: { label: 'Sign In', onClick: handleGoogleSignIn },
+                          });
+                          return;
+                        }
+                        setInputValue(item.query);
+                      }}
+                      className="flex flex-col items-start gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all text-left group"
+                    >
+                      <item.icon className={`w-4 h-4 ${item.color} group-hover:scale-110 transition-transform`} />
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Line Explanations */}
+              <div className="space-y-2 mb-4">
+                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+                  Understand Your Lines
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { line: 'Sun MC', color: '#FFD700' },
+                    { line: 'Venus DSC', color: '#FF69B4' },
+                    { line: 'Jupiter ASC', color: '#9400D3' },
+                    { line: 'Moon IC', color: '#C0C0C0' },
+                    { line: 'Mars MC', color: '#DC143C' },
+                    { line: 'Saturn DSC', color: '#8B4513' },
+                  ].map((item) => (
+                    <button
+                      key={item.line}
+                      onClick={() => {
+                        if (!user) {
+                          toast.error('Sign in required', {
+                            description: 'Please sign in to explore line meanings.',
+                            action: { label: 'Sign In', onClick: handleGoogleSignIn },
+                          });
+                          return;
+                        }
+                        setInputValue(`What does my ${item.line} line mean?`);
+                      }}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-colors group"
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full group-hover:scale-125 transition-transform"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-[11px] text-slate-600 dark:text-slate-300">{item.line}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ask anything prompt */}
+              <div className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/30 dark:to-slate-800/50 border border-slate-200 dark:border-slate-700/50">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
+                      Ask me anything
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      "Which cities have the strongest Jupiter influence for me?" or "Compare Paris vs Tokyo for my chart"
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Proactive upgrade prompt for free tier users */}
@@ -1219,16 +1291,14 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <button
                     onClick={() => setShowUpgradePanel(true)}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-medium text-sm transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                      Unlock more questions
-                    </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                      from $10/mo
-                    </span>
+                    <Crown className="w-4 h-4" />
+                    <span>Unlock Unlimited Questions</span>
                   </button>
+                  <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-2">
+                    {subscriptionStatus.questionsLimit - subscriptionStatus.questionsUsed} free questions remaining
+                  </p>
                 </div>
               )}
             </div>

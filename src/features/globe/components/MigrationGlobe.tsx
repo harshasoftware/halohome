@@ -25,6 +25,7 @@ import {
   getScoutClusterBeneficialKey,
   getScoutClusterChallengingKey,
   getScoutClusterMixedKey,
+  getFavoriteMarkerKey,
   zenithRingPool,
   createPendingBirthMarker,
   createPartnerMarker,
@@ -41,6 +42,7 @@ import {
   createScoutClusterBeneficialMarker,
   createScoutClusterChallengingMarker,
   createScoutClusterMixedMarker,
+  createFavoriteMarker,
   // Clustering
   zoomAwareClusterScoutMarkers,
   getCellSizeForAltitude,
@@ -128,6 +130,10 @@ interface MigrationGlobeProps {
   onScoutMarkerClick?: (lat: number, lng: number, name: string) => void;
   // Callback to show Scout panel when globe fails on mobile
   onGlobeFallbackShowScout?: () => void;
+  // Favorite locations to show as star markers
+  favoriteLocations?: Array<{ lat: number; lng: number; name: string }>;
+  // Callback when a favorite marker is clicked
+  onFavoriteClick?: (lat: number, lng: number, name: string) => void;
 }
 
 const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobeProps>(({
@@ -170,6 +176,9 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
   onScoutMarkerClick,
   // Fallback callback
   onGlobeFallbackShowScout,
+  // Favorite locations
+  favoriteLocations = [],
+  onFavoriteClick,
 }, ref) => {
   // Check WebGL availability with retries (handles PWA reload race conditions)
   // iOS gets 5 retries with longer delays due to slower context recycling
@@ -350,8 +359,17 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
     e.preventDefault();
     if (!globeEl.current || !onContextMenu) return;
 
-    // Get globe coordinates from screen position
-    const coords = globeEl.current.toGlobeCoords(e.clientX, e.clientY);
+    // Get globe container bounds to convert viewport coordinates to canvas-relative coordinates
+    // This is critical for accurate coordinate picking on 3D globe at all zoom levels
+    const container = globeContainerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const relativeX = e.clientX - rect.left;
+    const relativeY = e.clientY - rect.top;
+
+    // Get globe coordinates from container-relative position
+    const coords = globeEl.current.toGlobeCoords(relativeX, relativeY);
     if (coords && coords.lat != null && coords.lng != null) {
       onContextMenu(coords.lat, coords.lng, e.clientX, e.clientY);
     }
@@ -368,8 +386,16 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
     longPressTimerRef.current = setTimeout(() => {
       if (!globeEl.current || !onContextMenu || !longPressCoordsRef.current) return;
 
-      // Get globe coordinates from touch position
-      const coords = globeEl.current.toGlobeCoords(touch.clientX, touch.clientY);
+      // Get globe container bounds to convert viewport coordinates to canvas-relative coordinates
+      const container = globeContainerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const relativeX = touch.clientX - rect.left;
+      const relativeY = touch.clientY - rect.top;
+
+      // Get globe coordinates from container-relative position
+      const coords = globeEl.current.toGlobeCoords(relativeX, relativeY);
       if (coords && coords.lat != null && coords.lng != null) {
         isLongPressRef.current = true;
         onContextMenu(coords.lat, coords.lng, touch.clientX, touch.clientY);
@@ -948,11 +974,11 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
     return zoomAwareClusterScoutMarkers(scoutMarkers, globeAltitude);
   }, [scoutMarkers, globeAltitude]);
 
-  // Combine locations with analysis marker, city marker, pending birth marker, partner marker, paran crossings, line labels, and scout markers for HTML elements
+  // Combine locations with analysis marker, city marker, pending birth marker, partner marker, paran crossings, line labels, scout markers, and favorite markers for HTML elements
   const combinedHtmlData = useMemo(() => {
     const data: Array<
       PersonLocation |
-      { lat: number; lng: number; type: 'analysis' | 'city' | 'paran' | 'pending-birth' | 'relocation' | 'partner' | 'line-label' | 'scout-beneficial' | 'scout-challenging' | 'scout-cluster-beneficial' | 'scout-cluster-challenging' | 'scout-cluster-mixed'; name?: string; avatarUrl?: string; count?: number; beneficialCount?: number; challengingCount?: number } |
+      { lat: number; lng: number; type: 'analysis' | 'city' | 'paran' | 'pending-birth' | 'relocation' | 'partner' | 'line-label' | 'scout-beneficial' | 'scout-challenging' | 'scout-cluster-beneficial' | 'scout-cluster-challenging' | 'scout-cluster-mixed' | 'favorite'; name?: string; avatarUrl?: string; count?: number; beneficialCount?: number; challengingCount?: number } |
       ParanCrossingMarker & { type: 'paran' } |
       LineLabelMarker & { type: 'line-label' }
     > = [...locations];
@@ -1002,10 +1028,19 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
         type: 'scout-highlight' as const,
       });
     }
+    // Add favorite location markers (star icons)
+    for (const fav of favoriteLocations) {
+      data.push({
+        lat: fav.lat,
+        lng: fav.lng,
+        name: fav.name,
+        type: 'favorite' as const,
+      });
+    }
     return data;
-  }, [locations, analysisLocation, cityLocation, relocationLocation, pendingBirthLocation, partnerLocation, paranCrossingsData, lineLabelData, showLineLabels, clusteredScoutMarkers, highlightedScoutCity]);
+  }, [locations, analysisLocation, cityLocation, relocationLocation, pendingBirthLocation, partnerLocation, paranCrossingsData, lineLabelData, showLineLabels, clusteredScoutMarkers, highlightedScoutCity, favoriteLocations]);
 
-  const htmlElementCallback = useCallback((item: PersonLocation | { lat: number; lng: number; type: 'analysis' | 'city' | 'paran' | 'pending-birth' | 'relocation' | 'partner' | 'line-label' | 'scout-beneficial' | 'scout-challenging' | 'scout-highlight' | 'scout-cluster-beneficial' | 'scout-cluster-challenging' | 'scout-cluster-mixed'; name?: string; names?: string[]; avatarUrl?: string; count?: number; beneficialCount?: number; challengingCount?: number } | ParanCrossingMarker & { type: 'paran' } | LineLabelMarker & { type: 'line-label' }) => {
+  const htmlElementCallback = useCallback((item: PersonLocation | { lat: number; lng: number; type: 'analysis' | 'city' | 'paran' | 'pending-birth' | 'relocation' | 'partner' | 'line-label' | 'scout-beneficial' | 'scout-challenging' | 'scout-highlight' | 'scout-cluster-beneficial' | 'scout-cluster-challenging' | 'scout-cluster-mixed' | 'favorite'; name?: string; names?: string[]; avatarUrl?: string; count?: number; beneficialCount?: number; challengingCount?: number } | ParanCrossingMarker & { type: 'paran' } | LineLabelMarker & { type: 'line-label' }) => {
     // Safety check for null/undefined data
     if (!item || typeof item.lat !== 'number' || typeof item.lng !== 'number') {
       return createEmptyMarker();
@@ -1133,6 +1168,18 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
       return createScoutHighlightMarker();
     }
 
+    // Check if this is a favorite location marker (star)
+    if ('type' in item && item.type === 'favorite') {
+      const favItem = item as { lat: number; lng: number; type: 'favorite'; name?: string };
+      const cacheKey = getFavoriteMarkerKey(favItem.lat, favItem.lng);
+      return globeMarkerCache.getOrCreate(cacheKey, () => {
+        const handleClick = onFavoriteClick && favItem.name
+          ? () => onFavoriteClick(favItem.lat, favItem.lng, favItem.name!)
+          : undefined;
+        return createFavoriteMarker(handleClick);
+      });
+    }
+
     // Regular person location
     const personLocation = item as PersonLocation;
     const cacheKey = getPersonMarkerKey(personLocation.id, personLocation.count, personLocation.gender, personLocation.avatarUrl);
@@ -1145,7 +1192,7 @@ const MigrationGlobeComponent = React.forwardRef<GlobeMethods, MigrationGlobePro
         () => onPersonClick(personLocation)
       )
     );
-  }, [onPersonClick, onLineClick, onScoutMarkerClick]);
+  }, [onPersonClick, onLineClick, onScoutMarkerClick, onFavoriteClick]);
 
   const tileUrl = (x: number, y: number, z: number) =>
     `https://api.maptiler.com/maps/streets/${z}/${x}/${y}.png?key=${import.meta.env.VITE_MAPTILER_KEY}`;

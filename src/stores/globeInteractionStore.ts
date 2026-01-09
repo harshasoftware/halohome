@@ -44,7 +44,7 @@ export interface ZoneAnalysis {
 }
 
 // Panel types for the right panel stack
-export type PanelType = 'line' | 'analysis' | 'city' | 'person' | 'chat' | 'compatibility' | 'relocation' | 'favorites' | 'scout';
+export type PanelType = 'line' | 'analysis' | 'city' | 'person' | 'chat' | 'compatibility' | 'relocation' | 'favorites' | 'scout' | 'charts';
 
 export interface PanelItem {
   id: string;
@@ -517,6 +517,7 @@ export interface UsePanelStackReturn {
   navigateForward: () => void;
   closeCurrent: () => void;
   closeAll: () => void;
+  setCurrentIndex: (index: number) => void;
   isOpen: boolean;
   currentPanel: PanelItem | null;
 }
@@ -532,6 +533,7 @@ export const usePanelStackActions = (): UsePanelStackReturn =>
     navigateForward: state.navigateForward,
     closeCurrent: state.closeCurrentPanel,
     closeAll: state.closeAllPanels,
+    setCurrentIndex: state.setCurrentPanelIndex,
     isOpen: state.panelStack.length > 0 && state.currentPanelIndex >= 0,
     currentPanel: state.currentPanelIndex >= 0 ? state.panelStack[state.currentPanelIndex] : null,
   })));

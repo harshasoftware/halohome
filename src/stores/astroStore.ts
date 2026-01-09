@@ -231,6 +231,28 @@ export const useAstroStore = create<AstroState>()(
         partialize: (state) => ({
           visibility: state.visibility,
         }),
+        // Merge persisted state with defaults to handle new fields added over time
+        merge: (persistedState, currentState) => {
+          const persisted = persistedState as Partial<typeof currentState>;
+          const persistedVisibility = persisted.visibility || {};
+
+          // Filter out null/undefined values from persisted visibility
+          // This ensures new fields get their defaults
+          const cleanedVisibility: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(persistedVisibility)) {
+            if (value !== null && value !== undefined) {
+              cleanedVisibility[key] = value;
+            }
+          }
+
+          return {
+            ...currentState,
+            visibility: {
+              ...currentState.visibility,
+              ...cleanedVisibility,
+            },
+          };
+        },
       }
     ),
     { name: 'astro-store' }

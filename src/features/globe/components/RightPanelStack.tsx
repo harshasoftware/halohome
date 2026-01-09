@@ -8,8 +8,14 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Re-export types from store for backwards compatibility
 export type { PanelType, PanelItem } from '@/stores/globeInteractionStore';
@@ -23,6 +29,7 @@ interface RightPanelStackProps {
   onNavigateForward: () => void;
   onClose: () => void;
   onCloseAll: () => void;
+  onSetCurrentIndex?: (index: number) => void;
 
   // Content renderers for each panel type
   renderLine?: (data: unknown) => React.ReactNode;
@@ -34,6 +41,7 @@ interface RightPanelStackProps {
   renderRelocation?: (data: unknown) => React.ReactNode;
   renderFavorites?: (data: unknown) => React.ReactNode;
   renderScout?: (data: unknown) => React.ReactNode;
+  renderCharts?: (data: unknown) => React.ReactNode;
 
   // Optional footer (sticky at bottom)
   footer?: React.ReactNode;
@@ -46,6 +54,7 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
   onNavigateForward,
   onClose,
   onCloseAll,
+  onSetCurrentIndex,
   renderLine,
   renderAnalysis,
   renderCity,
@@ -55,6 +64,7 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
   renderRelocation,
   renderFavorites,
   renderScout,
+  renderCharts,
   footer,
 }) => {
   const currentPanel = stack[currentIndex];
@@ -85,6 +95,8 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
         return renderFavorites?.(currentPanel.data);
       case 'scout':
         return renderScout?.(currentPanel.data);
+      case 'charts':
+        return renderCharts?.(currentPanel.data);
       default:
         return null;
     }
@@ -99,8 +111,9 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
       case 'chat': return '💬';
       case 'compatibility': return '💫';
       case 'relocation': return '🌍';
-      case 'favorites': return '❤️';
+      case 'favorites': return '⭐';
       case 'scout': return '🔭';
+      case 'charts': return '👥';
       default: return '📄';
     }
   };
@@ -134,14 +147,37 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
             </Button>
           </div>
 
-          {/* Breadcrumb / Stack indicator */}
+          {/* Compact Stack indicator with dropdown */}
           {stack.length > 1 && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-white/5 rounded-lg">
-              <Layers className="h-3 w-3 text-slate-400" />
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {currentIndex + 1} / {stack.length}
-              </span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer tabular-nums"
+                  title="View panel history"
+                >
+                  <span>{currentIndex + 1}/{stack.length}</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-52">
+                {stack.map((panel, index) => (
+                  <DropdownMenuItem
+                    key={panel.id}
+                    onClick={() => onSetCurrentIndex?.(index)}
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer",
+                      index === currentIndex && "bg-slate-100 dark:bg-white/10"
+                    )}
+                  >
+                    <span className="text-xs text-slate-400 w-4 tabular-nums">{index + 1}</span>
+                    <span>{getPanelIcon(panel.type)}</span>
+                    <span className="truncate flex-1">{panel.title}</span>
+                    {index === currentIndex && (
+                      <span className="text-[10px] text-slate-400 bg-slate-200 dark:bg-white/10 px-1 rounded">now</span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 

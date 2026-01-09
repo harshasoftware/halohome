@@ -16,9 +16,12 @@ import {
   Users,
   ChevronRight,
   Settings,
+  Star,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BirthChart } from '@/hooks/useBirthCharts';
+import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 
 interface LeftActionBarProps {
   // Birth data state
@@ -32,6 +35,11 @@ interface LeftActionBarProps {
   currentChartId?: string | null;
   onSelectChart?: (id: string) => void;
   onOpenChartPicker?: () => void;
+
+  // Favorites management
+  favorites?: FavoriteCity[];
+  onOpenFavoritesPanel?: () => void;
+  onFavoriteSelect?: (lat: number, lng: number, name: string) => void;
 
   // AI Chat
   isAIChatOpen?: boolean;
@@ -77,6 +85,9 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
   currentChartId,
   onSelectChart,
   onOpenChartPicker,
+  favorites = [],
+  onOpenFavoritesPanel,
+  onFavoriteSelect,
   isAIChatOpen,
   onToggleAIChat,
   isCompatibilityEnabled,
@@ -252,6 +263,16 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
+      {/* My Favorites - saved locations */}
+      {onOpenFavoritesPanel && (
+        <FavoritesMenuButton
+          favorites={favorites}
+          onSelectFavorite={onFavoriteSelect}
+          onOpenFavoritesPanel={onOpenFavoritesPanel}
+          isExpanded={isExpanded}
+        />
+      )}
+
       {/* Divider */}
       {hasBirthData && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
 
@@ -410,6 +431,129 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
               >
                 <Settings className="w-3 h-3" />
                 Manage charts...
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface FavoritesMenuButtonProps {
+  favorites: FavoriteCity[];
+  onSelectFavorite?: (lat: number, lng: number, name: string) => void;
+  onOpenFavoritesPanel: () => void;
+  isExpanded: boolean;
+}
+
+const FavoritesMenuButton: React.FC<FavoritesMenuButtonProps> = ({
+  favorites,
+  onSelectFavorite,
+  onOpenFavoritesPanel,
+  isExpanded,
+}) => {
+  const [showSubmenu, setShowSubmenu] = useState(false);
+
+  const handleFavoriteSelect = (fav: FavoriteCity) => {
+    onSelectFavorite?.(fav.latitude, fav.longitude, fav.city_name);
+    setShowSubmenu(false);
+  };
+
+  // If not expanded or no favorites, show simple button
+  if (!isExpanded || favorites.length === 0) {
+    return (
+      <button
+        onClick={onOpenFavoritesPanel}
+        className={cn(
+          'flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-all duration-200 min-h-[40px] border border-transparent',
+          'text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-white/10',
+          isExpanded ? 'justify-start' : 'justify-center'
+        )}
+        title={!isExpanded ? 'My Favorites' : undefined}
+      >
+        <Star className="w-4 h-4" />
+        {isExpanded && (
+          <>
+            <span className="flex-1 text-left truncate text-sm font-medium whitespace-nowrap">
+              My Favorites
+            </span>
+            {favorites.length > 0 && (
+              <span className="text-xs text-slate-400 dark:text-zinc-500">{favorites.length}</span>
+            )}
+          </>
+        )}
+      </button>
+    );
+  }
+
+  // Expanded with favorites - show submenu on hover
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setShowSubmenu(true)}
+      onMouseLeave={() => setShowSubmenu(false)}
+    >
+      <button
+        onClick={onOpenFavoritesPanel}
+        className={cn(
+          'flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-all duration-200 min-h-[40px] border border-transparent w-full',
+          'text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-white/10',
+          'justify-start'
+        )}
+      >
+        <Star className="w-4 h-4" />
+        <span className="flex-1 text-left truncate text-sm font-medium whitespace-nowrap">
+          My Favorites
+        </span>
+        <span className="text-xs text-slate-400 dark:text-zinc-500 mr-1">{favorites.length}</span>
+        <ChevronRight className={cn(
+          'w-3.5 h-3.5 transition-transform duration-200',
+          showSubmenu && 'rotate-90'
+        )} />
+      </button>
+
+      {/* Submenu with favorite cities */}
+      {showSubmenu && (
+        <div className="absolute left-full top-0 ml-1 min-w-[180px] max-w-[240px] bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-lg shadow-lg py-1 z-50">
+          {favorites.slice(0, 5).map((fav) => (
+            <button
+              key={fav.id}
+              onClick={() => handleFavoriteSelect(fav)}
+              className="w-full px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-white/10"
+            >
+              <MapPin className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="block truncate">{fav.city_name}</span>
+                {fav.country && (
+                  <span className="block text-[10px] text-slate-400 dark:text-zinc-500 truncate">
+                    {fav.country}
+                  </span>
+                )}
+              </div>
+            </button>
+          ))}
+          {favorites.length > 5 && (
+            <>
+              <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />
+              <button
+                onClick={onOpenFavoritesPanel}
+                className="w-full px-3 py-2 text-left text-xs text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2"
+              >
+                <Settings className="w-3 h-3" />
+                View all {favorites.length} favorites...
+              </button>
+            </>
+          )}
+          {favorites.length <= 5 && (
+            <>
+              <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />
+              <button
+                onClick={onOpenFavoritesPanel}
+                className="w-full px-3 py-2 text-left text-xs text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2"
+              >
+                <Settings className="w-3 h-3" />
+                Manage favorites...
               </button>
             </>
           )}

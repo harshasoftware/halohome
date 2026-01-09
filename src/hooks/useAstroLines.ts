@@ -86,6 +86,7 @@ export interface UseAstroLinesResult {
   toggleParans: () => void;
   toggleZenithPoints: () => void;
   toggleLocalSpace: () => void;
+  toggleLineLabels: () => void;
   setVisibility: React.Dispatch<React.SetStateAction<AstroVisibilityState>>;
   showAllPlanets: () => void;
   hideAllPlanets: () => void;
@@ -552,6 +553,13 @@ export function useAstroLines(
     }));
   }, []);
 
+  const toggleLineLabels = useCallback(() => {
+    setVisibility(prev => ({
+      ...prev,
+      showLineLabels: !prev.showLineLabels,
+    }));
+  }, []);
+
   const showAllPlanets = useCallback(() => {
     setVisibility(prev => ({
       ...prev,
@@ -591,6 +599,7 @@ export function useAstroLines(
     toggleParans,
     toggleZenithPoints,
     toggleLocalSpace,
+    toggleLineLabels,
     setVisibility,
     showAllPlanets,
     hideAllPlanets,

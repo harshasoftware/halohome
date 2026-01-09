@@ -10,4 +10,5 @@ export { AnalysisPanelContent } from './AnalysisPanelContent';
 export { CityPanelContent } from './CityPanelContent';
 export { PersonPanelContent } from './PersonPanelContent';
 export { FavoritesPanelContent } from './FavoritesPanelContent';
+export { ChartsPanelContent } from './ChartsPanelContent';
 export { AstroLoadingOverlay } from './AstroLoadingOverlay';

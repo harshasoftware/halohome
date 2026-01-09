@@ -701,3 +701,78 @@ export function createScoutClusterMixedMarker(
 
   return el;
 }
+
+/**
+ * Create a favorite location marker (yellow star icon)
+ * @param onClick - Optional click handler to navigate to the favorite location
+ */
+export function createFavoriteMarker(onClick?: () => void): HTMLDivElement {
+  const el = document.createElement('div');
+  el.style.pointerEvents = onClick ? 'auto' : 'none';
+  el.style.cursor = onClick ? 'pointer' : 'default';
+  el.style.transform = 'translate(-50%, -50%)';
+
+  if (onClick) {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onClick();
+    });
+  }
+
+  el.innerHTML = `
+    <div style="
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <div style="
+        position: absolute;
+        inset: 0;
+        background: rgba(250, 204, 21, 0.3);
+        border-radius: 50%;
+        animation: favorite-pulse 2s ease-out infinite;
+      "></div>
+      <svg
+        style="
+          width: 20px;
+          height: 20px;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+          position: relative;
+          z-index: 1;
+          transition: transform 0.15s ease;
+        "
+        viewBox="0 0 24 24"
+        fill="#facc15"
+        stroke="#ca8a04"
+        stroke-width="1.5"
+        class="favorite-star"
+      >
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    </div>
+    <style>
+      @keyframes favorite-pulse {
+        0% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.3); opacity: 0.3; }
+        100% { transform: scale(1); opacity: 0.6; }
+      }
+    </style>
+  `;
+
+  // Add hover effect
+  if (onClick) {
+    el.addEventListener('mouseenter', () => {
+      const star = el.querySelector('.favorite-star') as HTMLElement;
+      if (star) star.style.transform = 'scale(1.2)';
+    });
+    el.addEventListener('mouseleave', () => {
+      const star = el.querySelector('.favorite-star') as HTMLElement;
+      if (star) star.style.transform = 'scale(1)';
+    });
+  }
+
+  return el;
+}

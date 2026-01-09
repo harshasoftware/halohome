@@ -189,12 +189,15 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const hasBirthDataFromStore = useHasBirthData();
   const hasBirthData = hasBirthDataProp !== undefined ? hasBirthDataProp : hasBirthDataFromStore;
 
-  // === Panel Stack from Store (for favorites panel) ===
+  // === Panel Stack from Store (for favorites and charts panels) ===
   const panelStack = usePanelStackActions();
   const handleOpenFavoritesPanelFromStore = useCallback(() => {
     // Check if favorites panel is already open
-    const hasFavoritesPanel = panelStack.stack.some(p => p.type === 'favorites');
-    if (!hasFavoritesPanel) {
+    const existingIndex = panelStack.stack.findIndex(p => p.type === 'favorites');
+    if (existingIndex >= 0) {
+      // Bring to front by setting current index
+      panelStack.setCurrentIndex(existingIndex);
+    } else {
       panelStack.push({
         type: 'favorites',
         title: 'Favorites',
@@ -203,11 +206,30 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     }
   }, [panelStack]);
 
+  // Handler to open charts panel (desktop) - opens in right panel stack
+  const handleOpenChartsPanelFromStore = useCallback(() => {
+    // Check if charts panel is already open
+    const existingIndex = panelStack.stack.findIndex(p => p.type === 'charts');
+    if (existingIndex >= 0) {
+      // Bring to front by setting current index
+      panelStack.setCurrentIndex(existingIndex);
+    } else {
+      panelStack.push({
+        type: 'charts',
+        title: 'My Charts',
+        data: null,
+      });
+    }
+  }, [panelStack]);
+
   // === Scout Panel Handler ===
   const handleOpenScoutPanel = useCallback(() => {
     // Check if scout panel is already open
-    const hasScoutPanel = panelStack.stack.some(p => p.type === 'scout');
-    if (!hasScoutPanel) {
+    const existingIndex = panelStack.stack.findIndex(p => p.type === 'scout');
+    if (existingIndex >= 0) {
+      // Bring to front by setting current index
+      panelStack.setCurrentIndex(existingIndex);
+    } else {
       panelStack.push({
         type: 'scout',
         title: 'Scout Locations',
@@ -647,7 +669,10 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         charts={charts}
         currentChartId={currentChartId}
         onSelectChart={onSelectChart}
-        onOpenChartPicker={onOpenChartPicker}
+        onOpenChartPicker={handleOpenChartsPanelFromStore}
+        favorites={favorites}
+        onOpenFavoritesPanel={handleOpenFavoritesPanelFromStore}
+        onFavoriteSelect={onFavoriteSelect}
         isAIChatOpen={isAIChatOpen}
         onToggleAIChat={onToggleAIChat}
         isCompatibilityEnabled={isCompatibilityEnabled}
@@ -732,7 +757,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           <ThemeToggle />
 
           {/* Account Menu */}
-          <AccountMenu onOpenChartPicker={onOpenChartPicker} onFavoriteSelect={onFavoriteSelect} onOpenFavoritesPanel={handleOpenFavoritesPanelFromStore} />
+          <AccountMenu onOpenChartPicker={handleOpenChartsPanelFromStore} onFavoriteSelect={onFavoriteSelect} onOpenFavoritesPanel={handleOpenFavoritesPanelFromStore} />
         </div>
       </div>
 

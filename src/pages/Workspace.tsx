@@ -783,6 +783,7 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
             onViewModeChange={handleViewModeChange}
             onBirthDataCreate={handleBirthDataCreate}
             onClearBirthData={handleClearBirthData}
+            onSelectChart={handleSelectSavedChart}
             // Note: Most UI state callbacks removed - GlobePage now reads/writes stores directly
             // - isLegendMinimized, showExportPanel → uiStore
             // - zone state → globeInteractionStore

@@ -1,11 +1,13 @@
 /**
  * Favorite Cities Hook
  * Manages favorite cities for authenticated users with localStorage fallback for guests
+ * Uses Zustand store for shared state across all components
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth-context';
+import { useFavoritesStore } from '@/stores/favoritesStore';
 
 export interface FavoriteCity {
   id: string;
@@ -59,8 +61,16 @@ const roundCoord = (coord: number): number => Math.round(coord * 10000) / 10000;
 
 export function useFavoriteCities(): UseFavoriteCitiesReturn {
   const { user } = useAuth();
-  const [favorites, setFavorites] = useState<FavoriteCity[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  // Use Zustand store for shared state across all components
+  const favorites = useFavoritesStore((state) => state.favorites);
+  const loading = useFavoritesStore((state) => state.loading);
+  const setFavorites = useFavoritesStore((state) => state.setFavorites);
+  const setLoading = useFavoritesStore((state) => state.setLoading);
+  const storAddFavorite = useFavoritesStore((state) => state.addFavorite);
+  const storeRemoveFavorite = useFavoritesStore((state) => state.removeFavorite);
+  const storeRemoveMultipleFavorites = useFavoritesStore((state) => state.removeMultipleFavorites);
+  const storeUpdateFavorite = useFavoritesStore((state) => state.updateFavorite);
 
   const isGuest = !user;
 
@@ -166,16 +176,19 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
 
       if (error) throw error;
 
-      setFavorites(prev => [newFavorite, ...prev]);
+      storAddFavorite(newFavorite);
       return { success: true, favorite: newFavorite };
     } catch (error) {
       console.error('Failed to add favorite city:', error);
       return { success: false, requiresAuth: false, error: 'Failed to save favorite' };
     }
-  }, [user, isGuest, isFavorite, getFavoriteByLocation]);
+  }, [user, isGuest, isFavorite, getFavoriteByLocation, storAddFavorite]);
 
   // Remove a favorite
   const removeFavorite = useCallback(async (id: string) => {
+    // Optimistically update store first
+    storeRemoveFavorite(id);
+
     if (isGuest) {
       const updated = favorites.filter(f => f.id !== id);
       saveGuestFavorites(updated);
@@ -189,23 +202,23 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
         .eq('id', id);
 
       if (error) throw error;
-
-      setFavorites(prev => prev.filter(f => f.id !== id));
     } catch (error) {
       console.error('Failed to remove favorite city:', error);
+      // Reload on error to restore correct state
+      loadFavorites();
     }
-  }, [isGuest, favorites, saveGuestFavorites]);
+  }, [isGuest, favorites, saveGuestFavorites, storeRemoveFavorite, loadFavorites]);
 
   // Remove multiple favorites at once
   const removeMultipleFavorites = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return;
 
-    // Optimistically update UI state first
-    const idsSet = new Set(ids);
-    setFavorites(prev => prev.filter(f => !idsSet.has(f.id)));
+    // Optimistically update store first
+    storeRemoveMultipleFavorites(ids);
 
     if (isGuest) {
       // For guests, filter out all matching IDs and save to localStorage
+      const idsSet = new Set(ids);
       const updated = favorites.filter(f => !idsSet.has(f.id));
       saveGuestFavorites(updated);
       return;
@@ -224,13 +237,18 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
       // Revert optimistic update on error by reloading favorites
       loadFavorites();
     }
-  }, [isGuest, favorites, saveGuestFavorites, loadFavorites]);
+  }, [isGuest, favorites, saveGuestFavorites, storeRemoveMultipleFavorites, loadFavorites]);
 
   // Update favorite notes
   const updateFavoriteNotes = useCallback(async (id: string, notes: string) => {
+    const updated_at = new Date().toISOString();
+
+    // Optimistically update store first
+    storeUpdateFavorite(id, { notes, updated_at });
+
     if (isGuest) {
       const updated = favorites.map(f =>
-        f.id === id ? { ...f, notes, updated_at: new Date().toISOString() } : f
+        f.id === id ? { ...f, notes, updated_at } : f
       );
       saveGuestFavorites(updated);
       return;
@@ -238,18 +256,16 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
 
     const { error } = await supabase
       .from('favorite_cities')
-      .update({ notes, updated_at: new Date().toISOString() })
+      .update({ notes, updated_at })
       .eq('id', id);
 
     if (error) {
+      // Reload on error to restore correct state
+      loadFavorites();
       // Re-throw to allow calling code to handle the error
       throw new Error(`Failed to save notes: ${error.message}`);
     }
-
-    setFavorites(prev =>
-      prev.map(f => f.id === id ? { ...f, notes, updated_at: new Date().toISOString() } : f)
-    );
-  }, [isGuest, favorites, saveGuestFavorites]);
+  }, [isGuest, favorites, saveGuestFavorites, storeUpdateFavorite, loadFavorites]);
 
   // Toggle favorite (add or remove)
   const toggleFavorite = useCallback(async (data: FavoriteCityInput): Promise<FavoriteResult> => {

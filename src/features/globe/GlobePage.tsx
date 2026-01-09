@@ -55,7 +55,7 @@ const CompatibilityPanel = lazy(() => import('./components/CompatibilityPanel').
 const LineReportPanel = lazy(() => import('./components/LineReportPanel').then(m => ({ default: m.LineReportPanel })));
 const CityInfoPanel = lazy(() => import('./components/CityInfoPanel').then(m => ({ default: m.CityInfoPanel })));
 const RelocationPanel = lazy(() => import('./components/RelocationPanel').then(m => ({ default: m.RelocationPanel })));
-import { FavoritesPanelContent } from './components/panels/FavoritesPanelContent';
+import { FavoritesPanelContent, ChartsPanelContent } from './components/panels';
 import { AstroLoadingOverlay } from './components/panels/AstroLoadingOverlay';
 import { ScoutPanel, type ScoutMarker } from './components/ScoutPanel';
 import { PartnerChartModal } from './components/PartnerChartModal';
@@ -150,6 +150,8 @@ interface GlobePageProps {
     hasData: boolean;
     toggle: () => void;
   }) => void;
+  // Callback when user selects a saved chart (updates nodes in Workspace)
+  onSelectChart?: (chartId: string) => void;
 }
 
 const GlobePage: React.FC<GlobePageProps> = ({
@@ -177,6 +179,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   onOpenFavoritesPanel: externalOpenFavoritesPanel,
   onCompatibilityStateChange,
   onNatalChartStateChange,
+  onSelectChart,
 }) => {
   // --- Hooks ---
   const globeEl = useRef<GlobeMethods | undefined>();
@@ -605,6 +608,16 @@ const GlobePage: React.FC<GlobePageProps> = ({
   // Favorite cities management
   const { favorites, loading: favoritesLoading, isFavorite, toggleFavorite, removeFavorite, updateFavoriteNotes, removeMultipleFavorites, isGuest: isFavoritesGuest } = useFavoriteCities();
 
+  // Map favorites to globe marker format
+  const favoriteLocations = useMemo(() =>
+    favorites.map(fav => ({
+      lat: fav.latitude,
+      lng: fav.longitude,
+      name: fav.city_name,
+    })),
+    [favorites]
+  );
+
   // --- Context Menu Action Handlers ---
   // (Defined here because they depend on birthData, relocateTo, enableLocalSpace, etc.)
 
@@ -695,6 +708,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
     toggleParans,
     toggleZenithPoints,
     toggleLocalSpace,
+    toggleLineLabels,
     showAllPlanets,
     hideAllPlanets,
   } = useAstroLines(effectiveBirthData, { enabled: showAstroLines && !isLocalSpace });
@@ -1663,6 +1677,40 @@ const GlobePage: React.FC<GlobePageProps> = ({
     );
   }, [favorites, favoritesLoading, removeFavorite, updateFavoriteNotes, removeMultipleFavorites, panelStack]);
 
+  // Render function for ChartsPanel (birth charts management)
+  const renderChartsPanel = useCallback(() => {
+    const handleSelectChart = (id: string) => {
+      // Use parent handler if available (updates nodes), otherwise just update current chart
+      if (onSelectChart) {
+        onSelectChart(id);
+      } else {
+        selectChart(id);
+        toast.success('Chart selected');
+      }
+    };
+
+    const handleCreateNew = () => {
+      // Close the panel and guide user to create new chart
+      panelStack.closeCurrent();
+      // User can double-tap on globe or use search bar to create a new chart
+      toast.info('Double-tap on the globe or use the search bar to set your birth location');
+    };
+
+    return (
+      <ChartsPanelContent
+        charts={savedCharts}
+        currentChart={currentChart}
+        loading={chartsLoading}
+        onSelectChart={handleSelectChart}
+        onDeleteChart={deleteChart}
+        onUpdateChart={updateChart}
+        onSetDefault={setDefaultChart}
+        onCreateNew={handleCreateNew}
+        onClose={panelStack.closeCurrent}
+      />
+    );
+  }, [savedCharts, currentChart, chartsLoading, selectChart, deleteChart, updateChart, setDefaultChart, panelStack, onSelectChart]);
+
   // Render function for ScoutPanel
   const renderScoutPanel = useCallback(() => {
     return (
@@ -1682,11 +1730,30 @@ const GlobePage: React.FC<GlobePageProps> = ({
   // Handler to open favorites panel
   const handleOpenFavoritesPanel = useCallback(() => {
     // Check if favorites panel is already open
-    const hasFavoritesPanel = panelStack.stack.some(p => p.type === 'favorites');
-    if (!hasFavoritesPanel) {
+    const existingIndex = panelStack.stack.findIndex(p => p.type === 'favorites');
+    if (existingIndex >= 0) {
+      // Bring to front by setting current index
+      panelStack.setCurrentIndex(existingIndex);
+    } else {
       panelStack.push({
         type: 'favorites',
         title: 'Favorites',
+        data: null,
+      });
+    }
+  }, [panelStack]);
+
+  // Handler to open charts panel
+  const handleOpenChartsPanel = useCallback(() => {
+    // Check if charts panel is already open
+    const existingIndex = panelStack.stack.findIndex(p => p.type === 'charts');
+    if (existingIndex >= 0) {
+      // Bring to front by setting current index
+      panelStack.setCurrentIndex(existingIndex);
+    } else {
+      panelStack.push({
+        type: 'charts',
+        title: 'My Charts',
         data: null,
       });
     }
@@ -1778,6 +1845,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
             onToggleParans={toggleParans}
             onToggleZenithPoints={toggleZenithPoints}
             onToggleLocalSpace={toggleLocalSpace}
+            onToggleLineLabels={toggleLineLabels}
             onShowAll={showAllPlanets}
             onHideAll={hideAllPlanets}
             isMinimized={legendMinimized}
@@ -1804,6 +1872,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
               onToggleParans={toggleParans}
               onToggleZenithPoints={toggleZenithPoints}
               onToggleLocalSpace={toggleLocalSpace}
+              onToggleLineLabels={toggleLineLabels}
               onShowAll={showAllPlanets}
               onHideAll={hideAllPlanets}
               isMinimized={legendMinimized}
@@ -2036,12 +2105,14 @@ const GlobePage: React.FC<GlobePageProps> = ({
                 onZoneComplete={handleZoneComplete}
                 isLocalSpaceMode={isLocalSpace}
                 localSpaceOrigin={localSpaceOrigin}
-                showLineLabels={storeVisibility.showLineLabels}
+                showLineLabels={visibility.showLineLabels}
                 onSingleClick={handleGlobeSingleClick}
                 onContextMenu={handleGlobeContextMenu}
                 scoutMarkers={scoutMarkers}
                 onScoutMarkerClick={handleCityClick}
                 onGlobeFallbackShowScout={() => setMobileScoutSheetOpen(true)}
+                favoriteLocations={favoriteLocations}
+                onFavoriteClick={handleCityClick}
               />
             </div>
           ) : (
@@ -2075,11 +2146,13 @@ const GlobePage: React.FC<GlobePageProps> = ({
                     onZoneComplete={handleZoneComplete}
                     isLocalSpaceMode={isLocalSpace}
                     localSpaceOrigin={localSpaceOrigin}
-                    showLineLabels={storeVisibility.showLineLabels}
+                    showLineLabels={visibility.showLineLabels}
                     onSingleClick={handleGlobeSingleClick}
                     onContextMenu={handleGlobeContextMenu}
                     scoutMarkers={scoutMarkers}
                     onScoutMarkerClick={handleCityClick}
+                    favoriteLocations={favoriteLocations}
+                    onFavoriteClick={handleCityClick}
                   />
                 </div>
               </ResizablePanel>
@@ -2094,6 +2167,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
                       onNavigateForward={panelStack.navigateForward}
                       onClose={panelStack.closeCurrent}
                       onCloseAll={panelStack.closeAll}
+                      onSetCurrentIndex={panelStack.setCurrentIndex}
                       renderLine={renderLinePanel}
                       renderAnalysis={renderAnalysisPanel}
                       renderCity={renderCityPanel}
@@ -2102,6 +2176,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
                       renderRelocation={renderRelocationPanel}
                       renderFavorites={renderFavoritesPanel}
                       renderScout={renderScoutPanel}
+                      renderCharts={renderChartsPanel}
                       footer={
                         <a
                           href="/"

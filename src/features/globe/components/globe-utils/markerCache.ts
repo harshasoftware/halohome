@@ -162,4 +162,11 @@ export function getScoutClusterMixedKey(lat: number, lng: number, beneficialCoun
   return `scout-cluster-mixed-${lat.toFixed(2)}-${lng.toFixed(2)}-${beneficialCount}-${challengingCount}`;
 }
 
+/**
+ * Generate cache key for favorite location markers (star icons)
+ */
+export function getFavoriteMarkerKey(lat: number, lng: number): string {
+  return `favorite-${lat.toFixed(4)}-${lng.toFixed(4)}`;
+}
+
 export default globeMarkerCache;
