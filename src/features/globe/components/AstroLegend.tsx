@@ -125,7 +125,10 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
 
     // Expanded mobile bottom sheet (bottom-0 since bottom nav is hidden when expanded)
     return (
-      <div className={`fixed inset-x-0 bottom-0 z-50 animate-in slide-in-from-bottom duration-300 ${isMaximized ? 'inset-0 mx-0' : 'mx-2'}`}>
+      <div
+        className={`fixed inset-x-0 bottom-0 z-50 animate-in slide-in-from-bottom duration-300 ${isMaximized ? 'inset-0 mx-0' : 'mx-2'}`}
+        data-tour="planetary-lines"
+      >
         <div
           className={`bg-white dark:bg-[#0a0a0a] backdrop-blur-md shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden ${isMaximized ? 'rounded-none' : 'rounded-t-2xl'}`}
           style={{
@@ -390,6 +393,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
       <div
         className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border border-slate-200 dark:border-white/10 cursor-pointer hover:bg-white dark:hover:bg-[#0a0a0a] transition-colors"
         onClick={onToggleMinimized}
+        data-tour="planetary-lines"
       >
         <SlidersHorizontal className="w-4 h-4 text-slate-600 dark:text-slate-300" />
         <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Filters</span>
@@ -399,7 +403,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
   }
 
   return (
-    <Card className="w-64 bg-white/90 dark:bg-[#0a0a0a]/90 dark:border-white/10 backdrop-blur-md shadow-lg flex flex-col overflow-hidden">
+    <Card className="w-64 bg-white/90 dark:bg-[#0a0a0a]/90 dark:border-white/10 backdrop-blur-md shadow-lg flex flex-col overflow-hidden" data-tour="planetary-lines">
       <CardHeader className="pb-2 flex flex-row items-center justify-between flex-shrink-0">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           Planetary Lines

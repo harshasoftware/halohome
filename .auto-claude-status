@@ -3,7 +3,7 @@
   "spec": "017-interactive-onboarding-tutorial",
   "state": "building",
   "subtasks": {
-    "completed": 7,
+    "completed": 8,
     "total": 16,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 8,
+    "number": 9,
     "started_at": "2026-01-09T06:54:29.561718"
   },
-  "last_update": "2026-01-09T07:07:07.257385"
+  "last_update": "2026-01-09T07:08:22.959343"
 }
