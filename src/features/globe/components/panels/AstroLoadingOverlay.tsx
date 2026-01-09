@@ -13,8 +13,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Compass, MapPin, ChevronUp, ChevronDown, Check } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Compass, MapPin, ChevronDown, Check } from 'lucide-react';
 
 type Phase = 'astro' | 'scout' | 'complete';
 
@@ -80,8 +79,6 @@ export const AstroLoadingOverlay: React.FC<AstroLoadingOverlayProps> = ({
   onDismiss,
   showResults,
 }) => {
-  const isMobile = useIsMobile();
-
   // Track if user has manually toggled minimized state
   const [userMinimized, setUserMinimized] = useState<boolean | null>(null);
   const [hasAutoMinimized, setHasAutoMinimized] = useState(false);
@@ -230,33 +227,10 @@ export const AstroLoadingOverlay: React.FC<AstroLoadingOverlayProps> = ({
     return null;
   }
 
-  // Minimized view - small pill in bottom right corner (desktop only)
-  // On mobile, the Toolbar Scout FAB shows the progress indicator
+  // Minimized view - progress is now shown in the Toolbar on both mobile and desktop
+  // Return null to let the Toolbar handle the scout progress indicator
   if (isMinimized && currentPhase === 'scout') {
-    // On mobile, return null - progress is shown in the Scout FAB
-    if (isMobile) {
-      return null;
-    }
-    return (
-      <div className="fixed bottom-4 right-4 z-[1000] pointer-events-auto">
-        <button
-          onClick={() => setUserMinimized(false)}
-          className="flex items-center gap-2 px-3 py-2 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 shadow-lg hover:shadow-xl transition-shadow"
-        >
-          <MapPin className="w-4 h-4 text-amber-500 animate-pulse" />
-          <span className="text-sm font-medium text-slate-700 dark:text-zinc-300">
-            Scouting... {roundedPercent}%
-          </span>
-          <div className="w-16 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full bg-amber-500 transition-all duration-300"
-              style={{ width: `${roundedPercent}%` }}
-            />
-          </div>
-          <ChevronUp className="w-4 h-4 text-slate-400" />
-        </button>
-      </div>
-    );
+    return null;
   }
 
   // Full overlay view

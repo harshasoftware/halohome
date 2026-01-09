@@ -737,11 +737,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
         {/* Right: Scout Progress, Upgrade, Theme, Account */}
         <div className="flex items-center gap-2">
-          {/* Scout Progress Indicator - shows when computing */}
+          {/* Scout Progress Indicator - shows when computing, click to open scout panel */}
           {scoutProgress?.phase === 'computing' && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700">
+                <button
+                  onClick={handleOpenScoutPanel}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                >
                   <div className="relative w-5 h-5">
                     <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
                       <circle
@@ -772,10 +775,10 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-300 tabular-nums">
                     {Math.round(scoutProgress.percent)}%
                   </span>
-                </div>
+                </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Scouting locations...</p>
+                <p>Click to open Scout panel</p>
               </TooltipContent>
             </Tooltip>
           )}
