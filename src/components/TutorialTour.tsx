@@ -6,7 +6,7 @@
  * completion/skip callbacks with automatic persistence.
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import Joyride, {
   CallBackProps,
   STATUS,
@@ -47,11 +47,47 @@ const DARK_THEME_COLORS = {
 };
 
 /**
- * Check if user prefers reduced motion
+ * Hook to reactively track user's reduced motion preference
+ * Listens for changes to the prefers-reduced-motion media query
+ * and updates the state accordingly.
  */
-const getPrefersReducedMotion = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const usePrefersReducedMotion = (): boolean => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Handler for media query changes
+    const handleChange = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    // Add event listener for preference changes
+    // Use addEventListener if available (modern browsers), otherwise use deprecated addListener
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      // Fallback for older browsers
+      mediaQuery.addListener(handleChange);
+    }
+
+    // Cleanup listener on unmount
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        // Fallback for older browsers
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  return prefersReducedMotion;
 };
 
 /**
@@ -64,6 +100,7 @@ const getIsDarkMode = (): boolean => {
 
 /**
  * Generate Joyride styles based on theme and motion preferences
+ * When reducedMotion is true, all transitions and animations are disabled
  */
 const getJoyrideStyles = (
   isDarkMode: boolean,
@@ -71,13 +108,17 @@ const getJoyrideStyles = (
 ): Partial<Styles> => {
   const colors = isDarkMode ? DARK_THEME_COLORS : THEME_COLORS;
 
+  // Disable all transitions when reduced motion is preferred
+  const noTransition = 'none';
+  const standardTransition = 'all 0.2s ease';
+
   return {
     options: {
       arrowColor: colors.background,
       backgroundColor: colors.background,
       overlayColor: colors.overlay,
       primaryColor: colors.primary,
-      spotlightShadow: '0 0 15px rgba(0, 0, 0, 0.5)',
+      spotlightShadow: reducedMotion ? 'none' : '0 0 15px rgba(0, 0, 0, 0.5)',
       textColor: colors.text,
       width: 380,
       zIndex: 10000,
@@ -85,6 +126,9 @@ const getJoyrideStyles = (
     tooltip: {
       borderRadius: 12,
       padding: 20,
+      // Disable tooltip animations when reduced motion is preferred
+      transition: reducedMotion ? noTransition : standardTransition,
+      animation: reducedMotion ? 'none' : undefined,
     },
     tooltipContainer: {
       textAlign: 'left' as const,
@@ -105,36 +149,45 @@ const getJoyrideStyles = (
       fontSize: 14,
       fontWeight: 500,
       padding: '10px 20px',
-      transition: reducedMotion ? 'none' : 'background-color 0.2s ease',
+      transition: reducedMotion ? noTransition : 'background-color 0.2s ease',
     },
     buttonBack: {
       color: colors.textMuted,
       fontSize: 14,
       fontWeight: 500,
       marginRight: 8,
+      transition: reducedMotion ? noTransition : 'color 0.2s ease',
     },
     buttonSkip: {
       color: colors.textMuted,
       fontSize: 13,
+      transition: reducedMotion ? noTransition : 'color 0.2s ease',
     },
     buttonClose: {
       display: 'none', // Hide close button, use skip instead
     },
     spotlight: {
       borderRadius: 8,
+      // Disable spotlight animations when reduced motion is preferred
+      transition: reducedMotion ? noTransition : 'opacity 0.3s ease, transform 0.3s ease',
+      animation: reducedMotion ? 'none' : undefined,
     },
     overlay: {
-      transition: reducedMotion ? 'none' : 'opacity 0.3s ease',
+      transition: reducedMotion ? noTransition : 'opacity 0.3s ease',
     },
     beacon: {
       display: 'none', // Beacons are disabled via disableBeacon in steps
+      // Disable beacon animations when reduced motion is preferred
+      animation: reducedMotion ? 'none' : undefined,
     },
     beaconInner: {
       backgroundColor: colors.beacon,
+      animation: reducedMotion ? 'none' : undefined,
     },
     beaconOuter: {
       backgroundColor: colors.beacon,
       borderColor: colors.beacon,
+      animation: reducedMotion ? 'none' : undefined,
     },
   };
 };
@@ -166,9 +219,16 @@ export interface TutorialTourProps {
  * Features:
  * - Connects to tutorialStore for state management
  * - Auto-persists progress via useTutorialAutoPersist hook
- * - Supports dark mode and prefers-reduced-motion
+ * - Supports dark mode theming
  * - Custom styling to match Radix UI design system
  * - Handles completion, skip, and step change events
+ *
+ * Accessibility - prefers-reduced-motion support:
+ * - Reactively tracks user's motion preference via usePrefersReducedMotion hook
+ * - Disables all CSS transitions and animations when reduced motion is preferred
+ * - Disables floater (tooltip positioning) animations
+ * - Removes spotlight shadow effects for cleaner appearance
+ * - Ensures instant state changes without visual motion
  */
 export const TutorialTour: React.FC<TutorialTourProps> = ({
   onComplete,
@@ -182,15 +242,14 @@ export const TutorialTour: React.FC<TutorialTourProps> = ({
   // Auto-persist tutorial state changes
   useTutorialAutoPersist();
 
+  // Track reduced motion preference reactively
+  const reducedMotion = usePrefersReducedMotion();
+
   // Memoize styles based on current theme and motion preferences
   const styles = useMemo(() => {
     const isDarkMode = getIsDarkMode();
-    const reducedMotion = getPrefersReducedMotion();
     return getJoyrideStyles(isDarkMode, reducedMotion);
-  }, []);
-
-  // Get reduced motion preference for Joyride props
-  const reducedMotion = useMemo(() => getPrefersReducedMotion(), []);
+  }, [reducedMotion]);
 
   /**
    * Handle Joyride callback events
@@ -248,11 +307,19 @@ export const TutorialTour: React.FC<TutorialTourProps> = ({
       callback={handleJoyrideCallback}
       styles={styles}
       locale={JOYRIDE_LOCALE}
+      // Control scroll behavior based on reduced motion preference
+      // When reduced motion is preferred, use instant scroll behavior
+      scrollOffset={100}
       floaterProps={{
+        // Disable floater animations when reduced motion is preferred
         disableAnimation: reducedMotion,
         styles: {
           floater: {
             transition: reducedMotion ? 'none' : 'opacity 0.3s ease',
+          },
+          arrow: {
+            // Disable arrow animations when reduced motion is preferred
+            transition: reducedMotion ? 'none' : 'transform 0.2s ease',
           },
         },
       }}
