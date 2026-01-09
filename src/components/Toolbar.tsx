@@ -666,44 +666,47 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   return (
     <>
       {/* Left Action Bar - vertical sidebar (hidden when birth chart or filters open) */}
+      {/* Positioned to center between search bar (top) and birth chart button (bottom) */}
       {showLeftActionBar && (
-      <LeftActionBar
-        hasBirthData={hasBirthData}
-        hasPendingBirthLocation={hasPendingBirthLocation}
-        onClearBirthData={onClearBirthData}
-        onClearPendingBirth={onClearPendingBirth}
-        charts={charts}
-        currentChartId={currentChartId}
-        onSelectChart={onSelectChart}
-        onOpenChartPicker={handleOpenChartsPanelFromStore}
-        onAddChart={handleAddChartFromStore}
-        favorites={favorites}
-        onOpenFavoritesPanel={handleOpenFavoritesPanelFromStore}
-        onFavoriteSelect={onFavoriteSelect}
-        isAIChatOpen={isAIChatOpen}
-        onToggleAIChat={onToggleAIChat}
-        isCompatibilityEnabled={isCompatibilityEnabled}
-        isCompatibilityCalculating={isCompatibilityCalculating}
-        hasPartnerChart={hasPartnerChart}
-        partnerName={partnerName}
-        onToggleCompatibility={onToggleCompatibility}
-        onOpenPartnerModal={onOpenPartnerModal}
-        isDrawingZone={isDrawingZone}
-        hasDrawnZone={hasDrawnZone}
-        zoneDrawingPointsCount={zoneDrawingPointsCount}
-        onToggleZoneDrawing={onToggleZoneDrawing}
-        onCompleteZoneDrawing={onCompleteZoneDrawing}
-        onClearZone={onClearZone}
-        onOpenExport={onOpenExport}
-        onOpenShareChart={() => setShowAstroShareModal(true)}
-        onOpenScoutPanel={handleOpenScoutPanel}
-        onToggleFilters={onToggleLegend}
-        isLocalSpaceMode={isLocalSpaceMode}
-        localSpaceOriginName={localSpaceOriginName}
-        isRelocated={isRelocated}
-        relocationName={relocationName}
-        onReturnToStandard={onReturnToStandard}
-      />
+        <div className="fixed left-4 top-[15vh] bottom-[8vh] z-40 flex items-center pointer-events-none">
+          <LeftActionBar
+            hasBirthData={hasBirthData}
+            hasPendingBirthLocation={hasPendingBirthLocation}
+            onClearBirthData={onClearBirthData}
+            onClearPendingBirth={onClearPendingBirth}
+            charts={charts}
+            currentChartId={currentChartId}
+            onSelectChart={onSelectChart}
+            onOpenChartPicker={handleOpenChartsPanelFromStore}
+            onAddChart={handleAddChartFromStore}
+            favorites={favorites}
+            onOpenFavoritesPanel={handleOpenFavoritesPanelFromStore}
+            onFavoriteSelect={onFavoriteSelect}
+            isAIChatOpen={isAIChatOpen}
+            onToggleAIChat={onToggleAIChat}
+            isCompatibilityEnabled={isCompatibilityEnabled}
+            isCompatibilityCalculating={isCompatibilityCalculating}
+            hasPartnerChart={hasPartnerChart}
+            partnerName={partnerName}
+            onToggleCompatibility={onToggleCompatibility}
+            onOpenPartnerModal={onOpenPartnerModal}
+            isDrawingZone={isDrawingZone}
+            hasDrawnZone={hasDrawnZone}
+            zoneDrawingPointsCount={zoneDrawingPointsCount}
+            onToggleZoneDrawing={onToggleZoneDrawing}
+            onCompleteZoneDrawing={onCompleteZoneDrawing}
+            onClearZone={onClearZone}
+            onOpenExport={onOpenExport}
+            onOpenShareChart={() => setShowAstroShareModal(true)}
+            onOpenScoutPanel={handleOpenScoutPanel}
+            onToggleFilters={onToggleLegend}
+            isLocalSpaceMode={isLocalSpaceMode}
+            localSpaceOriginName={localSpaceOriginName}
+            isRelocated={isRelocated}
+            relocationName={relocationName}
+            onReturnToStandard={onReturnToStandard}
+          />
+        </div>
       )}
 
       {/* Top toolbar - simplified */}
