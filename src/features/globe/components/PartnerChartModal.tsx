@@ -50,6 +50,7 @@ export const PartnerChartModal: React.FC<PartnerChartModalProps> = ({
   const [cityName, setCityName] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const wasOpenRef = useRef(false);
 
   // Places autocomplete for city search
   const {
@@ -63,9 +64,12 @@ export const PartnerChartModal: React.FC<PartnerChartModalProps> = ({
     debounce: 300,
   });
 
-  // Reset or populate form when modal opens
+  // Reset or populate form when modal opens (only on open transition, not on every render)
   useEffect(() => {
-    if (open) {
+    const justOpened = open && !wasOpenRef.current;
+    wasOpenRef.current = open;
+
+    if (justOpened) {
       // If editing an existing partner, pre-populate the form
       if (existingPartner) {
         setStep('name'); // Start at name step for editing

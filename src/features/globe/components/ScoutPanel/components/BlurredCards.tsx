@@ -66,7 +66,7 @@ export const BlurredOverallCard: React.FC<BlurredOverallCardProps> = ({ fakeCity
         </div>
 
         {/* Score Badge - deterministic based on rank */}
-        <div className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full text-sm font-bold border bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400">
+        <div className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full text-sm font-bold border bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400">
           {95 - (rank * 3)}
         </div>
       </div>

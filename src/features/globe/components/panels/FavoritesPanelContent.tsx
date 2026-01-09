@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SkeletonFavoriteCard } from '@/components/ui/skeleton-card';
-import { Heart, MapPin, Trash2, Navigation, Globe2, CheckSquare, X, Search, SearchX } from 'lucide-react';
+import { Star, MapPin, Trash2, Navigation, Globe2, CheckSquare, X, Search, SearchX } from 'lucide-react';
 import type { FavoriteCity } from '@/hooks/useFavoriteCities';
 import { useFavoriteSelection } from '@/hooks/useFavoriteSelection';
 import { useFavoritesFilter } from '@/hooks/useFavoritesFilter';
@@ -149,13 +149,13 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
     return (
       <div className="flex flex-col items-center justify-center p-8 h-full min-h-[300px] text-center">
         <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-          <Heart className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+          <Star className="w-8 h-8 text-slate-300 dark:text-slate-600" />
         </div>
         <h3 className="text-lg font-medium text-slate-700 dark:text-slate-200 mb-2">
           No Favorites Yet
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">
-          Click the heart icon on any city to save it to your favorites for quick access.
+          Click the star icon on any city to save it to your favorites for quick access.
         </p>
       </div>
     );
@@ -166,7 +166,7 @@ export const FavoritesPanelContent: React.FC<FavoritesPanelContentProps> = ({
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
         <div className="flex items-center gap-2">
-          <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+          <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
           <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
             Favorite Cities
           </h2>

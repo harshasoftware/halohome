@@ -7,12 +7,11 @@ import { PersonData } from '@/types/familyTree';
 import { toast } from 'sonner';
 import { useModalManager } from '@/hooks/useModalManager';
 import { useChartManager } from '@/hooks/useChartManager';
-import { useBirthDataDialog, useUIStore } from '@/stores/uiStore';
+import { useUIStore } from '@/stores/uiStore';
 import { useBirthCharts } from '@/hooks/useBirthCharts';
 import { supabase } from '@/integrations/supabase/client';
 import { IndexPageModals } from '@/components/IndexPageModals';
 import { ChartPickerModal } from '@/components/ChartPickerModal';
-import { BirthDataDialog } from '@/components/BirthDataDialog';
 import { HelpCircle, MessageSquare, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -77,13 +76,12 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
     isWelcomeDialogOpen
   } = modalManager;
 
-  // Birth data dialog for landing page flow
-  const {
-    isOpen: isBirthDataDialogOpen,
-    prefill: birthDataPrefill,
-    open: openBirthDataDialog,
-    close: closeBirthDataDialog
-  } = useBirthDataDialog();
+  // Landing page prefill - passed to GlobePage to trigger the same birth data flow
+  const [landingPagePrefill, setLandingPagePrefill] = useState<{
+    lat: number;
+    lng: number;
+    place: string;
+  } | null>(null);
 
   // Birth charts management
   const birthCharts = useBirthCharts();
@@ -150,14 +148,14 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
       newParams.delete('action');
       setSearchParams(newParams, { replace: true });
 
-      // Open birth data dialog with prefilled location
-      openBirthDataDialog({
+      // Set landing page prefill - GlobePage will trigger the birth data flow
+      setLandingPagePrefill({
         place,
         lat: parseFloat(lat),
         lng: parseFloat(lng),
       });
     }
-  }, [searchParams, isDataLoaded, setSearchParams, openBirthDataDialog]);
+  }, [searchParams, isDataLoaded, setSearchParams]);
 
   // Sync editingChartId with currentChart on initial load
   useEffect(() => {
@@ -533,20 +531,10 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
     }
   }, [nodes, setNodes, isProjectPermanent, projectId, birthCharts, editingChartId]);
 
-  // Handle save from BirthDataDialog (landing page flow)
-  const handleBirthDataDialogSave = useCallback((personData: Partial<PersonData>) => {
-    const birthLocation = personData.locations?.find(loc => loc.type === 'birth');
-    if (birthLocation && personData.birthDate && personData.birthTime) {
-      handleBirthDataCreate({
-        lat: birthLocation.lat!,
-        lng: birthLocation.lng!,
-        date: personData.birthDate,
-        time: personData.birthTime,
-        cityName: birthLocation.place,
-      });
-    }
-    closeBirthDataDialog();
-  }, [handleBirthDataCreate, closeBirthDataDialog]);
+  // Clear landing page prefill after GlobePage consumes it
+  const clearLandingPagePrefill = useCallback(() => {
+    setLandingPagePrefill(null);
+  }, []);
 
   const handleDeletePersonRequest = useCallback((personId: string) => {
     setPersonToDelete(personId);
@@ -729,7 +717,6 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
 
   return (
     <>
-
       <div
         className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-black flex flex-col overflow-hidden"
         style={isMobile ? {
@@ -773,6 +760,10 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
             onClearBirthData={handleClearBirthData}
             onOpenChartPicker={() => setShowChartPicker(true)}
             onFavoriteSelect={handleFavoriteSelect}
+            // === Charts quick access ===
+            charts={birthCharts.charts}
+            currentChartId={birthCharts.currentChart?.id ?? null}
+            onSelectChart={handleSelectSavedChart}
             // === Optional prop (store has it too, but parent can override) ===
             hasBirthData={hasBirthData}
           />
@@ -784,6 +775,9 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
             edges={edges}
             viewMode={viewMode}
             externalCitySelect={externalCitySelect}
+            // === Landing Page Flow ===
+            landingPagePrefill={landingPagePrefill}
+            onLandingPagePrefillConsumed={clearLandingPagePrefill}
             // === Action Callbacks (modify parent data) ===
             onFilterChange={handleFilterChange}
             onViewModeChange={handleViewModeChange}
@@ -805,13 +799,6 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
           clearPasswordRecovery={clearPasswordRecovery}
           personToDelete={personToDelete}
           setPersonToDelete={setPersonToDelete}
-        />
-        {/* Birth Data Dialog for landing page flow */}
-        <BirthDataDialog
-          open={isBirthDataDialogOpen}
-          onOpenChange={(open) => !open && closeBirthDataDialog()}
-          onSave={handleBirthDataDialogSave}
-          prefill={birthDataPrefill}
         />
         {/* Chart Picker Modal for authenticated users */}
         <ChartPickerModal

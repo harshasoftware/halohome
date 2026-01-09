@@ -30,8 +30,10 @@ import {
   Download,
   Share,
   Plus,
+  Crown,
 } from 'lucide-react';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
+import { useSubscriptionModal } from '@/stores/uiStore';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { Button } from '@/components/ui/button';
 
@@ -107,6 +109,9 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
   // Store actions for mobile sheets
   const setMobileChartsSheetOpen = useGlobeInteractionStore((s) => s.setMobileChartsSheetOpen);
   const setMobileFavoritesSheetOpen = useGlobeInteractionStore((s) => s.setMobileFavoritesSheetOpen);
+
+  // Subscription modal
+  const { setIsOpen: setSubscriptionModalOpen } = useSubscriptionModal();
 
   // PWA Install state
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
@@ -372,6 +377,18 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
                 {isCompatibilityEnabled && <Check className="w-4 h-4 text-pink-600" />}
               </button>
 
+              {/* Upgrade / Subscribe */}
+              <button
+                onClick={() => handleItemClick(() => setSubscriptionModalOpen(true))}
+                className="w-full flex items-center gap-4 px-4 py-3 text-left text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+              >
+                <Crown className="w-5 h-5" />
+                <div className="flex-1">
+                  <span className="font-medium">Upgrade</span>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">View subscription plans</p>
+                </div>
+              </button>
+
               {/* Divider before settings */}
               <div className="h-px bg-slate-200 dark:bg-slate-800 my-2" />
 
@@ -379,7 +396,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
               {!isInstalled && (isInstallable || isIOS) && (
                 <button
                   onClick={handleInstallClick}
-                  className="w-full flex items-center gap-4 px-4 py-3 text-left text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                  className="w-full flex items-center gap-4 px-4 py-3 text-left text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                 >
                   <Download className="w-5 h-5" />
                   <div className="flex-1">

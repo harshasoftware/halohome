@@ -8,7 +8,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import {
-  Heart,
+  Star,
   MapPin,
   Trash2,
   Navigation,
@@ -128,8 +128,8 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
   };
 
   const icon = (
-    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center">
-      <Heart className="w-4 h-4 text-white fill-white" />
+    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+      <Star className="w-4 h-4 text-white fill-white" />
     </div>
   );
 
@@ -159,13 +159,13 @@ export const MobileFavoritesSheet: React.FC<MobileFavoritesSheetProps> = ({
         ) : favorites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
-              <Heart className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+              <Star className="h-10 w-10 text-slate-300 dark:text-slate-600" />
             </div>
             <h3 className="text-base font-medium text-slate-700 dark:text-slate-200 mb-2">
               No Favorites Yet
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[250px]">
-              Tap the heart icon on any city to save it to your favorites for quick access
+              Tap the star icon on any city to save it to your favorites for quick access
             </p>
           </div>
         ) : (

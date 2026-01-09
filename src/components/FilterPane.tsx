@@ -54,7 +54,7 @@ export const FilterPane: React.FC<FilterPaneProps> = ({ onFilterChange, location
 
   const cardClass = isMobile
     ? 'fixed inset-x-0 bottom-0 z-[10000] rounded-t-2xl shadow-2xl'
-    : 'relative z-10 min-w-[320px] max-w-[400px] bg-white dark:bg-slate-900 rounded-lg shadow-lg';
+    : 'relative z-10 min-w-[320px] max-w-[400px] bg-white dark:bg-white/5 rounded-lg shadow-lg';
 
   const cardContent = (
     <TooltipProvider>

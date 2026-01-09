@@ -81,17 +81,17 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
       </div>
 
       {/* Traveler Plan - Most Popular */}
-      <Card className="relative overflow-hidden border-2 border-indigo-500/50 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 dark:from-indigo-500/10 dark:to-purple-500/10">
+      <Card className="relative overflow-hidden border-2 border-amber-500/50 bg-gradient-to-br from-amber-500/5 to-orange-500/5 dark:from-amber-500/10 dark:to-orange-500/10">
         <div className="absolute top-0 right-0">
-          <div className="bg-indigo-500 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">
+          <div className="bg-amber-500 text-black text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">
             Most Popular
           </div>
         </div>
         <CardContent className="p-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Traveler</h4>
@@ -105,7 +105,7 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2.5">
-            {['Detailed Interpretations', 'Save Locations', 'Priority AI'].map((feature) => (
+            {['Detailed Interpretations', 'Save Locations', 'Priority Access'].map((feature) => (
               <span key={feature} className="inline-flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300">
                 <Check className="w-2.5 h-2.5 text-green-500" />
                 {feature}
@@ -116,7 +116,7 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           <Button
             onClick={() => handleSubscribe('starter')}
             disabled={loadingPlan !== null}
-            className="w-full h-8 text-xs bg-indigo-500 hover:bg-indigo-600 text-white"
+            className="w-full h-8 text-xs bg-amber-500 hover:bg-amber-600 text-black"
           >
             {loadingPlan === 'starter' ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -150,7 +150,7 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2.5">
-            {['Pro AI', 'PDF Exports', 'Priority Support'].map((feature) => (
+            {['Advanced Insights', 'PDF Exports', 'Priority Support'].map((feature) => (
               <span key={feature} className="inline-flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300">
                 <Check className="w-2.5 h-2.5 text-green-500" />
                 {feature}
@@ -176,10 +176,6 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
         </CardContent>
       </Card>
 
-      {/* Credits option */}
-      <p className="text-center text-[10px] text-slate-400 dark:text-slate-500">
-        Or <a href="/ai-subscription" className="text-indigo-500 hover:underline">buy question credits</a> for one-time use
-      </p>
     </div>
   );
 };

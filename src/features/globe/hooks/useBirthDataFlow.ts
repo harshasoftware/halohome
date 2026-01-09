@@ -7,7 +7,7 @@
  * - Handles pending birth location state
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
 import { useScoutStore } from '@/stores/scoutStore';
 
@@ -32,6 +32,8 @@ interface UseBirthDataFlowReturn {
   showQuickBirthModal: boolean;
   showBirthDateTimeModal: boolean;
   pendingBirthplace: { lat: number; lng: number; cityName: string } | null;
+  // Initial city for QuickBirthDataModal (used when city search or landing page flow)
+  initialCityForQuickModal: { lat: number; lng: number; name: string } | null;
 
   // Actions
   handleGlobeDoubleTap: (lat: number, lng: number) => void;
@@ -51,6 +53,13 @@ export function useBirthDataFlow({
   pendingMarkerDelay = 1500,
 }: UseBirthDataFlowOptions): UseBirthDataFlowReturn {
   const pendingBirthTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Local state for initial city when using city search flow (opens QuickBirthDataModal with pre-filled city)
+  const [initialCityForQuickModal, setInitialCityForQuickModal] = useState<{
+    lat: number;
+    lng: number;
+    name: string;
+  } | null>(null);
 
   // Get state from store
   const pendingBirthCoords = useGlobeInteractionStore((s) => s.pendingBirthCoords);
@@ -121,13 +130,18 @@ export function useBirthDataFlow({
     [setPendingBirthCoords, setShowQuickBirthModal, pendingMarkerDelay]
   );
 
-  // Handle city selection from search bar (when no birth data exists)
+  // Handle city selection from search bar or landing page (when no birth data exists)
+  // Uses QuickBirthDataModal for unified stepper experience
   const handleCitySearchSelect = useCallback(
     (lat: number, lng: number, cityName: string) => {
-      setPendingBirthplace({ lat, lng, cityName });
-      setShowBirthDateTimeModal(true);
+      // Set the initial city for QuickBirthDataModal
+      setInitialCityForQuickModal({ lat, lng, name: cityName });
+      // Set pending coords for the modal (used as fallback if initialCity is somehow missing)
+      setPendingBirthCoords({ lat, lng });
+      // Open the QuickBirthDataModal (same stepper as globe double-tap flow)
+      setShowQuickBirthModal(true);
     },
-    [setPendingBirthplace, setShowBirthDateTimeModal]
+    [setPendingBirthCoords, setShowQuickBirthModal]
   );
 
   // Handle confirmation from quick birth modal
@@ -136,6 +150,8 @@ export function useBirthDataFlow({
       onBirthDataCreate?.(data);
       setPendingBirthCoords(null);
       setShowQuickBirthModal(false);
+      // Clear initial city (used when coming from city search or landing page)
+      setInitialCityForQuickModal(null);
     },
     [onBirthDataCreate, setPendingBirthCoords, setShowQuickBirthModal]
   );
@@ -153,6 +169,8 @@ export function useBirthDataFlow({
   // Handle canceling quick birth modal
   const handleCancelQuickBirth = useCallback(() => {
     setShowQuickBirthModal(false);
+    // Clear initial city (for city search/landing page flow)
+    setInitialCityForQuickModal(null);
     // Don't clear coordinates immediately - they may want to try again
   }, [setShowQuickBirthModal]);
 
@@ -220,6 +238,7 @@ export function useBirthDataFlow({
     showQuickBirthModal,
     showBirthDateTimeModal,
     pendingBirthplace,
+    initialCityForQuickModal,
 
     // Actions
     handleGlobeDoubleTap,

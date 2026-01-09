@@ -3,7 +3,7 @@
  * Navbar account dropdown with sign in/out and chart management
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,9 +16,10 @@ import {
 import { useAuth } from '@/hooks/useAuth-context';
 import { useIsRealUser } from '@/stores/authStore';
 import { useFavoriteCities } from '@/hooks/useFavoriteCities';
+import { useGoogleOneTap } from '@/hooks/useGoogleOneTap';
 import { AuthModal } from './AuthModal';
 import { toast } from 'sonner';
-import { User, LogIn, LogOut, ChevronDown, Star, Crown } from 'lucide-react';
+import { User, LogIn, LogOut, ChevronDown, Star, Crown, Mail, Save, MapPin, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAISubscription } from '@/features/globe/ai/useAISubscription';
 
@@ -43,6 +44,9 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
+  // Google One Tap - disabled auto-show, we'll trigger it manually on button click
+  const { showPrompt: showOneTap, isAvailable: oneTapAvailable } = useGoogleOneTap({ disabled: true });
+
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (error) {
@@ -54,6 +58,17 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
+
+    // Try Google One Tap first (shows popup instead of redirect)
+    if (oneTapAvailable) {
+      showOneTap();
+      // One Tap handles sign-in via callback, reset signing in state after a delay
+      // The callback in useGoogleOneTap will complete the sign-in
+      setTimeout(() => setIsSigningIn(false), 500);
+      return;
+    }
+
+    // Fallback to OAuth redirect if One Tap not available
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error('Failed to sign in with Google');
@@ -61,53 +76,145 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
     setIsSigningIn(false);
   };
 
+  // Dropdown state - supports both hover and click
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const openedByClickRef = useRef(false);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    if (!isDropdownOpen) {
+      openedByClickRef.current = false;
+      setIsDropdownOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    // Don't close on hover-leave if opened by click
+    if (openedByClickRef.current) return;
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsDropdownOpen(false);
+    }, 200);
+  };
+
+  // Handle click and click-outside/Escape
+  const handleOpenChange = (open: boolean) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+
+    if (open) {
+      openedByClickRef.current = true;
+    } else {
+      openedByClickRef.current = false;
+    }
+    setIsDropdownOpen(open);
+  };
+
   // If not a real user (including anonymous users), show sign in button
   if (!isRealUser) {
     return (
       <>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={`flex items-center justify-center transition-colors border ${
-                isMobile
-                  ? 'h-9 w-9 rounded-full border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
-                  : 'gap-2 px-4 py-2 rounded-full text-sm font-medium border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
-              }`}
-              disabled={loading || isSigningIn}
+        <DropdownMenu open={isDropdownOpen} onOpenChange={handleOpenChange}>
+          <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={`flex items-center justify-center transition-colors border ${
+                  isMobile
+                    ? 'h-9 w-9 rounded-full border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                    : 'gap-2 px-4 py-2 rounded-full text-sm font-medium border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                }`}
+                disabled={loading || isSigningIn}
+              >
+                <User className="h-4 w-4" />
+                {!isMobile && <span>Sign In</span>}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-72 z-[200] p-0 overflow-hidden rounded-2xl border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-xl"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             >
-              <User className="h-4 w-4" />
-              {!isMobile && <span>Sign In</span>}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 z-[200]">
-            <DropdownMenuLabel>Sign in to save your charts</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleGoogleSignIn} disabled={isSigningIn}>
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              {/* Sign In Options - CTAs first for less friction */}
+              <div className="p-4 space-y-3">
+                {/* Google Button - Primary */}
+                <button
+                  onClick={handleGoogleSignIn}
+                  disabled={isSigningIn}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-slate-100 dark:bg-white hover:bg-slate-200 dark:hover:bg-zinc-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                  <span className="font-medium text-sm text-slate-800 dark:text-zinc-800">
+                    {isSigningIn ? 'Signing in...' : 'Continue with Google'}
+                  </span>
+                </button>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200 dark:border-white/10" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="px-2 bg-white dark:bg-zinc-900 text-slate-400 dark:text-zinc-500">or</span>
+                  </div>
+                </div>
+
+                {/* Email Option - Secondary */}
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-sm"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>Sign in with Email</span>
+                </button>
+              </div>
+
+              {/* Benefits - below CTAs */}
+              <div className="px-4 pb-3 pt-1">
+                <ul className="space-y-1.5 text-xs text-slate-500 dark:text-zinc-400">
+                  <li className="flex items-center gap-2">
+                    <Save className="h-3 w-3 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                    <span>Save unlimited birth charts</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <MapPin className="h-3 w-3 text-rose-500 dark:text-rose-400 flex-shrink-0" />
+                    <span>Bookmark favorite locations</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Sparkles className="h-3 w-3 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+                    <span>Access AI astrology insights</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Footer - No credit card */}
+              <div className="px-4 py-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-center gap-2">
+                <img
+                  src="/logo.png"
+                  alt="Astrocarto"
+                  className="w-5 h-5 object-contain"
                 />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Continue with Google
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowAuthModal(true)}>
-              <User className="mr-2 h-4 w-4" />
-              Sign in with Email
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+                <span className="text-xs text-slate-500 dark:text-zinc-400">Free forever, no credit card</span>
+              </div>
+            </DropdownMenuContent>
+          </div>
         </DropdownMenu>
 
         <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />

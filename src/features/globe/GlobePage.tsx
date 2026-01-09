@@ -125,6 +125,14 @@ interface GlobePageProps {
     name: string;
     key: number; // Changes when a new selection is made
   } | null;
+  // Landing page prefill - triggers birth data flow with pre-filled location
+  landingPagePrefill?: {
+    lat: number;
+    lng: number;
+    place: string;
+  } | null;
+  // Callback when landing page prefill is consumed
+  onLandingPagePrefillConsumed?: () => void;
   // Callback to open favorites panel (for toolbar)
   onOpenFavoritesPanel?: () => void;
   // Compatibility/Duo mode state lifted for toolbar control
@@ -164,6 +172,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
   onToggleAIChat: externalToggleAIChat,
   onModeStateChange,
   externalCitySelect,
+  landingPagePrefill,
+  onLandingPagePrefillConsumed,
   onOpenFavoritesPanel: externalOpenFavoritesPanel,
   onCompatibilityStateChange,
   onNatalChartStateChange,
@@ -203,6 +213,28 @@ const GlobePage: React.FC<GlobePageProps> = ({
     onPendingBirthChange,
   });
 
+  // Handle landing page prefill - triggers unified birth data flow
+  // Track processed prefill to avoid re-processing on re-renders
+  const processedPrefillRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (landingPagePrefill && hasMounted) {
+      // Create a unique key for this prefill to avoid re-processing
+      const prefillKey = `${landingPagePrefill.lat},${landingPagePrefill.lng},${landingPagePrefill.place}`;
+
+      if (processedPrefillRef.current !== prefillKey) {
+        processedPrefillRef.current = prefillKey;
+        // Trigger the unified birth data flow with the prefilled location
+        birthDataFlow.handleCitySearchSelect(
+          landingPagePrefill.lat,
+          landingPagePrefill.lng,
+          landingPagePrefill.place
+        );
+        // Notify parent that prefill has been consumed
+        onLandingPagePrefillConsumed?.();
+      }
+    }
+  }, [landingPagePrefill, hasMounted, birthDataFlow.handleCitySearchSelect, onLandingPagePrefillConsumed]);
+
   // Partner modal state - use compatibilityStore (single source of truth)
   const showPartnerModal = useShowPartnerModal();
   const { setShowPartnerModal } = useCompatibilityActions();
@@ -235,6 +267,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   const uiSetShowExportPanel = useUIStore((s) => s.setShowExportPanel);
   const uiIsAIChatOpen = useUIStore((s) => s.isAIChatOpen);
   const uiSetIsAIChatOpen = useUIStore((s) => s.setIsAIChatOpen);
+  const setIsAuthModalOpen = useUIStore((s) => s.setIsAuthModalOpen);
 
   // Use external state if provided, otherwise use store
   const legendMinimized = externalLegendMinimized !== undefined ? externalLegendMinimized : uiIsLegendMinimized;
@@ -256,6 +289,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
     deleteChart,
     updateChart,
     setDefaultChart,
+    saveChart,
   } = useBirthCharts();
 
   // Context menu state (right-click on desktop, long-press on mobile)
@@ -569,7 +603,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   ]);
 
   // Favorite cities management
-  const { favorites, loading: favoritesLoading, isFavorite, toggleFavorite, removeFavorite, updateFavoriteNotes, removeMultipleFavorites } = useFavoriteCities();
+  const { favorites, loading: favoritesLoading, isFavorite, toggleFavorite, removeFavorite, updateFavoriteNotes, removeMultipleFavorites, isGuest: isFavoritesGuest } = useFavoriteCities();
 
   // --- Context Menu Action Handlers ---
   // (Defined here because they depend on birthData, relocateTo, enableLocalSpace, etc.)
@@ -599,9 +633,18 @@ const GlobePage: React.FC<GlobePageProps> = ({
   // Context menu action: Add to Favorites
   const handleContextAddToFavorites = useCallback(async (lat: number, lng: number, name: string) => {
     const wasFavorite = isFavorite(lat, lng);
-    await toggleFavorite({ latitude: lat, longitude: lng, city_name: name });
+    const result = await toggleFavorite({ latitude: lat, longitude: lng, city_name: name });
+    if (!result.success && result.requiresAuth) {
+      toast.info('Sign in to save favorite locations', {
+        action: {
+          label: 'Sign In',
+          onClick: () => setIsAuthModalOpen(true),
+        },
+      });
+      return;
+    }
     toast.success(wasFavorite ? `Removed ${name} from favorites` : `Added ${name} to favorites`);
-  }, [isFavorite, toggleFavorite]);
+  }, [isFavorite, toggleFavorite, setIsAuthModalOpen]);
 
   // Context menu action: Enter Birth Data
   const handleContextEnterBirthData = useCallback((lat: number, lng: number) => {
@@ -1139,9 +1182,18 @@ const GlobePage: React.FC<GlobePageProps> = ({
   // Handle toggling favorite city
   const handleToggleFavorite = useCallback(async (lat: number, lng: number, name: string, country?: string) => {
     const wasFavorite = isFavorite(lat, lng);
-    await toggleFavorite({ latitude: lat, longitude: lng, city_name: name, country });
+    const result = await toggleFavorite({ latitude: lat, longitude: lng, city_name: name, country });
+    if (!result.success && result.requiresAuth) {
+      toast.info('Sign in to save favorite locations', {
+        action: {
+          label: 'Sign In',
+          onClick: () => setIsAuthModalOpen(true),
+        },
+      });
+      return;
+    }
     toast.success(wasFavorite ? `Removed ${name} from favorites` : `Added ${name} to favorites`);
-  }, [isFavorite, toggleFavorite]);
+  }, [isFavorite, toggleFavorite, setIsAuthModalOpen]);
 
   const handleLocationAnalyze = globeCallbacks.handleLocationAnalyze;
   const handleCloseLocationAnalysis = globeCallbacks.handleCloseLocationAnalysis;
@@ -1291,12 +1343,54 @@ const GlobePage: React.FC<GlobePageProps> = ({
   }, [zoneDrawing.isDrawing, zoneDrawing.drawnZone, zoneDrawing.pointsCount, onZoneStateChange, handleToggleZoneDrawing, handleZoneComplete, handleClearZone]);
 
   // Handle partner chart submission from modal
-  const handlePartnerChartSubmit = useCallback((partnerData: PartnerChartData) => {
+  const handlePartnerChartSubmit = useCallback(async (partnerData: PartnerChartData) => {
+    let wasSaved = false;
+
+    // Auto-save new partner data as a birth chart
+    if (!partnerData.isSaved) {
+      const savedNewChart = await saveChart({
+        name: partnerData.name,
+        birth_date: partnerData.birthDate,
+        birth_time: partnerData.birthTime,
+        latitude: partnerData.latitude,
+        longitude: partnerData.longitude,
+        city_name: partnerData.cityName || null,
+      });
+
+      if (savedNewChart) {
+        // Update partner data with the saved chart's ID
+        partnerData = {
+          ...partnerData,
+          id: savedNewChart.id,
+          isSaved: true,
+        };
+        wasSaved = true;
+      }
+    }
+
     compatibility.setPartnerChart(partnerData);
     compatibility.enable();
     setShowPartnerModal(false);
-    toast.success(`Partner chart added: ${partnerData.name}`);
-  }, [compatibility]);
+
+    // Immediately push compatibility panel to stack (desktop) so user sees loading state
+    if (!isMobile) {
+      const hasCompatibilityPanel = panelStack.stack.some(p => p.type === 'compatibility');
+      if (!hasCompatibilityPanel) {
+        panelStack.push({
+          type: 'compatibility',
+          title: 'Compatible Spots',
+          data: null,
+        });
+      }
+    }
+
+    // Show appropriate toast message
+    if (wasSaved) {
+      toast.success(`${partnerData.name} added as partner & saved to My Charts`);
+    } else {
+      toast.success(`Duo Mode enabled with ${partnerData.name}`);
+    }
+  }, [compatibility, saveChart, isMobile, panelStack]);
 
   // Handle selecting a partner from saved charts (used in CompatibilityPanel dropdown)
   const handleSelectPartnerFromChart = useCallback((chart: BirthChart) => {
@@ -2094,6 +2188,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
         coordinates={birthDataFlow.pendingBirthCoords}
         onConfirm={handleQuickBirthDataConfirm}
         isMobile={isMobile}
+        initialCity={birthDataFlow.initialCityForQuickModal}
       />
 
       {/* Birth Date/Time Modal - shows when selecting birthplace via search bar */}

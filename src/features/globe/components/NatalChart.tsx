@@ -367,7 +367,7 @@ export const NatalChart: React.FC<NatalChartProps> = ({
         content: (
           <div className="text-xs">
             <div className="font-bold text-slate-800 dark:text-white">{planet}</div>
-            <div className="text-slate-600 dark:text-slate-300">
+            <div className="text-slate-600 dark:text-zinc-300">
               {info.sign} {formatDegree(info.degree)}
             </div>
             {info.house && (
@@ -393,7 +393,7 @@ export const NatalChart: React.FC<NatalChartProps> = ({
         content: (
           <div className="text-xs">
             <div className="font-bold text-slate-800 dark:text-white">{sign.name}</div>
-            <div className="text-slate-600 dark:text-slate-300 capitalize">{sign.element} sign</div>
+            <div className="text-slate-600 dark:text-zinc-300 capitalize">{sign.element} sign</div>
           </div>
         ),
       });
@@ -1064,7 +1064,7 @@ export const PlanetInfoList: React.FC<PlanetInfoListProps> = ({
           return (
             <div
               key={pos.planet}
-              className={`flex items-center gap-1 ${compact ? 'text-xs' : 'text-sm'} ${onPlanetClick ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded px-1 -mx-1' : ''}`}
+              className={`flex items-center gap-1 ${compact ? 'text-xs' : 'text-sm'} ${onPlanetClick ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800 rounded px-1 -mx-1' : ''}`}
               onClick={() => onPlanetClick?.(pos.planet)}
               title={`${pos.planet} in ${sign?.name || 'Unknown'} ${formatDegree(pos.degreeInSign)}, House ${pos.house}${pos.retrograde ? ' (Retrograde)' : ''}`}
             >
@@ -1084,15 +1084,15 @@ export const PlanetInfoList: React.FC<PlanetInfoListProps> = ({
                 {glyph}
               </span>
               {showEnglishNames ? (
-                <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>
+                <span className={isDark ? 'text-zinc-300' : 'text-slate-700'}>
                   {sign?.name || '?'}
                 </span>
               ) : (
-                <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>
+                <span className={isDark ? 'text-zinc-300' : 'text-slate-700'}>
                   {ZODIAC_ABBREV[sign?.name || ''] || '?'}
                 </span>
               )}
-              <span className={`${isDark ? 'text-slate-400' : 'text-slate-500'} ${compact ? 'text-[10px]' : 'text-xs'}`}>
+              <span className={`${isDark ? 'text-zinc-400' : 'text-slate-500'} ${compact ? 'text-[10px]' : 'text-xs'}`}>
                 {formatDegree(pos.degreeInSign)}
               </span>
               {showHouses && (
@@ -1126,7 +1126,7 @@ export const PlanetInfoList: React.FC<PlanetInfoListProps> = ({
         return (
           <div
             key={pos.planet}
-            className={`flex items-center gap-1 ${compact ? 'text-xs' : 'text-sm'} ${onPlanetClick ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded px-1 -mx-1' : ''}`}
+            className={`flex items-center gap-1 ${compact ? 'text-xs' : 'text-sm'} ${onPlanetClick ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800 rounded px-1 -mx-1' : ''}`}
             onClick={() => onPlanetClick?.(pos.planet)}
             title={`${pos.planet} in ${sign.name} ${formatDegree(zodiacPos.degree)}`}
           >
@@ -1146,15 +1146,15 @@ export const PlanetInfoList: React.FC<PlanetInfoListProps> = ({
               {glyph}
             </span>
             {showEnglishNames ? (
-              <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>
+              <span className={isDark ? 'text-zinc-300' : 'text-slate-700'}>
                 {sign.name}
               </span>
             ) : (
-              <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>
+              <span className={isDark ? 'text-zinc-300' : 'text-slate-700'}>
                 {ZODIAC_ABBREV[sign.name]}
               </span>
             )}
-            <span className={`${isDark ? 'text-slate-400' : 'text-slate-500'} ${compact ? 'text-[10px]' : 'text-xs'}`}>
+            <span className={`${isDark ? 'text-zinc-400' : 'text-slate-500'} ${compact ? 'text-[10px]' : 'text-xs'}`}>
               {formatDegree(zodiacPos.degree)}
             </span>
           </div>

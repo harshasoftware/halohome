@@ -27,13 +27,18 @@ export interface FavoriteCityInput {
   notes?: string | null;
 }
 
+export type FavoriteResult =
+  | { success: true; favorite: FavoriteCity }
+  | { success: false; requiresAuth: true }
+  | { success: false; requiresAuth: false; error?: string };
+
 export interface UseFavoriteCitiesReturn {
   favorites: FavoriteCity[];
   loading: boolean;
 
   // Actions
   loadFavorites: () => Promise<void>;
-  addFavorite: (data: FavoriteCityInput) => Promise<FavoriteCity | null>;
+  addFavorite: (data: FavoriteCityInput) => Promise<FavoriteResult>;
   removeFavorite: (id: string) => Promise<void>;
   removeMultipleFavorites: (ids: string[]) => Promise<void>;
   updateFavoriteNotes: (id: string, notes: string) => Promise<void>;
@@ -41,7 +46,7 @@ export interface UseFavoriteCitiesReturn {
   // Helpers
   isFavorite: (lat: number, lng: number) => boolean;
   getFavoriteByLocation: (lat: number, lng: number) => FavoriteCity | undefined;
-  toggleFavorite: (data: FavoriteCityInput) => Promise<void>;
+  toggleFavorite: (data: FavoriteCityInput) => Promise<FavoriteResult>;
 
   // Guest mode
   isGuest: boolean;
@@ -131,26 +136,18 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
   }, [favorites]);
 
   // Add a new favorite
-  const addFavorite = useCallback(async (data: FavoriteCityInput): Promise<FavoriteCity | null> => {
+  const addFavorite = useCallback(async (data: FavoriteCityInput): Promise<FavoriteResult> => {
     // Check if already favorited
     if (isFavorite(data.latitude, data.longitude)) {
-      return getFavoriteByLocation(data.latitude, data.longitude) || null;
+      const existing = getFavoriteByLocation(data.latitude, data.longitude);
+      if (existing) {
+        return { success: true, favorite: existing };
+      }
     }
 
+    // Guest users must sign in to save favorites
     if (isGuest) {
-      const guestFavorite: FavoriteCity = {
-        id: `guest-fav-${Date.now()}`,
-        user_id: 'guest',
-        latitude: data.latitude,
-        longitude: data.longitude,
-        city_name: data.city_name,
-        country: data.country || null,
-        notes: data.notes || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      saveGuestFavorites([guestFavorite, ...favorites]);
-      return guestFavorite;
+      return { success: false, requiresAuth: true };
     }
 
     try {
@@ -170,12 +167,12 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
       if (error) throw error;
 
       setFavorites(prev => [newFavorite, ...prev]);
-      return newFavorite;
+      return { success: true, favorite: newFavorite };
     } catch (error) {
       console.error('Failed to add favorite city:', error);
-      return null;
+      return { success: false, requiresAuth: false, error: 'Failed to save favorite' };
     }
-  }, [user, isGuest, favorites, isFavorite, getFavoriteByLocation, saveGuestFavorites]);
+  }, [user, isGuest, isFavorite, getFavoriteByLocation]);
 
   // Remove a favorite
   const removeFavorite = useCallback(async (id: string) => {
@@ -255,12 +252,13 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
   }, [isGuest, favorites, saveGuestFavorites]);
 
   // Toggle favorite (add or remove)
-  const toggleFavorite = useCallback(async (data: FavoriteCityInput) => {
+  const toggleFavorite = useCallback(async (data: FavoriteCityInput): Promise<FavoriteResult> => {
     const existing = getFavoriteByLocation(data.latitude, data.longitude);
     if (existing) {
       await removeFavorite(existing.id);
+      return { success: true, favorite: existing };
     } else {
-      await addFavorite(data);
+      return await addFavorite(data);
     }
   }, [getFavoriteByLocation, removeFavorite, addFavorite]);
 

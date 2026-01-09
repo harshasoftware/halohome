@@ -19,6 +19,12 @@ interface QuickBirthDataModalProps {
   coordinates: { lat: number; lng: number } | null;
   onConfirm: (data: { lat: number; lng: number; date: string; time: string; cityName?: string }) => void;
   isMobile?: boolean;
+  // Optional initial city - when provided, skips location step and starts at date
+  initialCity?: {
+    lat: number;
+    lng: number;
+    name: string;
+  } | null;
 }
 
 export const QuickBirthDataModal: React.FC<QuickBirthDataModalProps> = ({
@@ -27,6 +33,7 @@ export const QuickBirthDataModal: React.FC<QuickBirthDataModalProps> = ({
   coordinates,
   onConfirm,
   isMobile = false,
+  initialCity = null,
 }) => {
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
@@ -60,14 +67,24 @@ export const QuickBirthDataModal: React.FC<QuickBirthDataModalProps> = ({
     if (open) {
       setBirthDate('');
       setBirthTime('');
-      setStep('location');
-      setLocationMode('pin');
-      setCityName(null);
-      setSearchedCoords(null);
-      setSearchValue('');
       clearSuggestions();
+
+      // If initialCity is provided, pre-fill and skip to date step
+      if (initialCity) {
+        setCityName(initialCity.name);
+        setSearchedCoords({ lat: initialCity.lat, lng: initialCity.lng });
+        setLocationMode('search');
+        setSearchValue(initialCity.name, false);
+        setStep('date');
+      } else {
+        setStep('location');
+        setLocationMode('pin');
+        setCityName(null);
+        setSearchedCoords(null);
+        setSearchValue('');
+      }
     }
-  }, [open, setSearchValue, clearSuggestions]);
+  }, [open, setSearchValue, clearSuggestions, initialCity]);
 
   // Focus search input when switching to search mode
   useEffect(() => {

@@ -363,11 +363,71 @@ const CompatibilityPanelComponent: React.FC<CompatibilityPanelProps> = ({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {isLoading ? (
+      {/* Content - use relative/absolute pattern for reliable scrolling */}
+      <div className="flex-1 min-h-0 relative">
+        <div className="absolute inset-0 overflow-y-auto">
+        {isLoading || !analysis ? (
+          // Show loading when calculating OR when analysis hasn't been computed yet
           <SkeletonCompatibilityPanelContent locationCount={5} />
-        ) : !analysis || analysis.topLocations.length === 0 ? (
+        ) : analysis.topLocations.length === 0 ? (
+          // Only show empty state when we have results but no locations
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+              <MapPin className="w-8 h-8 text-slate-400" />
+            </div>
+            <h4 className="font-medium text-slate-900 dark:text-white mb-1">
+              No intersections found
+            </h4>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
+              Your astrocartography lines don't cross at the moment. Try adjusting birth data or exploring different line types.
+            </p>
+          </div>
+        ) : (
+          <div className="p-4 space-y-3">
+            {/* Stats summary */}
+            <div className="flex items-center gap-4 p-3 rounded-xl bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-pink-500" />
+                <span className="text-sm text-pink-700 dark:text-pink-300">
+                  <strong>{analysis.totalIntersections}</strong> line intersections
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-pink-500" />
+                <span className="text-sm text-pink-700 dark:text-pink-300">
+                  <strong>{analysis.topLocations.length}</strong> destinations
+                </span>
+              </div>
+            </div>
+
+            {/* Location list */}
+            <div className="space-y-2">
+              {analysis.topLocations.map((location, index) => (
+                <LocationCard
+                  key={`${location.lat}-${location.lng}`}
+                  location={location}
+                  rank={index + 1}
+                  onZoom={() => onLocationZoom(location.lat, location.lng, location.cityName)}
+                  onCityInfo={() => onLocationCityInfo(location.lat, location.lng, location.cityName)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        </div>
+      </div>
+    </>
+  );
+
+  // Mobile: content only (MobileBottomSheet provides header and scroll container)
+  if (isMobile) {
+    return (
+      <div className="bg-white dark:bg-slate-900">
+        {isLoading || !analysis ? (
+          // Show loading when calculating OR when analysis hasn't been computed yet
+          <SkeletonCompatibilityPanelContent locationCount={5} />
+        ) : analysis.topLocations.length === 0 ? (
+          // Only show empty state when we have results but no locations
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
               <MapPin className="w-8 h-8 text-slate-400" />
@@ -412,21 +472,12 @@ const CompatibilityPanelComponent: React.FC<CompatibilityPanelProps> = ({
           </div>
         )}
       </div>
-    </>
-  );
-
-  // Mobile: bottom sheet style with proper flex height for scrolling
-  if (isMobile) {
-    return (
-      <div className="flex flex-col w-full h-full bg-white dark:bg-slate-900">
-        {panelContent}
-      </div>
     );
   }
 
   // Desktop: side panel
   return (
-    <div className="w-full h-full bg-white dark:bg-slate-900 flex flex-col">
+    <div className="w-full h-full bg-white dark:bg-slate-900 flex flex-col overflow-hidden">
       {panelContent}
     </div>
   );

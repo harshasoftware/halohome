@@ -32,3 +32,6 @@ src/hooks/family-tree-parts/usePersonForm.ts
 # Auto Claude data directory
 .auto-claude/
 .worktrees/
+
+# Local Netlify folder
+.netlify

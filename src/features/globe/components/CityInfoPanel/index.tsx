@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Cloud, TreePine, Plane, Compass, Heart, Sparkles } from 'lucide-react';
+import { X, MapPin, Cloud, TreePine, Plane, Compass, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCityInfo } from '../../hooks/useCityInfo';
@@ -93,7 +93,7 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
                 onClick={() => onToggleFavorite(city.lat, city.lng, city.name, data.city?.country || undefined)}
                 title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
-                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} />
+                <Star className={`w-5 h-5 ${isFavorite ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
               </Button>
             )}
             {onViewLocalSpace && (
@@ -195,7 +195,7 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
               title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               className="h-8 w-8"
             >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} />
+              <Star className={`w-5 h-5 ${isFavorite ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
             </Button>
           )}
           {onViewLocalSpace && (

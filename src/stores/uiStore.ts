@@ -54,6 +54,7 @@ interface UIState {
   isAuthModalOpen: boolean;
   isRenameModalOpen: boolean;
   isWelcomeDialogOpen: boolean;
+  isSubscriptionModalOpen: boolean;
 
   // Password modal
   isPasswordModalOpen: boolean;
@@ -98,6 +99,7 @@ interface UIState {
   setIsAuthModalOpen: (open: boolean) => void;
   setIsRenameModalOpen: (open: boolean) => void;
   setIsWelcomeDialogOpen: (open: boolean) => void;
+  setIsSubscriptionModalOpen: (open: boolean) => void;
 
   // === UI Actions ===
   setViewMode: (mode: ViewMode) => void;
@@ -134,6 +136,7 @@ const initialModalState = {
   isAuthModalOpen: false,
   isRenameModalOpen: false,
   isWelcomeDialogOpen: false,
+  isSubscriptionModalOpen: false,
   isPasswordModalOpen: false,
   passwordModalProject: null,
   passwordModalCallbacks: { resolve: null, reject: null },
@@ -222,6 +225,7 @@ export const useUIStore = create<UIState>()(
       setIsAuthModalOpen: (open) => set((state) => { state.isAuthModalOpen = open; }),
       setIsRenameModalOpen: (open) => set((state) => { state.isRenameModalOpen = open; }),
       setIsWelcomeDialogOpen: (open) => set((state) => { state.isWelcomeDialogOpen = open; }),
+      setIsSubscriptionModalOpen: (open) => set((state) => { state.isSubscriptionModalOpen = open; }),
 
       // === UI Actions ===
       setViewMode: (mode) => set((state) => { state.viewMode = mode; }),
@@ -313,5 +317,11 @@ export const useAnyModalOpen = () => useUIStore((state) =>
   state.isAuthModalOpen ||
   state.isRenameModalOpen ||
   state.isWelcomeDialogOpen ||
-  state.isPasswordModalOpen
+  state.isPasswordModalOpen ||
+  state.isSubscriptionModalOpen
 );
+
+export const useSubscriptionModal = () => useUIStore(useShallow((state) => ({
+  isOpen: state.isSubscriptionModalOpen,
+  setIsOpen: state.setIsSubscriptionModalOpen,
+})));

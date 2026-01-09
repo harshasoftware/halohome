@@ -54,7 +54,7 @@ export const OverallLocationCard: React.FC<OverallLocationCardProps> = ({
         rank === 1 && 'border-amber-500/30',
         rank === 2 && 'border-slate-400/30',
         rank === 3 && 'border-amber-600/30',
-        rank > 3 && 'border-indigo-500/20 hover:border-indigo-500/40',
+        rank > 3 && 'border-amber-500/20 hover:border-amber-500/40',
         'hover:bg-slate-50 dark:hover:bg-white/[0.04]'
       )}
       onClick={onClick}
@@ -133,7 +133,7 @@ export const OverallLocationCard: React.FC<OverallLocationCardProps> = ({
         <div className={cn(
           'flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full text-sm font-bold border',
           isMostlyBeneficial
-            ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
+            ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
             : 'bg-slate-500/10 border-slate-400/30 text-slate-600 dark:text-slate-400'
         )}>
           {location.totalScore}

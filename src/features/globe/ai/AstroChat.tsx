@@ -33,6 +33,7 @@ import {
 import { useAISubscription } from './useAISubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth-context';
+import { useGoogleOneTap } from '@/hooks/useGoogleOneTap';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useChatHistory } from '@/hooks/useChatHistory';
@@ -458,7 +459,7 @@ const MarkdownMessage: React.FC<{ content: string }> = ({ content }) => {
         },
         // Blockquote
         blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-indigo-400 dark:border-indigo-500 pl-2 my-2 text-xs text-slate-600 dark:text-slate-300 italic">
+          <blockquote className="border-l-2 border-amber-400 dark:border-amber-500 pl-2 my-2 text-xs text-slate-600 dark:text-slate-300 italic">
             {children}
           </blockquote>
         ),
@@ -468,7 +469,7 @@ const MarkdownMessage: React.FC<{ content: string }> = ({ content }) => {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="text-amber-600 dark:text-amber-400 hover:underline"
           >
             {children}
           </a>
@@ -580,6 +581,28 @@ export const AstroChat: React.FC<AstroChatProps> = ({
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const { signInWithPassword, signUp } = useAuth();
+
+  // Google One Tap - disabled auto-show, trigger manually
+  const { showPrompt: showOneTap, isAvailable: oneTapAvailable } = useGoogleOneTap({ disabled: true });
+
+  // Handle Google sign-in with One Tap preference
+  const handleGoogleSignIn = useCallback(async () => {
+    setIsSigningIn(true);
+
+    // Try Google One Tap first (shows popup instead of redirect)
+    if (oneTapAvailable) {
+      showOneTap();
+      setTimeout(() => setIsSigningIn(false), 500);
+      return;
+    }
+
+    // Fallback to OAuth redirect
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast.error(error.message);
+    }
+    setIsSigningIn(false);
+  }, [oneTapAvailable, showOneTap, signInWithGoogle]);
   const {
     currentConversation,
     messages: savedMessages,
@@ -1038,7 +1061,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               onClick={() => setShowUpgradePanel(!showUpgradePanel)}
               className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] transition-colors ${
                 showUpgradePanel
-                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
               title="View plans & upgrade"
@@ -1048,7 +1071,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               {subscriptionStatus?.hasSonarProAccess ? (
                 <Crown className="w-3 h-3 text-amber-500 ml-0.5" />
               ) : (
-                <Sparkles className="w-3 h-3 text-indigo-500 ml-0.5" />
+                <Sparkles className="w-3 h-3 text-amber-500 ml-0.5" />
               )}
             </button>
           )}
@@ -1178,7 +1201,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                           description: 'Please sign in to explore planetary line meanings.',
                           action: {
                             label: 'Sign In',
-                            onClick: () => signInWithGoogle(),
+                            onClick: () => handleGoogleSignIn(),
                           },
                         });
                         return;
@@ -1196,10 +1219,10 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <button
                     onClick={() => setShowUpgradePanel(true)}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 hover:border-indigo-500/40 transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                    <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                       Unlock more questions
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -1220,7 +1243,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               <div
                 className={`max-w-[85%] ${
                   msg.role === 'user'
-                    ? 'bg-indigo-500 text-white rounded-2xl rounded-br-md px-3 py-2'
+                    ? 'bg-amber-500 text-white rounded-2xl rounded-br-md px-3 py-2'
                     : 'space-y-2'
                 }`}
               >
@@ -1313,11 +1336,11 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                 }
               }}
               placeholder="Ask about your lines..."
-              className="flex-1 text-sm px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 text-sm px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border-0 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <Button
               size="icon"
-              className="h-9 w-9 rounded-full bg-indigo-500 hover:bg-indigo-600"
+              className="h-9 w-9 rounded-full bg-amber-500 hover:bg-amber-600"
               onClick={handleSendMessage}
               disabled={isLoading || !inputValue.trim()}
             >
@@ -1335,14 +1358,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                   variant="outline"
                   size="sm"
                   className="w-full flex items-center justify-center gap-2 h-9"
-                  onClick={async () => {
-                    setIsSigningIn(true);
-                    const { error } = await signInWithGoogle();
-                    if (error) {
-                      toast.error(error.message);
-                    }
-                    setIsSigningIn(false);
-                  }}
+                  onClick={handleGoogleSignIn}
                   disabled={isSigningIn}
                 >
                   {isSigningIn ? (
@@ -1386,14 +1402,14 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="Email"
-                  className="text-sm px-3 py-2 rounded-md bg-slate-100 dark:bg-slate-800 border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-sm px-3 py-2 rounded-md bg-slate-100 dark:bg-slate-800 border-0 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
                 <input
                   type="password"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   placeholder="Password"
-                  className="text-sm px-3 py-2 rounded-md bg-slate-100 dark:bg-slate-800 border-0 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-sm px-3 py-2 rounded-md bg-slate-100 dark:bg-slate-800 border-0 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
                 <div className="flex gap-2">
                   <Button
