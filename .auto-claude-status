@@ -3,23 +3,23 @@
   "spec": "017-interactive-onboarding-tutorial",
   "state": "building",
   "subtasks": {
-    "completed": 4,
+    "completed": 6,
     "total": 16,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Welcome Modal Component",
+    "current": "Add DOM Tutorial Targets",
     "id": null,
-    "total": 1
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
+    "number": 7,
     "started_at": "2026-01-09T06:54:29.561718"
   },
-  "last_update": "2026-01-09T07:01:57.215716"
+  "last_update": "2026-01-09T07:06:09.549523"
 }

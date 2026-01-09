@@ -172,7 +172,7 @@ export const BirthDataDialog: React.FC<BirthDataDialogProps> = ({
 
         {/* Form */}
         <div className={`flex-1 overflow-y-auto ${isMobile ? 'px-5 py-6' : 'px-4 py-4'}`}>
-          <form onSubmit={handleSubmit} id="birth-data-form" className={`${isMobile ? 'space-y-8' : 'space-y-6'}`}>
+          <form onSubmit={handleSubmit} id="birth-data-form" data-tour="birth-data-form" className={`${isMobile ? 'space-y-8' : 'space-y-6'}`}>
             {/* Intro text */}
             <p className={`text-slate-600 dark:text-slate-400 text-center ${isMobile ? 'text-base' : 'text-sm'}`}>
               Enter your birth details to generate your personalized astrocartography map.
