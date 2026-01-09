@@ -207,7 +207,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   }, [panelStack]);
 
   // Handler to open charts panel (desktop) - opens in right panel stack
-  const handleOpenChartsPanelFromStore = useCallback(() => {
+  const handleOpenChartsPanelFromStore = useCallback((options?: { showCreateForm?: boolean }) => {
     // Check if charts panel is already open
     const existingIndex = panelStack.stack.findIndex(p => p.type === 'charts');
     if (existingIndex >= 0) {
@@ -217,10 +217,15 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
       panelStack.push({
         type: 'charts',
         title: 'My Charts',
-        data: null,
+        data: options?.showCreateForm ? { showCreateForm: true } : null,
       });
     }
   }, [panelStack]);
+
+  // Handler to open charts panel with create form visible
+  const handleAddChartFromStore = useCallback(() => {
+    handleOpenChartsPanelFromStore({ showCreateForm: true });
+  }, [handleOpenChartsPanelFromStore]);
 
   // === Scout Panel Handler ===
   const handleOpenScoutPanel = useCallback(() => {
@@ -670,6 +675,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         currentChartId={currentChartId}
         onSelectChart={onSelectChart}
         onOpenChartPicker={handleOpenChartsPanelFromStore}
+        onAddChart={handleAddChartFromStore}
         favorites={favorites}
         onOpenFavoritesPanel={handleOpenFavoritesPanelFromStore}
         onFavoriteSelect={onFavoriteSelect}

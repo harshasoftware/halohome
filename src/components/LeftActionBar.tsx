@@ -37,6 +37,7 @@ interface LeftActionBarProps {
   currentChartId?: string | null;
   onSelectChart?: (id: string) => void;
   onOpenChartPicker?: () => void;
+  onAddChart?: () => void;
 
   // Favorites management
   favorites?: FavoriteCity[];
@@ -90,6 +91,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
   currentChartId,
   onSelectChart,
   onOpenChartPicker,
+  onAddChart,
   favorites = [],
   onOpenFavoritesPanel,
   onFavoriteSelect,
@@ -282,6 +284,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           currentChartId={currentChartId}
           onSelectChart={onSelectChart}
           onOpenChartPicker={onOpenChartPicker}
+          onAddChart={onAddChart}
           isExpanded={isExpanded}
         />
       )}
@@ -350,6 +353,7 @@ interface ChartsMenuButtonProps {
   currentChartId?: string | null;
   onSelectChart?: (id: string) => void;
   onOpenChartPicker: () => void;
+  onAddChart?: () => void;
   isExpanded: boolean;
 }
 
@@ -358,6 +362,7 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
   currentChartId,
   onSelectChart,
   onOpenChartPicker,
+  onAddChart,
   isExpanded,
 }) => {
   const [showSubmenu, setShowSubmenu] = useState(false);
@@ -435,14 +440,20 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
           ))}
           <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />
           <button
-            onClick={onOpenChartPicker}
+            onClick={() => {
+              setShowSubmenu(false);
+              (onAddChart || onOpenChartPicker)();
+            }}
             className="w-full px-3 py-2 text-left text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center gap-2"
           >
             <Plus className="w-3 h-3" />
             Add Chart
           </button>
           <button
-            onClick={onOpenChartPicker}
+            onClick={() => {
+              setShowSubmenu(false);
+              onOpenChartPicker();
+            }}
             className="w-full px-3 py-2 text-left text-xs text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2"
           >
             <Settings className="w-3 h-3" />

@@ -1679,7 +1679,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
   }, [favorites, favoritesLoading, removeFavorite, updateFavoriteNotes, removeMultipleFavorites, panelStack]);
 
   // Render function for ChartsPanel (birth charts management)
-  const renderChartsPanel = useCallback(() => {
+  const renderChartsPanel = useCallback((data: unknown) => {
+    const panelData = data as { showCreateForm?: boolean } | null;
     const handleSelectChart = (id: string) => {
       // Use parent handler if available (updates nodes), otherwise just update current chart
       if (onSelectChart) {
@@ -1701,6 +1702,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
         onSetDefault={setDefaultChart}
         onSaveChart={saveChart}
         onClose={panelStack.closeCurrent}
+        initialShowCreateForm={panelData?.showCreateForm}
       />
     );
   }, [savedCharts, currentChart, chartsLoading, selectChart, deleteChart, updateChart, setDefaultChart, saveChart, panelStack, onSelectChart]);
@@ -1738,7 +1740,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   }, [panelStack]);
 
   // Handler to open charts panel
-  const handleOpenChartsPanel = useCallback(() => {
+  const handleOpenChartsPanel = useCallback((options?: { showCreateForm?: boolean }) => {
     // Check if charts panel is already open
     const existingIndex = panelStack.stack.findIndex(p => p.type === 'charts');
     if (existingIndex >= 0) {
@@ -1748,10 +1750,15 @@ const GlobePage: React.FC<GlobePageProps> = ({
       panelStack.push({
         type: 'charts',
         title: 'My Charts',
-        data: null,
+        data: options?.showCreateForm ? { showCreateForm: true } : null,
       });
     }
   }, [panelStack]);
+
+  // Handler to open charts panel with create form visible
+  const handleAddChart = useCallback(() => {
+    handleOpenChartsPanel({ showCreateForm: true });
+  }, [handleOpenChartsPanel]);
 
   // --- Effects ---
 

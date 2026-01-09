@@ -48,6 +48,8 @@ interface ChartsPanelContentProps {
   onSaveChart: (data: BirthChartInput) => Promise<BirthChart | null>;
   onSetDefault: (id: string) => Promise<void>;
   onClose: () => void;
+  /** If true, automatically show the create form when panel opens */
+  initialShowCreateForm?: boolean;
 }
 
 interface EditState {
@@ -69,6 +71,7 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
   onSaveChart,
   onSetDefault,
   onClose,
+  initialShowCreateForm = false,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
@@ -76,8 +79,15 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [chartToDelete, setChartToDelete] = useState<BirthChart | null>(null);
   const [saving, setSaving] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createState, setCreateState] = useState<EditState | null>(null);
+  const [isCreating, setIsCreating] = useState(initialShowCreateForm);
+  const [createState, setCreateState] = useState<EditState | null>(initialShowCreateForm ? {
+    name: '',
+    birth_date: '',
+    birth_time: '12:00',
+    city_name: '',
+    latitude: 0,
+    longitude: 0,
+  } : null);
   const locationInputRef = useRef<HTMLInputElement>(null);
 
   // Places autocomplete for location editing
