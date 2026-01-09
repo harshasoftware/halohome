@@ -86,6 +86,17 @@ export function useAuthActions() {
   const clearPasswordRecovery = useAuthStore((state) => state.clearPasswordRecovery);
 
   const signUp = async (email: string, password: string): Promise<{ error: AuthError | null }> => {
+    // If current user is anonymous, convert to permanent account to preserve their data
+    if (user?.is_anonymous) {
+      console.log('[Auth] Converting anonymous user to permanent account to preserve data...');
+      const { error } = await supabase.auth.updateUser({
+        email,
+        password,
+      });
+      return { error };
+    }
+
+    // Otherwise, create a new account
     const { error } = await supabase.auth.signUp({ email, password });
     return { error };
   };
@@ -96,6 +107,17 @@ export function useAuthActions() {
   };
 
   const signInWithGoogle = async (): Promise<{ error: AuthError | null }> => {
+    // If current user is anonymous, link Google identity to preserve their data
+    if (user?.is_anonymous) {
+      console.log('[Auth] Linking Google identity to anonymous user to preserve data...');
+      const { error } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/guest` },
+      });
+      return { error };
+    }
+
+    // Otherwise, do a regular OAuth sign-in
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/guest` },
