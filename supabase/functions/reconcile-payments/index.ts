@@ -76,22 +76,8 @@ Deno.serve(async (req) => {
       totalReconciled += creditPurchases.length;
     }
 
-    // 3. Check for family tree project purchases (if table exists)
-    // This is a safe operation - if table doesn't exist, it will just fail silently
-    try {
-      const { data: projects } = await supabase
-        .from('project_purchases')
-        .update({ user_id: user.id })
-        .eq('email', userEmail)
-        .is('user_id', null)
-        .select('id');
-
-      if (projects) {
-        totalReconciled += projects.length;
-      }
-    } catch {
-      // Table might not exist, ignore
-    }
+    // Note: project_purchases table was removed - family tree purchases
+    // are now handled through the orders table
 
     return new Response(
       JSON.stringify({ reconciled: totalReconciled }),
