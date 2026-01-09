@@ -107,17 +107,24 @@ export function useAuthActions() {
   };
 
   const signInWithGoogle = async (): Promise<{ error: AuthError | null }> => {
-    // If current user is anonymous, link Google identity to preserve their data
+    // If current user is anonymous, try to link Google identity to preserve their data
+    // If linking fails (e.g., feature not enabled), fall back to regular OAuth
     if (user?.is_anonymous) {
-      console.log('[Auth] Linking Google identity to anonymous user to preserve data...');
-      const { error } = await supabase.auth.linkIdentity({
+      console.log('[Auth] Attempting to link Google identity to anonymous user...');
+      const { error: linkError } = await supabase.auth.linkIdentity({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/guest` },
       });
-      return { error };
+
+      if (linkError) {
+        console.warn('[Auth] Link identity failed, falling back to OAuth:', linkError.message);
+        // Fall through to regular OAuth - data will need manual migration
+      } else {
+        return { error: null };
+      }
     }
 
-    // Otherwise, do a regular OAuth sign-in
+    // Regular OAuth sign-in (also used as fallback when linkIdentity fails)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/guest` },
