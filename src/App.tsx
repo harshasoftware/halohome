@@ -12,9 +12,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import LazyErrorBoundary from "./components/LazyErrorBoundary";
 import { DatabaseProvider } from "./providers/DatabaseProvider";
 import { usePreventBrowserZoom } from "./hooks/usePreventBrowserZoom";
-import TutorialWelcomeModal from "./components/TutorialWelcomeModal";
-import TutorialTour from "./components/TutorialTour";
-import { useTutorialPersistence } from "./hooks/useTutorialPersistence";
 
 // ============================================================================
 // Dynamic Imports - Route-level Code Splitting
@@ -74,22 +71,6 @@ const ZoomPrevention = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Component that initializes tutorial persistence and renders tutorial UI
-// Must be inside AuthProvider to have access to auth state
-const TutorialProvider = ({ children }: { children: React.ReactNode }) => {
-  // Initialize tutorial persistence - loads state from Supabase/localStorage
-  useTutorialPersistence();
-
-  return (
-    <>
-      {children}
-      {/* Tutorial components - render after children for proper z-index */}
-      <TutorialWelcomeModal />
-      <TutorialTour />
-    </>
-  );
-};
-
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" storageKey="themodernfamily-ui-theme">
     <ZoomPrevention>
@@ -98,11 +79,10 @@ const App = () => (
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <AuthProvider>
-                <TutorialProvider>
-                  <Toaster />
-                  <ErrorBoundary componentName="Routes">
-                    <Suspense fallback={<RouteLoader />}>
-                      <Routes>
+                <Toaster />
+                <ErrorBoundary componentName="Routes">
+                  <Suspense fallback={<RouteLoader />}>
+                    <Routes>
                     {/* Landing page - eagerly loaded for fast initial paint */}
                     <Route path="/" element={<Landing />} />
 
@@ -194,13 +174,12 @@ const App = () => (
                       </LazyErrorBoundary>
                     } />
 
-                      {/* Error routes - eagerly loaded */}
-                      <Route path="/project/:projectId/settings" element={<NotFound />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
+                    {/* Error routes - eagerly loaded */}
+                    <Route path="/project/:projectId/settings" element={<NotFound />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
                 </ErrorBoundary>
-              </TutorialProvider>
               </AuthProvider>
             </TooltipProvider>
           </QueryClientProvider>

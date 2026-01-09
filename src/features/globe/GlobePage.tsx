@@ -1669,7 +1669,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
     <div
       className="h-full w-full flex flex-col relative bg-white dark:bg-[#050505]"
       style={isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : undefined}
-      data-tour="globe-container"
     >
       {/* Astro Legend - Desktop: top-left overlay, Mobile: bottom sheet */}
       {showAstroLines && birthData && (

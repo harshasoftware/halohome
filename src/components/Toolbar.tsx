@@ -427,7 +427,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                 {/* AI Chat Toggle */}
                 <button
                   type="button"
-                  data-tour="ai-chat-toggle"
                   onClick={() => {
                     if (!hasBirthData) {
                       toast.info('Enter birth data first to use AI assistant');
@@ -803,7 +802,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                     {/* AI Guide Option */}
                     {onToggleAIChat && (
                       <button
-                        data-tour="ai-chat-toggle"
                         onClick={onToggleAIChat}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
                           isAIChatOpen
