@@ -220,7 +220,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
           {/* Drag handle - hide when maximized */}
           {!isMaximized && (
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
-              <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full" />
+              <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-600 rounded-full" />
             </div>
           )}
 
@@ -250,7 +250,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
                       ? 'Relocated Chart'
                       : 'Birth Chart'}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-zinc-400">
                   {showingRelocated && relocationLocationName ? `@ ${relocationLocationName} · ` : ''}
                   {settings.zodiacType === 'sidereal' ? 'Vedic' : 'Western'} · {settings.houseSystem}
                 </p>
@@ -305,7 +305,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'self'
                     ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
                 }`}
               >
                 {personName}
@@ -316,7 +316,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'partner'
                     ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300'
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
                 } ${(!partnerPlanetaryPositions || partnerPlanetaryPositions.length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {partnerName}
@@ -332,7 +332,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   relocationTab === 'natal'
                     ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
                 }`}
               >
                 Birth Location
@@ -342,7 +342,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                   relocationTab === 'relocated'
                     ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                    : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
                 }`}
               >
                 {relocationLocationName || 'Relocated'}
@@ -383,7 +383,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
 
               {/* Birth info */}
               {birthLocation && (
-                <div className="text-center text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/5 rounded-xl px-4 py-2">
+                <div className="text-center text-sm text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-white/5 rounded-xl px-4 py-2">
                   {birthDate && birthTime && (
                     <span className="block">{birthDate} at {birthTime}</span>
                   )}
@@ -394,7 +394,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
               {/* Planet positions - show when expanded or maximized */}
               {(isExpanded || isMaximized) && (
                 <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-4">
-                  <h4 className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-slate-600 dark:text-zinc-300 mb-3 flex items-center gap-2">
                     <Sparkles className={`w-4 h-4 ${showingPartner ? 'text-pink-500' : 'text-amber-500'}`} />
                     Planet Positions
                   </h4>
@@ -418,13 +418,13 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
   if (isMinimized) {
     return (
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border border-slate-200 dark:border-white/10 cursor-pointer hover:bg-white dark:hover:bg-[#0a0a0a] transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-white dark:bg-zinc-800 backdrop-blur-md border border-slate-200 dark:border-white/10 cursor-pointer transition-colors"
         onClick={onToggleMinimized}
       >
         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
           <Circle className="w-2.5 h-2.5 text-white" fill="white" />
         </div>
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        <span className="text-sm font-medium text-slate-700 dark:text-zinc-200">
           Birth Chart
         </span>
         <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -503,7 +503,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
               className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
                 activeTab === 'self'
                   ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
               {personName}
@@ -514,7 +514,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
               className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
                 activeTab === 'partner'
                   ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300'
-                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
               } ${(!partnerPlanetaryPositions || partnerPlanetaryPositions.length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {partnerName}
@@ -530,7 +530,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
               className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
                 relocationTab === 'natal'
                   ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
               Birth Location
@@ -540,7 +540,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
               className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
                 relocationTab === 'relocated'
                   ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
               {relocationLocationName || 'Relocated'}
@@ -572,7 +572,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
 
         {/* Birth info */}
         {(birthDate || birthTime || birthLocation) && !showSettings && !isDuoMode && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/5 rounded px-2 py-1 text-center">
+          <div className="text-xs text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-white/5 rounded px-2 py-1 text-center">
             {birthDate && birthTime && (
               <span>
                 {birthDate} at {birthTime}
@@ -604,7 +604,7 @@ export const NatalChartWidget: React.FC<NatalChartWidgetProps> = (props) => {
         {/* Planet positions - only show when expanded */}
         {isExpanded && (
           <div className="pt-2 border-t border-slate-200 dark:border-white/10">
-            <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
+            <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2 flex items-center gap-1">
               <Sparkles className={`w-3 h-3 ${showingPartner ? 'text-pink-500' : 'text-amber-500'}`} />
               Positions
             </h4>

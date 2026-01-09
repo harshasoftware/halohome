@@ -139,7 +139,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
             {/* Drag handle - hide when maximized */}
             {!isMaximized && (
               <div className="pt-2 pb-1">
-                <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
+                <div className="w-10 h-1 bg-slate-300 dark:bg-zinc-600 rounded-full" />
               </div>
             )}
             <div
@@ -151,7 +151,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span className="font-semibold text-slate-800 dark:text-slate-200">Planetary Lines</span>
+                <span className="font-semibold text-slate-800 dark:text-zinc-200">Planetary Lines</span>
                 {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
               </div>
               <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
 
               {/* Planets - visible in all modes including local space */}
               <div>
-                <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">
+                <h4 className="text-sm font-medium text-slate-600 dark:text-zinc-400 mb-3">
                   Planets
                 </h4>
                 <div className="flex flex-wrap gap-2">
@@ -248,7 +248,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
               {/* Line Types - larger touch targets (hidden in local space mode) */}
               {mode !== 'localSpace' && (
                 <div>
-                  <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">
+                  <h4 className="text-sm font-medium text-slate-600 dark:text-zinc-400 mb-3">
                     Line Types
                   </h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -263,7 +263,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                         }`}
                       >
                         <span className="text-sm font-semibold">{lineType}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-slate-500 dark:text-zinc-400">
                           {LINE_TYPE_DESCRIPTIONS[lineType]}
                         </span>
                       </button>
@@ -275,7 +275,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
               {/* Advanced options in a compact grid (hidden in local space mode) */}
               {mode !== 'localSpace' && (
                 <div>
-                <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">
+                <h4 className="text-sm font-medium text-slate-600 dark:text-zinc-400 mb-3">
                   Advanced
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
@@ -289,7 +289,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                           : 'bg-transparent border-slate-200 dark:border-white/10 opacity-60'
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showAspects ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-slate-600'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showAspects ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-zinc-600'}`}>
                         {visibility.showAspects && <Check className="w-3 h-3 text-white" />}
                       </div>
                       <span className="text-sm font-medium">Aspects</span>
@@ -305,7 +305,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                           : 'bg-transparent border-slate-200 dark:border-white/10 opacity-60'
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showParans ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-slate-600'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showParans ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-zinc-600'}`}>
                         {visibility.showParans && <Check className="w-3 h-3 text-white" />}
                       </div>
                       <span className="text-sm font-medium">Parans</span>
@@ -321,7 +321,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                           : 'bg-transparent border-slate-200 dark:border-white/10 opacity-60'
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showZenithPoints ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-slate-600'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showZenithPoints ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-zinc-600'}`}>
                         {visibility.showZenithPoints && <Check className="w-3 h-3 text-white" />}
                       </div>
                       <span className="text-sm font-medium">Zenith</span>
@@ -337,7 +337,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                           : 'bg-transparent border-slate-200 dark:border-white/10 opacity-60'
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showLineLabels ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-slate-600'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${visibility.showLineLabels ? 'bg-purple-600 border-purple-600' : 'border-slate-300 dark:border-zinc-600'}`}>
                         {visibility.showLineLabels && <Check className="w-3 h-3 text-white" />}
                       </div>
                       <span className="text-sm font-medium">Labels</span>
@@ -388,11 +388,11 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
   if (isMinimized) {
     return (
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border border-slate-200 dark:border-white/10 cursor-pointer hover:bg-white dark:hover:bg-[#0a0a0a] transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-white dark:bg-zinc-800 backdrop-blur-md border border-slate-200 dark:border-white/10 cursor-pointer transition-colors"
         onClick={onToggleMinimized}
       >
-        <SlidersHorizontal className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Filters</span>
+        <SlidersHorizontal className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
+        <span className="text-sm font-medium text-slate-700 dark:text-zinc-200">Filters</span>
         <ChevronRight className="w-4 h-4 text-slate-400" />
       </div>
     );
@@ -438,7 +438,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Line Types (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
                 Line Types
               </h4>
               <div className="space-y-1">
@@ -453,7 +453,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                     />
                     <div className="flex-1">
                       <span className="text-xs font-medium">{lineType}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                         {LINE_TYPE_DESCRIPTIONS[lineType]}
                       </span>
                     </div>
@@ -466,7 +466,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Advanced Line Types (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
                 Aspect Lines
               </h4>
               <div className="space-y-1">
@@ -478,7 +478,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                     />
                     <div className="flex-1">
                       <span className="text-xs font-medium">Show Aspects</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                         Planet to angle
                       </span>
                     </div>
@@ -495,7 +495,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                         />
                         <div className="flex-1">
                           <span className="text-xs font-medium text-green-600 dark:text-green-400">Harmonious</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                             Trine, Sextile
                           </span>
                         </div>
@@ -509,7 +509,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                         />
                         <div className="flex-1">
                           <span className="text-xs font-medium text-red-600 dark:text-red-400">Challenging</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                             Square
                           </span>
                         </div>
@@ -524,7 +524,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Paran Lines (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
                 Paran Lines
               </h4>
               <div className="space-y-1">
@@ -536,7 +536,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                     />
                     <div className="flex-1">
                       <span className="text-xs font-medium">Show Parans</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                         Line crossings
                       </span>
                     </div>
@@ -549,7 +549,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Zenith Points (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
                 Zenith Points
               </h4>
               <div className="space-y-1">
@@ -561,7 +561,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                     />
                     <div className="flex-1">
                       <span className="text-xs font-medium">Show Zenith</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                         Max power points
                       </span>
                     </div>
@@ -574,7 +574,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Line Labels (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
                 Line Labels
               </h4>
               <div className="space-y-1">
@@ -586,7 +586,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                     />
                     <div className="flex-1">
                       <span className="text-xs font-medium">Show Labels</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                         Line names on globe
                       </span>
                     </div>
@@ -599,7 +599,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Local Space Lines (hidden in local space mode - they're always shown there) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
                 Local Space
               </h4>
               <div className="space-y-1">
@@ -611,7 +611,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
                     />
                     <div className="flex-1">
                       <span className="text-xs font-medium">Show Local Space</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
                         Azimuth lines
                       </span>
                     </div>
@@ -623,7 +623,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
 
           {/* Planets - visible in all modes including local space */}
           <div>
-            <h4 className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
               Planets
             </h4>
             <div className="grid grid-cols-2 gap-1">
@@ -648,7 +648,7 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
 
           {/* Legend explanation (hidden in local space mode) */}
           {mode !== 'localSpace' && (
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-white/10">
+            <div className="text-[10px] text-slate-500 dark:text-zinc-400 pt-2 border-t border-slate-200 dark:border-white/10">
               <p className="mb-1">
                 <strong>MC/IC:</strong> Vertical meridian lines
               </p>

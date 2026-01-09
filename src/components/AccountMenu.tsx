@@ -18,7 +18,9 @@ import { useIsRealUser } from '@/stores/authStore';
 import { useFavoriteCities } from '@/hooks/useFavoriteCities';
 import { AuthModal } from './AuthModal';
 import { toast } from 'sonner';
-import { User, LogIn, LogOut, ChevronDown, Star, Heart } from 'lucide-react';
+import { User, LogIn, LogOut, ChevronDown, Star, Crown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAISubscription } from '@/features/globe/ai/useAISubscription';
 
 interface AccountMenuProps {
   onOpenChartPicker?: () => void;
@@ -33,9 +35,11 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   onOpenFavoritesPanel,
   isMobile = false,
 }) => {
+  const navigate = useNavigate();
   const { user, signOut, signInWithGoogle, loading } = useAuth();
   const isRealUser = useIsRealUser();
   const { favorites } = useFavoriteCities();
+  const { status: subscriptionStatus } = useAISubscription();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
@@ -63,15 +67,17 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
       <>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size={isMobile ? 'icon' : 'default'}
-              className={isMobile ? 'h-9 w-9 rounded-full' : 'gap-2'}
+            <button
+              className={`flex items-center justify-center transition-colors border ${
+                isMobile
+                  ? 'h-9 w-9 rounded-full border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                  : 'gap-2 px-4 py-2 rounded-full text-sm font-medium border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
               disabled={loading || isSigningIn}
             >
-              <LogIn className="h-4 w-4" />
+              <User className="h-4 w-4" />
               {!isMobile && <span>Sign In</span>}
-            </Button>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 z-[200]">
             <DropdownMenuLabel>Sign in to save your charts</DropdownMenuLabel>
@@ -162,7 +168,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
         {/* Favorites - Opens panel on desktop */}
         {onOpenFavoritesPanel && (
           <DropdownMenuItem onClick={onOpenFavoritesPanel}>
-            <Heart className="mr-2 h-4 w-4" />
+            <Star className="mr-2 h-4 w-4" />
             Favorite Cities
             {favorites.length > 0 && (
               <span className="ml-auto text-xs text-muted-foreground">
@@ -171,6 +177,16 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
             )}
           </DropdownMenuItem>
         )}
+        {/* Subscription Management */}
+        <DropdownMenuItem onClick={() => navigate('/ai-subscription')}>
+          <Crown className="mr-2 h-4 w-4 text-amber-500" />
+          Manage Subscription
+          {subscriptionStatus && subscriptionStatus.planType !== 'free' && (
+            <span className="ml-auto text-xs text-amber-500">
+              {subscriptionStatus.planType === 'starter' ? 'Traveler' : 'Mystic'}
+            </span>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
           <LogOut className="mr-2 h-4 w-4" />

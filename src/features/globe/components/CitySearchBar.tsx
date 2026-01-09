@@ -11,7 +11,7 @@ import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
 } from '@/hooks/usePlacesAutocompleteNew';
-import { Search, X, Loader2, MapPin, Sparkles, ChevronLeft } from 'lucide-react';
+import { Search, X, Loader2, MapPin, ChevronLeft } from 'lucide-react';
 
 type SearchMode = 'birthplace' | 'search';
 
@@ -110,7 +110,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
           onClick={() => setIsExpanded(true)}
           className={`flex items-center gap-2 px-4 h-11 rounded-full backdrop-blur-md shadow-lg bg-blue-500 border border-blue-400 animate-pulse ${className}`}
         >
-          <Sparkles className="w-5 h-5 text-white" />
+          <MapPin className="w-5 h-5 text-white" />
           <span className="text-sm font-medium text-white">Enter Birthplace</span>
         </button>
       );
@@ -119,9 +119,9 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
     return (
       <button
         onClick={() => setIsExpanded(true)}
-        className={`flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-md shadow-lg border bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-700 ${className}`}
+        className={`flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-md shadow-lg border bg-white/90 dark:bg-zinc-800 border-slate-200 dark:border-white/10 ${className}`}
       >
-        <Search className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+        <Search className="w-5 h-5 text-slate-600 dark:text-zinc-300" />
       </button>
     );
   }
@@ -132,7 +132,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
       <div className={`flex items-center backdrop-blur-md rounded-full shadow-lg overflow-hidden ${
         isBirthplaceMode
           ? 'bg-blue-500/95 border border-blue-400'
-          : 'bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-700'
+          : 'bg-white/95 dark:bg-zinc-800 border border-slate-200 dark:border-white/10'
       }`}>
         <div className="flex items-center justify-center w-10 h-10 shrink-0">
           {loading ? (
@@ -140,7 +140,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
           ) : selectedCity ? (
             <MapPin className={`w-4 h-4 ${isBirthplaceMode ? 'text-white' : 'text-emerald-500'}`} />
           ) : isBirthplaceMode ? (
-            <Sparkles className="w-4 h-4 text-white" />
+            <MapPin className="w-4 h-4 text-white" />
           ) : (
             <Search className="w-4 h-4 text-slate-400" />
           )}
@@ -156,7 +156,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
           className={`flex-1 h-10 bg-transparent border-none outline-none pr-2 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden ${
             isBirthplaceMode
               ? 'text-white placeholder-white/70'
-              : 'text-slate-700 dark:text-slate-200 placeholder-slate-400'
+              : 'text-slate-700 dark:text-zinc-200 placeholder-slate-400'
           }`}
           style={{
             minWidth: isMobile ? '200px' : '220px',
@@ -170,7 +170,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
             className={`flex items-center justify-center w-8 h-8 mr-1 rounded-full transition-colors ${
               isBirthplaceMode
                 ? 'hover:bg-white/20'
-                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'hover:bg-slate-100 dark:hover:bg-white/10'
             }`}
           >
             <X className={`w-4 h-4 ${isBirthplaceMode ? 'text-white/70' : 'text-slate-400'}`} />
@@ -185,7 +185,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
             className={`flex items-center justify-center w-10 h-10 border-l transition-colors ${
               isBirthplaceMode
                 ? 'border-white/30 hover:bg-white/20'
-                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
             }`}
             aria-label="Close search"
           >
@@ -196,7 +196,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
 
       {/* Suggestions dropdown */}
       {status === 'OK' && data.length > 0 && (
-        <ul className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
+        <ul className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden">
           {data.map((suggestion) => {
             const {
               place_id,
@@ -207,14 +207,14 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
               <li
                 key={place_id}
                 onClick={() => handleSelect(suggestion)}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/10 transition-colors border-b border-slate-100 dark:border-white/5 last:border-b-0"
               >
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
+                  <div className="font-medium text-sm text-slate-800 dark:text-zinc-200 truncate">
                     {main_text}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs text-slate-500 dark:text-zinc-400 truncate">
                     {secondary_text}
                   </div>
                 </div>
@@ -226,8 +226,8 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
 
       {/* No results message */}
       {status === 'ZERO_RESULTS' && (
-        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-4 text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl p-4 text-center">
+          <p className="text-sm text-slate-500 dark:text-zinc-400">
             No cities found
           </p>
         </div>
