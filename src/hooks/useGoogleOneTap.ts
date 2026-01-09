@@ -9,7 +9,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore, useIsRealUser } from '@/stores/authStore';
+import { useAuthStore, useIsRealUser, useIsAnonymous } from '@/stores/authStore';
 
 // Google Identity Services types
 declare global {
@@ -71,7 +71,9 @@ export function useGoogleOneTap(options: UseGoogleOneTapOptions = {}) {
   const { disabled = false, autoSelect = true, context = 'signin' } = options;
 
   const loading = useAuthStore((state) => state.loading);
+  const user = useAuthStore((state) => state.user);
   const isRealUser = useIsRealUser(); // True only for non-anonymous authenticated users
+  const isAnonymous = useIsAnonymous();
   const isInitialized = useRef(false);
   const scriptLoaded = useRef(false);
 
@@ -81,6 +83,9 @@ export function useGoogleOneTap(options: UseGoogleOneTapOptions = {}) {
   const handleCredentialResponse = useCallback(async (response: GoogleCredentialResponse) => {
     try {
       console.log('[GoogleOneTap] Received credential, signing in...');
+
+      // Capture anonymous user ID before sign-in for data migration
+      const anonymousUserId = user?.is_anonymous ? user.id : null;
 
       // Sign in with Supabase using the Google ID token
       const { data, error } = await supabase.auth.signInWithIdToken({
@@ -92,11 +97,29 @@ export function useGoogleOneTap(options: UseGoogleOneTapOptions = {}) {
         console.error('[GoogleOneTap] Sign-in failed:', error.message);
       } else {
         console.log('[GoogleOneTap] Sign-in successful:', data.user?.email);
+
+        // Migrate anonymous user's data to the new account
+        if (anonymousUserId && data.user?.id && anonymousUserId !== data.user.id) {
+          console.log('[GoogleOneTap] Migrating anonymous user data...');
+          try {
+            const { error: migrateError } = await supabase.rpc('migrate_anonymous_user_data', {
+              old_user_id: anonymousUserId,
+              new_user_id: data.user.id,
+            });
+            if (migrateError) {
+              console.error('[GoogleOneTap] Data migration failed:', migrateError.message);
+            } else {
+              console.log('[GoogleOneTap] Data migration successful');
+            }
+          } catch (migrateErr) {
+            console.error('[GoogleOneTap] Data migration error:', migrateErr);
+          }
+        }
       }
     } catch (err) {
       console.error('[GoogleOneTap] Error during sign-in:', err);
     }
-  }, []);
+  }, [user]);
 
   // Load the Google Identity Services script
   const loadScript = useCallback((): Promise<void> => {
