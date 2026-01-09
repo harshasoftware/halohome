@@ -45,8 +45,8 @@ interface ChartsPanelContentProps {
   onSelectChart: (id: string) => void;
   onDeleteChart: (id: string) => Promise<void>;
   onUpdateChart: (id: string, data: Partial<BirthChartInput>) => Promise<void>;
+  onSaveChart: (data: BirthChartInput) => Promise<BirthChart | null>;
   onSetDefault: (id: string) => Promise<void>;
-  onCreateNew: () => void;
   onClose: () => void;
 }
 
@@ -66,8 +66,8 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
   onSelectChart,
   onDeleteChart,
   onUpdateChart,
+  onSaveChart,
   onSetDefault,
-  onCreateNew,
   onClose,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -76,6 +76,8 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [chartToDelete, setChartToDelete] = useState<BirthChart | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createState, setCreateState] = useState<EditState | null>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
 
   // Places autocomplete for location editing
@@ -128,6 +130,76 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
     setEditState(null);
     setLocationValue('');
     clearSuggestions();
+  };
+
+  // === Create Chart Handlers ===
+  const handleStartCreate = () => {
+    setIsCreating(true);
+    setCreateState({
+      name: '',
+      birth_date: '',
+      birth_time: '12:00',
+      city_name: '',
+      latitude: 0,
+      longitude: 0,
+    });
+    setLocationValue('');
+  };
+
+  const handleSaveCreate = async () => {
+    if (!createState || !createState.name.trim() || !createState.birth_date || !createState.city_name) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const newChart = await onSaveChart({
+        name: createState.name.trim(),
+        birth_date: createState.birth_date,
+        birth_time: createState.birth_time,
+        city_name: createState.city_name,
+        latitude: createState.latitude,
+        longitude: createState.longitude,
+      });
+
+      if (newChart) {
+        // Select the new chart and close create form
+        onSelectChart(newChart.id);
+        setIsCreating(false);
+        setCreateState(null);
+        setLocationValue('');
+        clearSuggestions();
+        // Close the panel to navigate to the globe with new chart
+        onClose();
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+    setCreateState(null);
+    setLocationValue('');
+    clearSuggestions();
+  };
+
+  const handleCreateLocationSelect = async (suggestion: { description: string; place_id: string }) => {
+    setLocationValue(suggestion.description);
+    clearSuggestions();
+
+    try {
+      const results = await getGeocode({ placeId: suggestion.place_id });
+      const { lat, lng } = await getLatLng(results[0]);
+      setCreateState(prev => prev ? {
+        ...prev,
+        city_name: suggestion.description,
+        latitude: lat,
+        longitude: lng,
+      } : null);
+    } catch (error) {
+      console.error('Error getting location coordinates:', error);
+    }
   };
 
   const handleLocationSelect = async (suggestion: { description: string; place_id: string }) => {
@@ -245,7 +317,7 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[250px] mb-4">
             Set your birth data on the globe to save a chart
           </p>
-          <Button onClick={onCreateNew} className="gap-2">
+          <Button onClick={handleStartCreate} className="gap-2">
             <Plus className="h-4 w-4" />
             New Chart
           </Button>
@@ -269,12 +341,137 @@ export const ChartsPanelContent: React.FC<ChartsPanelContentProps> = ({
         </div>
       </div>
 
-      {/* New Chart Button - at top */}
+      {/* New Chart Button or Create Form */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
-        <Button onClick={onCreateNew} variant="outline" className="w-full gap-2">
-          <Plus className="h-4 w-4" />
-          New Chart
-        </Button>
+        {isCreating && createState ? (
+          <div className="space-y-3">
+            {/* Header with back button */}
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-white/10">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={handleCancelCreate}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium">New Chart</span>
+            </div>
+
+            {/* Name field */}
+            <div className="space-y-1">
+              <label className="text-xs text-slate-500 dark:text-slate-400">Name</label>
+              <Input
+                value={createState.name}
+                onChange={(e) => setCreateState({ ...createState, name: e.target.value })}
+                className="h-9"
+                placeholder="Chart name"
+                autoFocus
+              />
+            </div>
+
+            {/* Date and Time row */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Birth Date
+                </label>
+                <Input
+                  type="date"
+                  value={createState.birth_date}
+                  onChange={(e) => setCreateState({ ...createState, birth_date: e.target.value })}
+                  className="h-9"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Birth Time
+                </label>
+                <Input
+                  type="time"
+                  value={createState.birth_time}
+                  onChange={(e) => setCreateState({ ...createState, birth_time: e.target.value })}
+                  className="h-9"
+                />
+              </div>
+            </div>
+
+            {/* Location field */}
+            <div className="space-y-1 relative">
+              <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Birth Location
+              </label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  value={locationValue}
+                  onChange={(e) => setLocationValue(e.target.value)}
+                  className="h-9 pl-8"
+                  placeholder="Search city..."
+                />
+              </div>
+              {/* Location suggestions dropdown */}
+              {suggestions.status === 'OK' && suggestions.data.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-md shadow-md max-h-48 overflow-y-auto">
+                  {suggestions.data.map((suggestion) => (
+                    <button
+                      key={suggestion.place_id}
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                      onClick={() => handleCreateLocationSelect(suggestion)}
+                    >
+                      {suggestion.description}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Current coordinates display */}
+            {createState.latitude !== 0 && createState.longitude !== 0 && (
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                Coordinates: {createState.latitude.toFixed(4)}, {createState.longitude.toFixed(4)}
+              </p>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancelCreate}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveCreate}
+                disabled={saving || !createState.name.trim() || !createState.birth_date || !createState.city_name}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Create Chart
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button onClick={handleStartCreate} variant="outline" className="w-full gap-2">
+            <Plus className="h-4 w-4" />
+            New Chart
+          </Button>
+        )}
       </div>
 
       {/* Charts List - scrollable */}

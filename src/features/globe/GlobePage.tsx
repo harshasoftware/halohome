@@ -1689,13 +1689,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
       }
     };
 
-    const handleCreateNew = () => {
-      // Close the panel and guide user to create new chart
-      panelStack.closeCurrent();
-      // User can double-tap on globe or use search bar to create a new chart
-      toast.info('Double-tap on the globe or use the search bar to set your birth location');
-    };
-
     return (
       <ChartsPanelContent
         charts={savedCharts}
@@ -1705,11 +1698,11 @@ const GlobePage: React.FC<GlobePageProps> = ({
         onDeleteChart={deleteChart}
         onUpdateChart={updateChart}
         onSetDefault={setDefaultChart}
-        onCreateNew={handleCreateNew}
+        onSaveChart={saveChart}
         onClose={panelStack.closeCurrent}
       />
     );
-  }, [savedCharts, currentChart, chartsLoading, selectChart, deleteChart, updateChart, setDefaultChart, panelStack, onSelectChart]);
+  }, [savedCharts, currentChart, chartsLoading, selectChart, deleteChart, updateChart, setDefaultChart, saveChart, panelStack, onSelectChart]);
 
   // Render function for ScoutPanel
   const renderScoutPanel = useCallback(() => {
@@ -2337,11 +2330,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
           onDeleteChart={deleteChart}
           onUpdateChart={updateChart}
           onSetDefault={setDefaultChart}
-          onCreateNew={() => {
-            setMobileChartsSheetOpen(false);
-            // User can double-tap on globe or use search bar to create a new chart
-            toast.info('Double-tap on the globe or use the search bar to set your birth location');
-          }}
+          onSaveChart={saveChart}
           onClose={() => setMobileChartsSheetOpen(false)}
         />
       )}
