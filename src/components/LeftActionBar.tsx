@@ -18,6 +18,7 @@ import {
   Settings,
   Star,
   MapPin,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BirthChart } from '@/hooks/useBirthCharts';
@@ -68,6 +69,9 @@ interface LeftActionBarProps {
   // Scout
   onOpenScoutPanel?: () => void;
 
+  // Filters (Legend)
+  onToggleFilters?: () => void;
+
   // Mode indicators
   isLocalSpaceMode?: boolean;
   localSpaceOriginName?: string;
@@ -105,6 +109,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
   onOpenExport,
   onOpenShareChart,
   onOpenScoutPanel,
+  onToggleFilters,
   isLocalSpaceMode,
   localSpaceOriginName,
   isRelocated,
@@ -174,6 +179,17 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           isActive
           activeColor="amber"
           actionLabel="Exit"
+        />
+      )}
+
+      {/* Preferences (Legend/Filters) */}
+      {hasBirthData && onToggleFilters && (
+        <ActionButton
+          icon={<SlidersHorizontal className="w-4 h-4" />}
+          label="Preferences"
+          onClick={onToggleFilters}
+          isExpanded={isExpanded}
+          activeColor="blue"
         />
       )}
 

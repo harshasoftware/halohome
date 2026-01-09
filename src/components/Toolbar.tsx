@@ -690,6 +690,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         onOpenExport={onOpenExport}
         onOpenShareChart={() => setShowAstroShareModal(true)}
         onOpenScoutPanel={handleOpenScoutPanel}
+        onToggleFilters={onToggleLegend}
         isLocalSpaceMode={isLocalSpaceMode}
         localSpaceOriginName={localSpaceOriginName}
         isRelocated={isRelocated}

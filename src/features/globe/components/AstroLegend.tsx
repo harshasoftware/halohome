@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronLeft, ChevronRight, ChevronDown, Eye, EyeOff, Loader2, Sparkles, Compass, SlidersHorizontal, X, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, Eye, EyeOff, Loader2, Sparkles, X, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   AstroVisibilityState,
@@ -73,6 +73,7 @@ const LINE_TYPE_DESCRIPTIONS: Record<LineType, string> = {
 const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
   const isMobile = useIsMobile();
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // Desktop: vertical (false) vs horizontal (true)
 
   // Get store values
   const astroState = useAstroLegendState();
@@ -383,52 +384,164 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
     );
   }
 
-  // Desktop: Original sidebar legend
-  // Minimized collapsed bar
+  // Desktop: Preferences panel
+  // Minimized state - return null (Preferences button in left toolbar controls this)
   if (isMinimized) {
+    return null;
+  }
+
+  // Expanded horizontal mode
+  if (isExpanded) {
     return (
-      <div
-        className="flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg bg-white dark:bg-zinc-800 backdrop-blur-md border border-slate-200 dark:border-white/10 cursor-pointer transition-colors"
-        onClick={onToggleMinimized}
-      >
-        <SlidersHorizontal className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
-        <span className="text-sm font-medium text-slate-700 dark:text-zinc-200">Filters</span>
-        <ChevronRight className="w-4 h-4 text-slate-400" />
-      </div>
+      <Card className="w-[560px] bg-white/95 dark:bg-[#0a0a0a]/95 dark:border-white/10 backdrop-blur-md shadow-lg overflow-hidden">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between flex-shrink-0 border-b border-slate-200 dark:border-white/10">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            Preferences
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {mode !== 'localSpace' && (
+              <>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onShowAll}>
+                  <Eye className="w-3 h-3 mr-1" />
+                  Show All
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onHideAll}>
+                  <EyeOff className="w-3 h-3 mr-1" />
+                  Hide All
+                </Button>
+              </>
+            )}
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsExpanded(false)}>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleMinimized}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="flex gap-6">
+            {/* Left Column: Line Types & Options */}
+            <div className="flex-1 space-y-5 min-w-0">
+              {mode !== 'localSpace' && (
+                <div>
+                  <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-3">Line Types</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {ALL_LINE_TYPES.map((lineType) => (
+                      <label key={lineType} className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                        <Checkbox checked={visibility.lineTypes[lineType]} onCheckedChange={() => onToggleLineType(lineType)} />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-medium">{lineType}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">{LINE_TYPE_DESCRIPTIONS[lineType]}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {mode !== 'localSpace' && (
+                <div>
+                  <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-3">Advanced</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {onToggleAspects && (
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                        <Checkbox checked={visibility.showAspects} onCheckedChange={onToggleAspects} />
+                        <span className="text-xs">Aspects</span>
+                      </label>
+                    )}
+                    {onToggleParans && (
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                        <Checkbox checked={visibility.showParans} onCheckedChange={onToggleParans} />
+                        <span className="text-xs">Parans</span>
+                      </label>
+                    )}
+                    {onToggleZenithPoints && (
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                        <Checkbox checked={visibility.showZenithPoints} onCheckedChange={onToggleZenithPoints} />
+                        <span className="text-xs">Zenith Points</span>
+                      </label>
+                    )}
+                    {onToggleLineLabels && (
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                        <Checkbox checked={visibility.showLineLabels} onCheckedChange={onToggleLineLabels} />
+                        <span className="text-xs">Labels</span>
+                      </label>
+                    )}
+                    {onToggleLocalSpace && (
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                        <Checkbox checked={visibility.showLocalSpace} onCheckedChange={onToggleLocalSpace} />
+                        <span className="text-xs">Local Space</span>
+                      </label>
+                    )}
+                  </div>
+                  {visibility.showAspects && (onToggleHarmoniousAspects || onToggleDisharmoniousAspects) && (
+                    <div className="flex gap-3 mt-3 ml-1">
+                      {onToggleHarmoniousAspects && (
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 px-2 py-1.5 rounded">
+                          <Checkbox checked={visibility.showHarmoniousAspects} onCheckedChange={onToggleHarmoniousAspects} />
+                          <span className="text-xs text-green-600 dark:text-green-400">Harmonious</span>
+                        </label>
+                      )}
+                      {onToggleDisharmoniousAspects && (
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 px-2 py-1.5 rounded">
+                          <Checkbox checked={visibility.showDisharmoniousAspects} onCheckedChange={onToggleDisharmoniousAspects} />
+                          <span className="text-xs text-red-600 dark:text-red-400">Challenging</span>
+                        </label>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Divider */}
+            <div className="w-px bg-slate-200 dark:bg-white/10 self-stretch" />
+            {/* Right Column: Planets Grid */}
+            <div className="w-[200px] flex-shrink-0">
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-3">Planets</h4>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                {ALL_PLANETS.map((planet) => (
+                  <label key={planet} className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 rounded">
+                    <Checkbox checked={visibility.planets[planet]} onCheckedChange={() => onTogglePlanet(planet)} />
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PLANET_COLORS[planet] }} />
+                    <span className="text-xs">{planet === 'NorthNode' ? 'N.Node' : planet}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
+  // Default vertical scroll mode
   return (
-    <Card className="w-64 bg-white/90 dark:bg-[#0a0a0a]/90 dark:border-white/10 backdrop-blur-md shadow-lg flex flex-col overflow-hidden">
+    <Card className="w-64 bg-white/95 dark:bg-[#0a0a0a]/95 dark:border-white/10 backdrop-blur-md shadow-lg flex flex-col overflow-hidden">
       <CardHeader className="pb-2 flex flex-row items-center justify-between flex-shrink-0">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          Planetary Lines
+          Preferences
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         </CardTitle>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onToggleMinimized}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(true)} title="Expand">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onToggleMinimized}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <ScrollArea className="h-[calc(70vh-60px)]">
         <CardContent className="space-y-4 pr-4">
           {/* Quick actions (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 text-xs"
-                onClick={onShowAll}
-              >
+              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={onShowAll}>
                 <Eye className="w-3 h-3 mr-1" />
                 Show All
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 text-xs"
-                onClick={onHideAll}
-              >
+              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={onHideAll}>
                 <EyeOff className="w-3 h-3 mr-1" />
                 Hide All
               </Button>
@@ -438,24 +551,14 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Line Types (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-                Line Types
-              </h4>
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Line Types</h4>
               <div className="space-y-1">
                 {ALL_LINE_TYPES.map((lineType) => (
-                  <label
-                    key={lineType}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded"
-                  >
-                    <Checkbox
-                      checked={visibility.lineTypes[lineType]}
-                      onCheckedChange={() => onToggleLineType(lineType)}
-                    />
+                  <label key={lineType} className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
+                    <Checkbox checked={visibility.lineTypes[lineType]} onCheckedChange={() => onToggleLineType(lineType)} />
                     <div className="flex-1">
                       <span className="text-xs font-medium">{lineType}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                        {LINE_TYPE_DESCRIPTIONS[lineType]}
-                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">{LINE_TYPE_DESCRIPTIONS[lineType]}</span>
                     </div>
                   </label>
                 ))}
@@ -463,55 +566,37 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
             </div>
           )}
 
-          {/* Advanced Line Types (hidden in local space mode) */}
+          {/* Aspect Lines (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-                Aspect Lines
-              </h4>
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Aspect Lines</h4>
               <div className="space-y-1">
                 {onToggleAspects && (
                   <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                    <Checkbox
-                      checked={visibility.showAspects}
-                      onCheckedChange={onToggleAspects}
-                    />
+                    <Checkbox checked={visibility.showAspects} onCheckedChange={onToggleAspects} />
                     <div className="flex-1">
                       <span className="text-xs font-medium">Show Aspects</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                        Planet to angle
-                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Planet to angle</span>
                     </div>
                   </label>
                 )}
-                {/* Harmonious/Disharmonious sub-options - only show when aspects are enabled */}
                 {visibility.showAspects && (
                   <div className="ml-4 space-y-1 border-l-2 border-slate-200 dark:border-white/10 pl-2">
                     {onToggleHarmoniousAspects && (
                       <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                        <Checkbox
-                          checked={visibility.showHarmoniousAspects}
-                          onCheckedChange={onToggleHarmoniousAspects}
-                        />
+                        <Checkbox checked={visibility.showHarmoniousAspects} onCheckedChange={onToggleHarmoniousAspects} />
                         <div className="flex-1">
                           <span className="text-xs font-medium text-green-600 dark:text-green-400">Harmonious</span>
-                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                            Trine, Sextile
-                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Trine, Sextile</span>
                         </div>
                       </label>
                     )}
                     {onToggleDisharmoniousAspects && (
                       <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                        <Checkbox
-                          checked={visibility.showDisharmoniousAspects}
-                          onCheckedChange={onToggleDisharmoniousAspects}
-                        />
+                        <Checkbox checked={visibility.showDisharmoniousAspects} onCheckedChange={onToggleDisharmoniousAspects} />
                         <div className="flex-1">
                           <span className="text-xs font-medium text-red-600 dark:text-red-400">Challenging</span>
-                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                            Square
-                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Square</span>
                         </div>
                       </label>
                     )}
@@ -522,124 +607,77 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           )}
 
           {/* Paran Lines (hidden in local space mode) */}
-          {mode !== 'localSpace' && (
+          {mode !== 'localSpace' && onToggleParans && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-                Paran Lines
-              </h4>
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Paran Lines</h4>
               <div className="space-y-1">
-                {onToggleParans && (
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                    <Checkbox
-                      checked={visibility.showParans}
-                      onCheckedChange={onToggleParans}
-                    />
-                    <div className="flex-1">
-                      <span className="text-xs font-medium">Show Parans</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                        Line crossings
-                      </span>
-                    </div>
-                  </label>
-                )}
+                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
+                  <Checkbox checked={visibility.showParans} onCheckedChange={onToggleParans} />
+                  <div className="flex-1">
+                    <span className="text-xs font-medium">Show Parans</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Line crossings</span>
+                  </div>
+                </label>
               </div>
             </div>
           )}
 
           {/* Zenith Points (hidden in local space mode) */}
-          {mode !== 'localSpace' && (
+          {mode !== 'localSpace' && onToggleZenithPoints && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-                Zenith Points
-              </h4>
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Zenith Points</h4>
               <div className="space-y-1">
-                {onToggleZenithPoints && (
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                    <Checkbox
-                      checked={visibility.showZenithPoints}
-                      onCheckedChange={onToggleZenithPoints}
-                    />
-                    <div className="flex-1">
-                      <span className="text-xs font-medium">Show Zenith</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                        Max power points
-                      </span>
-                    </div>
-                  </label>
-                )}
+                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
+                  <Checkbox checked={visibility.showZenithPoints} onCheckedChange={onToggleZenithPoints} />
+                  <div className="flex-1">
+                    <span className="text-xs font-medium">Show Zenith</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Max power points</span>
+                  </div>
+                </label>
               </div>
             </div>
           )}
 
           {/* Line Labels (hidden in local space mode) */}
-          {mode !== 'localSpace' && (
+          {mode !== 'localSpace' && onToggleLineLabels && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-                Line Labels
-              </h4>
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Line Labels</h4>
               <div className="space-y-1">
-                {onToggleLineLabels && (
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                    <Checkbox
-                      checked={visibility.showLineLabels}
-                      onCheckedChange={onToggleLineLabels}
-                    />
-                    <div className="flex-1">
-                      <span className="text-xs font-medium">Show Labels</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                        Line names on globe
-                      </span>
-                    </div>
-                  </label>
-                )}
+                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
+                  <Checkbox checked={visibility.showLineLabels} onCheckedChange={onToggleLineLabels} />
+                  <div className="flex-1">
+                    <span className="text-xs font-medium">Show Labels</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Line names on globe</span>
+                  </div>
+                </label>
               </div>
             </div>
           )}
 
-          {/* Local Space Lines (hidden in local space mode - they're always shown there) */}
-          {mode !== 'localSpace' && (
+          {/* Local Space Lines (hidden in local space mode) */}
+          {mode !== 'localSpace' && onToggleLocalSpace && (
             <div>
-              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-                Local Space
-              </h4>
+              <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Local Space</h4>
               <div className="space-y-1">
-                {onToggleLocalSpace && (
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
-                    <Checkbox
-                      checked={visibility.showLocalSpace}
-                      onCheckedChange={onToggleLocalSpace}
-                    />
-                    <div className="flex-1">
-                      <span className="text-xs font-medium">Show Local Space</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">
-                        Azimuth lines
-                      </span>
-                    </div>
-                  </label>
-                )}
+                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
+                  <Checkbox checked={visibility.showLocalSpace} onCheckedChange={onToggleLocalSpace} />
+                  <div className="flex-1">
+                    <span className="text-xs font-medium">Show Local Space</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 ml-1">Azimuth lines</span>
+                  </div>
+                </label>
               </div>
             </div>
           )}
 
-          {/* Planets - visible in all modes including local space */}
+          {/* Planets */}
           <div>
-            <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">
-              Planets
-            </h4>
+            <h4 className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-2">Planets</h4>
             <div className="grid grid-cols-2 gap-1">
               {ALL_PLANETS.map((planet) => (
-                <label
-                  key={planet}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded"
-                >
-                  <Checkbox
-                    checked={visibility.planets[planet]}
-                    onCheckedChange={() => onTogglePlanet(planet)}
-                  />
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: PLANET_COLORS[planet] }}
-                  />
+                <label key={planet} className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 p-1 rounded">
+                  <Checkbox checked={visibility.planets[planet]} onCheckedChange={() => onTogglePlanet(planet)} />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PLANET_COLORS[planet] }} />
                   <span className="text-xs">{planet === 'NorthNode' ? 'N.Node' : planet}</span>
                 </label>
               ))}
@@ -649,12 +687,8 @@ const AstroLegendComponent: React.FC<AstroLegendProps> = (props) => {
           {/* Legend explanation (hidden in local space mode) */}
           {mode !== 'localSpace' && (
             <div className="text-[10px] text-slate-500 dark:text-zinc-400 pt-2 border-t border-slate-200 dark:border-white/10">
-              <p className="mb-1">
-                <strong>MC/IC:</strong> Vertical meridian lines
-              </p>
-              <p>
-                <strong>ASC/DSC:</strong> Curved horizon lines
-              </p>
+              <p className="mb-1"><strong>MC/IC:</strong> Vertical meridian lines</p>
+              <p><strong>ASC/DSC:</strong> Curved horizon lines</p>
             </div>
           )}
         </CardContent>
