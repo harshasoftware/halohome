@@ -127,7 +127,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} data-tour="search-bar">
       {/* Search input container */}
       <div className={`flex items-center backdrop-blur-md rounded-full shadow-lg overflow-hidden ${
         isBirthplaceMode

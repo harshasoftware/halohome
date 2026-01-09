@@ -20,6 +20,7 @@ import { QuickBirthDataModal } from './components/QuickBirthDataModal';
 import { BirthDateTimeModal } from './components/BirthDateTimeModal';
 import { CitySearchBar } from './components/CitySearchBar';
 import { RightPanelStack, usePanelStack } from './components/RightPanelStack';
+import { OnboardingTour } from '@/components/OnboardingTour';
 
 // Mobile bottom sheet components
 import {
@@ -1823,6 +1824,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
     <div
       className="h-full w-full flex flex-col relative bg-white dark:bg-[#050505]"
       style={isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : undefined}
+      data-tour="welcome"
     >
       {/* Astro Legend - Desktop: top-left overlay, Mobile: bottom sheet */}
       {showAstroLines && birthData && (
@@ -2051,7 +2053,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
       {/* TimelineScrubber (desktop only) */}
       {/* Removed TimelineScrubber for all devices */}
       <div className="flex-1 flex flex-col min-h-0 relative">
-        <div className="flex-1 flex items-center justify-center relative">
+        <div className="flex-1 flex items-center justify-center relative" data-tour="globe">
           {/* City Search Bar - floating top-left */}
           {/* Shows as "Enter your birthplace" when no valid birth data, otherwise as regular search */}
           {/* Hidden on mobile when AI chat is open */}
@@ -2383,6 +2385,11 @@ const GlobePage: React.FC<GlobePageProps> = ({
         onAskAI={handleContextAskAI}
         isFavorited={isFavorite(contextMenu.lat, contextMenu.lng)}
       />
+
+      {/* Onboarding Tour - Desktop only */}
+      {!isMobile && (
+        <OnboardingTour hasBirthData={!!birthData} />
+      )}
     </div>
   );
 };

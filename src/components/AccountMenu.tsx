@@ -115,7 +115,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
     return (
       <>
         <DropdownMenu open={isDropdownOpen} onOpenChange={handleOpenChange}>
-          <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+          <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} data-tour="account-menu">
             <DropdownMenuTrigger asChild>
               <button
                 className={`flex items-center justify-center transition-colors border ${
@@ -228,6 +228,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   const avatarUrl = user.user_metadata?.avatar_url;
 
   return (
+    <div data-tour="account-menu">
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
@@ -301,6 +302,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 };
 

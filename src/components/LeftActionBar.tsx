@@ -149,6 +149,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
 
   return (
     <div
+      data-tour="left-toolbar"
       className={cn(
         'fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-1 p-2 rounded-xl transition-all duration-200 ease-out',
         'bg-white/95 dark:bg-zinc-800 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-lg',
@@ -190,6 +191,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           onClick={onToggleFilters}
           isExpanded={isExpanded}
           activeColor="blue"
+          dataTour="filters"
         />
       )}
 
@@ -202,6 +204,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           isExpanded={isExpanded}
           isActive={isAIChatOpen}
           activeColor="amber"
+          dataTour="ai-chat"
         />
       )}
 
@@ -212,6 +215,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           label="Scout Locations"
           onClick={onOpenScoutPanel}
           isExpanded={isExpanded}
+          dataTour="scout-button"
         />
       )}
 
@@ -230,6 +234,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           isExpanded={isExpanded}
           isActive={isCompatibilityEnabled}
           activeColor="pink"
+          dataTour="duo-mode"
         />
       )}
 
@@ -588,6 +593,7 @@ interface ActionButtonProps {
   activeColor?: 'amber' | 'pink' | 'cyan' | 'blue';
   variant?: 'default' | 'danger';
   actionLabel?: string;
+  dataTour?: string;
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({
@@ -599,6 +605,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   activeColor = 'amber',
   variant = 'default',
   actionLabel,
+  dataTour,
 }) => {
   const colorClasses = {
     amber: {
@@ -625,6 +632,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   return (
     <button
       onClick={onClick}
+      data-tour={dataTour}
       className={cn(
         'flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-all duration-200 min-h-[40px] border border-transparent',
         variant === 'danger'
