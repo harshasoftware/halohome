@@ -70,8 +70,11 @@
 # =============================================================================
 
 [build]
-  command = "npm run build"
+  # Build is now done locally via `npm run deploy`
+  # CI builds are skipped (ignore exit 0 = skip)
+  command = "echo 'Build skipped - using local deploy'"
   publish = "dist"
+  ignore = "exit 0"
 
 # Static files must be served directly (not caught by SPA fallback)
 # These rules must come BEFORE the /* catch-all
