@@ -36,7 +36,7 @@ import {
 
 // Zustand stores
 import { useGlobeInteractionStore, type GlobePath } from '@/stores/globeInteractionStore';
-import { useUIStore } from '@/stores/uiStore';
+import { useUIStore, useTutorial } from '@/stores/uiStore';
 import {
   useNatalChartSettings,
   useNatalChartResult,
@@ -195,6 +195,9 @@ const GlobePage: React.FC<GlobePageProps> = ({
   });
 
   // === Zustand Store State ===
+  // Tutorial state
+  const { showTutorial, tutorialPhase, setShowTutorial } = useTutorial();
+
   // Globe interaction store - selections, zones, modals
   const selectedPerson = useGlobeInteractionStore((s) => s.selectedPerson);
   const setSelectedPerson = useGlobeInteractionStore((s) => s.setSelectedPerson);
@@ -2395,7 +2398,12 @@ const GlobePage: React.FC<GlobePageProps> = ({
 
       {/* Onboarding Tour - Desktop only */}
       {!isMobile && (
-        <OnboardingTour hasBirthData={!!birthData} />
+        <OnboardingTour
+          hasBirthData={!!birthData}
+          forceShow={showTutorial}
+          forcePhase={tutorialPhase}
+          onComplete={() => setShowTutorial(false)}
+        />
       )}
     </div>
   );

@@ -74,6 +74,8 @@ interface UIState {
   isAIChatOpen: boolean;
   isBottomSheetOpen: boolean;
   personToDelete: string | null;
+  showTutorial: boolean;
+  tutorialPhase: 'phase1' | 'phase2' | 'all';
 
   // === Modal Actions ===
   openPersonDialog: (person: PersonData | null) => void;
@@ -116,6 +118,7 @@ interface UIState {
   setIsAIChatOpen: (open: boolean) => void;
   setIsBottomSheetOpen: (open: boolean) => void;
   setPersonToDelete: (id: string | null) => void;
+  setShowTutorial: (show: boolean, phase?: 'phase1' | 'phase2' | 'all') => void;
 
   // Batch actions
   closeAllModals: () => void;
@@ -155,6 +158,8 @@ const initialUIState = {
   isAIChatOpen: false,
   isBottomSheetOpen: false,
   personToDelete: null,
+  showTutorial: false,
+  tutorialPhase: 'all' as const,
 };
 
 export const useUIStore = create<UIState>()(
@@ -242,6 +247,10 @@ export const useUIStore = create<UIState>()(
       setIsAIChatOpen: (open) => set((state) => { state.isAIChatOpen = open; }),
       setIsBottomSheetOpen: (open) => set((state) => { state.isBottomSheetOpen = open; }),
       setPersonToDelete: (id) => set((state) => { state.personToDelete = id; }),
+      setShowTutorial: (show, phase = 'all') => set((state) => {
+        state.showTutorial = show;
+        state.tutorialPhase = phase;
+      }),
 
       // Batch actions
       closeAllModals: () => set((state) => {
@@ -324,4 +333,10 @@ export const useAnyModalOpen = () => useUIStore((state) =>
 export const useSubscriptionModal = () => useUIStore(useShallow((state) => ({
   isOpen: state.isSubscriptionModalOpen,
   setIsOpen: state.setIsSubscriptionModalOpen,
+})));
+
+export const useTutorial = () => useUIStore(useShallow((state) => ({
+  showTutorial: state.showTutorial,
+  tutorialPhase: state.tutorialPhase,
+  setShowTutorial: state.setShowTutorial,
 })));

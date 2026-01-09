@@ -20,6 +20,7 @@ import { LeftActionBar } from './LeftActionBar';
 import { useAuth } from '@/hooks/useAuth-context';
 import { useIsRealUser } from '@/stores/authStore';
 import { ThemeToggle } from './ThemeToggle';
+import { TutorialButton } from './TutorialButton';
 import { useTheme } from 'next-themes';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -807,6 +808,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             </Tooltip>
           )}
 
+          <TutorialButton />
           <ThemeToggle />
 
           {/* Account Menu */}

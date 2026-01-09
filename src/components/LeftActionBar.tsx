@@ -151,16 +151,17 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
   };
 
   return (
-    <div
-      data-tour="left-toolbar"
-      className={cn(
-        'fixed left-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-1 p-2 rounded-xl transition-all duration-200 ease-out',
-        'bg-white/95 dark:bg-zinc-800 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-lg',
-        isExpanded ? 'w-52' : 'w-14'
-      )}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
+    <div className="fixed left-4 top-0 bottom-0 z-40 flex items-center pointer-events-none">
+      <div
+        data-tour="left-toolbar"
+        className={cn(
+          'flex flex-col gap-1 p-2 rounded-xl transition-all duration-200 ease-out pointer-events-auto',
+          'bg-white/95 dark:bg-zinc-800 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-lg',
+          isExpanded ? 'w-52' : 'w-14'
+        )}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
       {/* Mode Indicators */}
       {isRelocated && onReturnToStandard && (
         <ActionButton
@@ -344,6 +345,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           variant="danger"
         />
       )}
+      </div>
     </div>
   );
 };

@@ -1,22 +1,32 @@
 /**
- * OnboardingTour - Desktop joyride tutorial for new users
+ * OnboardingTour - Two-phase desktop joyride tutorial
  *
- * Guides users through the key features of the astrocartography app.
- * Stores completion state in localStorage to avoid showing again.
+ * Phase 1 (Getting Started): For new users without birth data
+ *   - Welcome, search bar, globe, account menu
+ *
+ * Phase 2 (Explore Features): Auto-triggers after birth data is entered
+ *   - Left toolbar, scout, AI chat, duo mode, filters
+ *
+ * Stores completion state per phase in localStorage.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
 import { useTheme } from 'next-themes';
 
-const TOUR_STORAGE_KEY = 'astrocarto_onboarding_completed';
-const TOUR_VERSION = '1'; // Increment to show tour again after major updates
+const TOUR_STORAGE_KEY_PHASE1 = 'astrocarto_tour_phase1';
+const TOUR_STORAGE_KEY_PHASE2 = 'astrocarto_tour_phase2';
+const TOUR_VERSION = '2'; // Increment to show tour again after major updates
+
+export type TourPhase = 'phase1' | 'phase2' | 'all';
 
 interface OnboardingTourProps {
-  /** Whether the user has birth data set (affects which steps to show) */
+  /** Whether the user has birth data set */
   hasBirthData: boolean;
-  /** Force show the tour (for settings/help menu) */
+  /** Force show a specific phase (for tutorial button) */
   forceShow?: boolean;
+  /** Which phase to force show */
+  forcePhase?: TourPhase;
   /** Callback when tour is dismissed or completed */
   onComplete?: () => void;
 }
@@ -24,49 +34,19 @@ interface OnboardingTourProps {
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   hasBirthData,
   forceShow = false,
+  forcePhase = 'all',
   onComplete,
 }) => {
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const [currentPhase, setCurrentPhase] = useState<TourPhase>('phase1');
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+  const prevHasBirthData = useRef(hasBirthData);
 
-  // Check if tour should run
-  useEffect(() => {
-    if (forceShow) {
-      setRun(true);
-      setStepIndex(0);
-      return;
-    }
-
-    const stored = localStorage.getItem(TOUR_STORAGE_KEY);
-    if (!stored || stored !== TOUR_VERSION) {
-      // Small delay to let the page render
-      const timer = setTimeout(() => {
-        setRun(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [forceShow]);
-
-  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
-    const { status, action, index, type } = data;
-
-    // Handle step changes
-    if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
-      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
-    }
-
-    // Handle tour completion or skip
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-      setRun(false);
-      localStorage.setItem(TOUR_STORAGE_KEY, TOUR_VERSION);
-      onComplete?.();
-    }
-  }, [onComplete]);
-
-  // Define tour steps - these target elements by data-tour attribute
-  const steps: Step[] = [
+  // Phase 1 steps - Getting Started (visible without birth data)
+  // Note: isFixed: true is required for elements in fixed-position containers (header, sidebars)
+  const phase1Steps: Step[] = [
     {
       target: '[data-tour="welcome"]',
       content: (
@@ -74,7 +54,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
           <h3 className="text-lg font-semibold">Welcome to Astrocartography</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
             Discover how planetary energies influence different locations around the world.
-            Let's take a quick tour of the key features.
+            Let's take a quick tour of the basics.
           </p>
         </div>
       ),
@@ -94,6 +74,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       ),
       placement: 'bottom',
       disableBeacon: true,
+      isFixed: true,
     },
     {
       target: '[data-tour="globe"]',
@@ -102,81 +83,11 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
           <h3 className="text-lg font-semibold">Interactive Globe</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
             This is your personal astrocartography map. Drag to rotate, scroll to zoom,
-            and click on any line or city to explore its planetary influences.
+            and click on any location to explore its planetary influences.
           </p>
         </div>
       ),
       placement: 'center',
-      disableBeacon: true,
-    },
-    {
-      target: '[data-tour="left-toolbar"]',
-      content: (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Quick Actions</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Access key features from here: AI insights, Duo mode for relationship compatibility,
-            zone analysis, export options, and more.
-          </p>
-        </div>
-      ),
-      placement: 'right',
-      disableBeacon: true,
-    },
-    {
-      target: '[data-tour="scout-button"]',
-      content: (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Scout Best Locations</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Our AI-powered Scout analyzes thousands of cities to find the best locations
-            for your goals - whether it's career, love, creativity, or personal growth.
-          </p>
-        </div>
-      ),
-      placement: 'right',
-      disableBeacon: true,
-    },
-    {
-      target: '[data-tour="ai-chat"]',
-      content: (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">AI Assistant</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Ask questions about your chart, get personalized insights about locations,
-            or learn more about how planetary lines affect different areas of life.
-          </p>
-        </div>
-      ),
-      placement: 'right',
-      disableBeacon: true,
-    },
-    {
-      target: '[data-tour="duo-mode"]',
-      content: (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Duo Mode</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Compare your chart with a partner's to find locations where your energies
-            harmonize. Great for couples, business partners, or friends planning to travel together.
-          </p>
-        </div>
-      ),
-      placement: 'right',
-      disableBeacon: true,
-    },
-    {
-      target: '[data-tour="filters"]',
-      content: (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Customize Your View</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Toggle which planetary lines and aspects are visible. Focus on specific
-            planets or line types to declutter your map.
-          </p>
-        </div>
-      ),
-      placement: 'right',
       disableBeacon: true,
     },
     {
@@ -192,15 +103,16 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       ),
       placement: 'bottom-end',
       disableBeacon: true,
+      isFixed: true,
     },
     {
       target: '[data-tour="welcome"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">You're All Set!</h3>
+          <h3 className="text-lg font-semibold">Ready to Begin!</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Start by entering your birthplace in the search bar. Click on any line
-            on the globe to learn about its meaning. Enjoy exploring your cosmic map!
+            Enter your birthplace in the search bar to see your planetary lines.
+            Once your chart is generated, we'll show you all the powerful features available!
           </p>
         </div>
       ),
@@ -209,10 +121,187 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
     },
   ];
 
-  // Filter steps based on whether birth data exists
-  const activeSteps = hasBirthData
-    ? steps.filter((_, i) => i !== 1) // Skip search bar step if they already have data
-    : steps;
+  // Phase 2 steps - Explore Features (visible after birth data is entered)
+  // Note: isFixed: true is required for elements inside fixed-position containers
+  const phase2Steps: Step[] = [
+    {
+      target: '[data-tour="welcome"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Your Chart is Ready!</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Now that you have your astrocartography map, let's explore the powerful
+            features available to help you find your best locations.
+          </p>
+        </div>
+      ),
+      placement: 'center',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="left-toolbar"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Quick Actions</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Access key features from this toolbar: AI insights, compatibility analysis,
+            zone drawing, export options, and more.
+          </p>
+        </div>
+      ),
+      placement: 'right',
+      disableBeacon: true,
+      isFixed: true,
+    },
+    {
+      target: '[data-tour="scout-button"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Scout Best Locations</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Our AI-powered Scout analyzes thousands of cities to find the best locations
+            for your goals - whether it's career, love, creativity, or personal growth.
+          </p>
+        </div>
+      ),
+      placement: 'right',
+      disableBeacon: true,
+      isFixed: true,
+    },
+    {
+      target: '[data-tour="ai-chat"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">AI Assistant</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Ask questions about your chart, get personalized insights about locations,
+            or learn more about how planetary lines affect different areas of life.
+          </p>
+        </div>
+      ),
+      placement: 'right',
+      disableBeacon: true,
+      isFixed: true,
+    },
+    {
+      target: '[data-tour="duo-mode"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Duo Mode</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Compare your chart with a partner's to find locations where your energies
+            harmonize. Great for couples, business partners, or friends planning to travel together.
+          </p>
+        </div>
+      ),
+      placement: 'right',
+      disableBeacon: true,
+      isFixed: true,
+    },
+    {
+      target: '[data-tour="filters"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Customize Your View</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Toggle which planetary lines and aspects are visible. Focus on specific
+            planets or line types to declutter your map.
+          </p>
+        </div>
+      ),
+      placement: 'right',
+      disableBeacon: true,
+      isFixed: true,
+    },
+    {
+      target: '[data-tour="welcome"]',
+      content: (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">You're All Set!</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Click on any planetary line to learn its meaning, or use Scout to discover
+            your optimal locations. Enjoy exploring your cosmic map!
+          </p>
+        </div>
+      ),
+      placement: 'center',
+      disableBeacon: true,
+    },
+  ];
+
+  // Get steps based on current phase
+  const getStepsForPhase = (phase: TourPhase): Step[] => {
+    if (phase === 'phase1') return phase1Steps;
+    if (phase === 'phase2') return phase2Steps;
+    // 'all' - combine both, skipping duplicate welcome/ending
+    return [...phase1Steps.slice(0, -1), ...phase2Steps];
+  };
+
+  // Check completion status
+  const hasCompletedPhase1 = () => localStorage.getItem(TOUR_STORAGE_KEY_PHASE1) === TOUR_VERSION;
+  const hasCompletedPhase2 = () => localStorage.getItem(TOUR_STORAGE_KEY_PHASE2) === TOUR_VERSION;
+
+  // Start tour logic
+  useEffect(() => {
+    // Force show from button
+    if (forceShow) {
+      const phase = forcePhase === 'all'
+        ? (hasBirthData ? 'phase2' : 'phase1')
+        : forcePhase;
+      setCurrentPhase(phase);
+      setStepIndex(0);
+      setRun(true);
+      return;
+    }
+
+    // Auto-show phase 1 for new users
+    if (!hasCompletedPhase1() && !hasBirthData) {
+      const timer = setTimeout(() => {
+        setCurrentPhase('phase1');
+        setStepIndex(0);
+        setRun(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [forceShow, forcePhase, hasBirthData]);
+
+  // Auto-trigger phase 2 when birth data is first added
+  useEffect(() => {
+    if (!prevHasBirthData.current && hasBirthData && !hasCompletedPhase2()) {
+      // Birth data was just added, trigger phase 2
+      const timer = setTimeout(() => {
+        setCurrentPhase('phase2');
+        setStepIndex(0);
+        setRun(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+    prevHasBirthData.current = hasBirthData;
+  }, [hasBirthData]);
+
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { status, action, index, type } = data;
+
+    // Handle step changes
+    if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+    }
+
+    // Handle tour completion or skip
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRun(false);
+      // Mark the appropriate phase as completed
+      if (currentPhase === 'phase1' || currentPhase === 'all') {
+        localStorage.setItem(TOUR_STORAGE_KEY_PHASE1, TOUR_VERSION);
+      }
+      if (currentPhase === 'phase2' || currentPhase === 'all') {
+        localStorage.setItem(TOUR_STORAGE_KEY_PHASE2, TOUR_VERSION);
+      }
+      onComplete?.();
+    }
+  }, [currentPhase, onComplete]);
+
+  const activeSteps = getStepsForPhase(currentPhase);
 
   // Custom styles matching app theme
   const joyrideStyles = {
@@ -277,7 +366,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       showSkipButton
       hideCloseButton
       scrollToFirstStep
-      disableScrollParentFix
+      disableScrolling
+      spotlightPadding={4}
       callback={handleJoyrideCallback}
       styles={joyrideStyles}
       locale={{
@@ -289,6 +379,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       }}
       floaterProps={{
         disableAnimation: false,
+        hideArrow: false,
       }}
     />
   );
@@ -298,15 +389,30 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
  * Hook to control the onboarding tour programmatically
  */
 export const useOnboardingTour = () => {
-  const resetTour = useCallback(() => {
-    localStorage.removeItem(TOUR_STORAGE_KEY);
+  const resetTour = useCallback((phase?: TourPhase) => {
+    if (!phase || phase === 'all') {
+      localStorage.removeItem(TOUR_STORAGE_KEY_PHASE1);
+      localStorage.removeItem(TOUR_STORAGE_KEY_PHASE2);
+    } else if (phase === 'phase1') {
+      localStorage.removeItem(TOUR_STORAGE_KEY_PHASE1);
+    } else if (phase === 'phase2') {
+      localStorage.removeItem(TOUR_STORAGE_KEY_PHASE2);
+    }
   }, []);
 
-  const hasCompletedTour = useCallback(() => {
-    return localStorage.getItem(TOUR_STORAGE_KEY) === TOUR_VERSION;
+  const hasCompletedPhase1 = useCallback(() => {
+    return localStorage.getItem(TOUR_STORAGE_KEY_PHASE1) === TOUR_VERSION;
   }, []);
 
-  return { resetTour, hasCompletedTour };
+  const hasCompletedPhase2 = useCallback(() => {
+    return localStorage.getItem(TOUR_STORAGE_KEY_PHASE2) === TOUR_VERSION;
+  }, []);
+
+  const hasCompletedAllPhases = useCallback(() => {
+    return hasCompletedPhase1() && hasCompletedPhase2();
+  }, [hasCompletedPhase1, hasCompletedPhase2]);
+
+  return { resetTour, hasCompletedPhase1, hasCompletedPhase2, hasCompletedAllPhases };
 };
 
 export default OnboardingTour;
