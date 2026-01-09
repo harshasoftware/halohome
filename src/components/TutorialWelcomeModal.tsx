@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sparkles, Globe, MessageSquare, MapPin } from 'lucide-react';
 import { useTutorialStore, useShowWelcomeModal, useTutorialLoading } from '@/stores/tutorialStore';
+import { analytics, AnalyticsEvent } from '@/lib/utils/eventConstants';
 
 interface TutorialWelcomeModalProps {
   open?: boolean;
@@ -94,11 +95,21 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const handleStartTutorial = () => {
+    analytics.capture(AnalyticsEvent.TUTORIAL_STARTED, {
+      source: 'welcome_modal',
+      timestamp: new Date().toISOString(),
+    });
     startTutorial();
     handleOpenChange(false);
   };
 
   const handleSkipTutorial = () => {
+    analytics.capture(AnalyticsEvent.TUTORIAL_SKIPPED, {
+      source: 'welcome_modal',
+      skipped_at_step: 0,
+      steps_viewed: 0,
+      timestamp: new Date().toISOString(),
+    });
     skipTutorial();
     handleOpenChange(false);
   };

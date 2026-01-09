@@ -26,6 +26,7 @@ import {
   useCurrentTutorialStep,
 } from '@/stores/tutorialStore';
 import { useTutorialAutoPersist } from '@/hooks/useTutorialPersistence';
+import { analytics, AnalyticsEvent } from '@/lib/utils/eventConstants';
 
 // Configuration for element availability checks
 const ELEMENT_CHECK_INTERVAL = 100; // ms between checks
@@ -509,6 +510,25 @@ export const TutorialTour: React.FC<TutorialTourProps> = ({
     [reverseStepMapping]
   );
 
+  // Track tutorial start when it becomes active and ready
+  const hasTrackedStart = useRef(false);
+  useEffect(() => {
+    if (isTutorialActive && isReady && availableSteps.length > 0 && !hasTrackedStart.current) {
+      hasTrackedStart.current = true;
+      analytics.capture(AnalyticsEvent.TUTORIAL_STARTED, {
+        source: 'tutorial_tour',
+        total_steps: availableSteps.length,
+        unavailable_steps: unavailableIndices.length,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Reset tracking flag when tutorial becomes inactive
+    if (!isTutorialActive) {
+      hasTrackedStart.current = false;
+    }
+  }, [isTutorialActive, isReady, availableSteps.length, unavailableIndices.length]);
+
   // Effect to skip tutorial if no elements are available after timeout
   useEffect(() => {
     if (isTutorialActive && isReady && availableSteps.length === 0) {
@@ -567,6 +587,18 @@ export const TutorialTour: React.FC<TutorialTourProps> = ({
     (data: CallBackProps) => {
       const { status, action, index, type } = data;
 
+      // Track step viewed when tooltip is shown
+      if (type === EVENTS.TOOLTIP) {
+        const originalStepIndex = mapFilteredToOriginalIndex(index);
+        const currentStepData = availableSteps[index];
+        analytics.capture(AnalyticsEvent.TUTORIAL_STEP_VIEWED, {
+          step_index: originalStepIndex,
+          step_title: typeof currentStepData?.title === 'string' ? currentStepData.title : 'Untitled',
+          total_steps: availableSteps.length,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       // Handle step changes
       // Note: index is relative to availableSteps, so we map back to original indices
       if (type === EVENTS.STEP_AFTER && action === ACTIONS.NEXT) {
@@ -585,17 +617,28 @@ export const TutorialTour: React.FC<TutorialTourProps> = ({
 
       // Handle tour completion
       if (status === STATUS.FINISHED) {
+        analytics.capture(AnalyticsEvent.TUTORIAL_COMPLETED, {
+          steps_viewed: index + 1,
+          total_steps: availableSteps.length,
+          timestamp: new Date().toISOString(),
+        });
         completeTutorial();
         onComplete?.();
       }
 
       // Handle tour skip
       if (status === STATUS.SKIPPED) {
+        analytics.capture(AnalyticsEvent.TUTORIAL_SKIPPED, {
+          skipped_at_step: mapFilteredToOriginalIndex(index),
+          steps_viewed: index + 1,
+          total_steps: availableSteps.length,
+          timestamp: new Date().toISOString(),
+        });
         skipTutorial();
         onSkip?.();
       }
     },
-    [completeTutorial, skipTutorial, setTutorialStep, onComplete, onSkip, onStepChange, mapFilteredToOriginalIndex]
+    [completeTutorial, skipTutorial, setTutorialStep, onComplete, onSkip, onStepChange, mapFilteredToOriginalIndex, availableSteps]
   );
 
   // Don't render if tutorial is not active or elements aren't ready
