@@ -195,11 +195,12 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
-      {/* AI Guide */}
+      {/* Astro Guide */}
       {hasBirthData && onToggleAIChat && (
         <ActionButton
           icon={<Bot className="w-4 h-4" />}
-          label="AI Guide"
+          label={<>Astro Guide<span className="text-[10px] text-slate-400 dark:text-zinc-500 font-normal ml-1.5">AI</span></>}
+          tooltip="Astro Guide"
           onClick={onToggleAIChat}
           isExpanded={isExpanded}
           isActive={isAIChatOpen}
@@ -586,7 +587,8 @@ const FavoritesMenuButton: React.FC<FavoritesMenuButtonProps> = ({
 
 interface ActionButtonProps {
   icon: React.ReactNode;
-  label: string;
+  label: React.ReactNode;
+  tooltip?: string;
   onClick: () => void;
   isExpanded: boolean;
   isActive?: boolean;
@@ -599,6 +601,7 @@ interface ActionButtonProps {
 const ActionButton: React.FC<ActionButtonProps> = ({
   icon,
   label,
+  tooltip,
   onClick,
   isExpanded,
   isActive,
@@ -642,7 +645,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
             : defaultClasses,
         isExpanded ? 'justify-start' : 'justify-center'
       )}
-      title={!isExpanded ? label : undefined}
+      title={!isExpanded ? tooltip : undefined}
     >
       <span className={cn(isActive && colorClasses[activeColor].icon)}>
         {icon}
