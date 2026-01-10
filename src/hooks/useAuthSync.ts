@@ -29,7 +29,32 @@ export function useAuthSync() {
           setPasswordRecovery(true);
         }
 
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Check if we need to merge anonymous user data after OAuth sign-in
+          const anonymousUserId = localStorage.getItem('anonymous_user_id_for_merge');
+          if (anonymousUserId && anonymousUserId !== session.user.id && !session.user.is_anonymous) {
+            console.log('[Auth] Detected sign-in after anonymous session, merging data...');
+            console.log('[Auth] Anonymous user ID:', anonymousUserId);
+            console.log('[Auth] New user ID:', session.user.id);
+
+            // Call the server-side function to merge anonymous user data
+            supabase.rpc('migrate_anonymous_user_data', {
+              old_user_id: anonymousUserId,
+              new_user_id: session.user.id,
+            }).then(({ error }) => {
+              if (error) {
+                console.error('[Auth] Failed to migrate anonymous user data:', error.message);
+              } else {
+                console.log('[Auth] Successfully migrated anonymous user data');
+              }
+              // Clean up the stored ID regardless of success/failure
+              localStorage.removeItem('anonymous_user_id_for_merge');
+            });
+          } else if (anonymousUserId) {
+            // Clean up if IDs match or user is still anonymous
+            localStorage.removeItem('anonymous_user_id_for_merge');
+          }
+
           // Fire and forget reconcile
           supabase.functions.invoke('reconcile-payments').catch(err => {
             console.error("Failed to reconcile payments on sign-in:", err.message);
@@ -107,24 +132,17 @@ export function useAuthActions() {
   };
 
   const signInWithGoogle = async (): Promise<{ error: AuthError | null }> => {
-    // If current user is anonymous, try to link Google identity to preserve their data
-    // If linking fails (e.g., feature not enabled), fall back to regular OAuth
+    // Store anonymous user ID before OAuth redirect so we can merge their data
+    // after they sign in with an existing Google account
     if (user?.is_anonymous) {
-      console.log('[Auth] Attempting to link Google identity to anonymous user...');
-      const { error: linkError } = await supabase.auth.linkIdentity({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/guest` },
-      });
-
-      if (linkError) {
-        console.warn('[Auth] Link identity failed, falling back to OAuth:', linkError.message);
-        // Fall through to regular OAuth - data will need manual migration
-      } else {
-        return { error: null };
-      }
+      localStorage.setItem('anonymous_user_id_for_merge', user.id);
+      console.log('[Auth] Stored anonymous user ID for potential data merge:', user.id);
     }
 
-    // Regular OAuth sign-in (also used as fallback when linkIdentity fails)
+    // Always use regular OAuth sign-in
+    // Note: linkIdentity was removed because it causes redirect errors when the
+    // Google account is already linked to another user (identity_already_exists)
+    // and the error redirect happens before we can fall back to regular OAuth.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/guest` },

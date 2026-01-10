@@ -220,7 +220,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      migrate_anonymous_user_data: {
+        Args: {
+          old_user_id: string
+          new_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
