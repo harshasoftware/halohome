@@ -95,12 +95,12 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
                 <div className="md:hidden flex items-center gap-3">
                     <button
                         onClick={onInstall}
-                        className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 text-black hover:bg-black/10 rounded-full transition-colors"
                         aria-label="Install App"
                     >
                         <Download size={20} />
                     </button>
-                    <button className="text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                    <button className="text-black" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                         {mobileMenuOpen ? <X /> : <Menu />}
                     </button>
                 </div>

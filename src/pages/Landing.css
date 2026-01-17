@@ -63,6 +63,16 @@ body {
     overflow-y: visible;
     background: var(--bg-deep);
     min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Ensure main element is full width on mobile */
+@media (max-width: 768px) {
+    .page-root > main {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
 }
 
 /* Background Noise Texture - Removed for clean look */
@@ -158,6 +168,53 @@ body {
     justify-content: center;
     position: relative;
     overflow: hidden;
+}
+
+/* Mobile responsive padding for section blocks */
+@media (max-width: 768px) {
+    .section-block {
+        padding: 60px 16px;
+        min-height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-block {
+        padding: 40px 12px;
+    }
+}
+
+/* Ensure color block sections maintain full width on mobile */
+@media (max-width: 768px) {
+    .bg-section-hero,
+    .bg-section-beige,
+    .bg-section-pink,
+    .bg-section-green,
+    .bg-section-white,
+    .bg-section-gray,
+    .bg-section-orange,
+    .bg-section-black {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        box-sizing: border-box;
+    }
+    
+    /* Ensure section-block maintains full width within colored sections */
+    .bg-section-hero .section-block,
+    .bg-section-beige .section-block,
+    .bg-section-pink .section-block,
+    .bg-section-green .section-block,
+    .bg-section-white .section-block,
+    .bg-section-gray .section-block,
+    .bg-section-orange .section-block,
+    .bg-section-black .section-block {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
 }
 
 /* Text overrides for colored sections - Ensure visibility */
@@ -499,22 +556,46 @@ body {
     .hero-left {
         align-items: center;
         padding-right: 0;
+        width: 100%;
     }
 
     .hero-content-stack {
         align-items: center;
         text-align: center;
+        width: 100%;
+        max-width: 100%;
     }
 
     .hero-text-content {
         align-items: center;
+        text-align: center;
         min-height: 180px; /* Fixed height for mobile */
+        width: 100%;
     }
 
     .hero-title {
         font-size: clamp(2rem, 8vw, 3rem);
         min-height: calc(clamp(2rem, 8vw, 3rem) * 3.3);
         white-space: pre-line;
+        text-align: center;
+        justify-content: center; /* Center flex items */
+        align-items: center;
+        width: 100%;
+    }
+
+    .hero-title span {
+        text-align: center;
+        display: block;
+        width: 100%;
+        text-align: center; /* Ensure text inside span is centered */
+    }
+
+    .hero-subtitle {
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .hero-right {
@@ -546,12 +627,37 @@ body {
 }
 
 @media (max-width: 768px) {
+    .hero-wrapper {
+        padding: 100px 16px 40px;
+    }
+
     .hero-content-stack {
         gap: 1.5rem;
+        align-items: center;
+        text-align: center;
     }
 
     .hero-text-content {
         gap: 1rem;
+        align-items: center;
+        text-align: center;
+    }
+
+    .hero-title {
+        text-align: center;
+        justify-content: center; /* Center flex items horizontally */
+        align-items: center;
+    }
+
+    .hero-title span {
+        text-align: center;
+        display: block;
+        width: 100%;
+    }
+
+    .hero-subtitle {
+        text-align: center;
+        max-width: 100%;
     }
 
     /* On mobile, don't animate search - keep it in place */
@@ -578,6 +684,31 @@ body {
     }
 }
 
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .hero-wrapper {
+        padding: 80px 12px 32px;
+    }
+
+    .hero-title {
+        font-size: clamp(1.75rem, 8vw, 2.5rem);
+        text-align: center;
+        justify-content: center; /* Center flex items */
+        align-items: center;
+    }
+
+    .hero-title span {
+        text-align: center;
+        display: block;
+        width: 100%;
+    }
+
+    .hero-subtitle {
+        font-size: clamp(0.95rem, 3vw, 1.1rem);
+        text-align: center;
+    }
+}
+
 .hero-title {
     font-size: clamp(2.5rem, 6vw, 4.5rem);
     line-height: 1.1;
@@ -587,6 +718,7 @@ body {
     min-height: calc(clamp(2.5rem, 6vw, 4.5rem) * 3.3);
     display: flex;
     align-items: center;
+    justify-content: flex-start; /* Default: left align on desktop */
     width: 100%;
     white-space: pre-line; /* Respect \n but prevent extra wrapping */
 }
@@ -649,6 +781,62 @@ body {
     margin-bottom: 16px;
 }
 
+/* Mobile responsive for Features section */
+@media (max-width: 768px) {
+    .section-wrapper {
+        padding: 60px 16px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .section-header {
+        margin-bottom: 40px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .section-title {
+        font-size: clamp(2rem, 8vw, 2.5rem);
+        text-align: center;
+        width: 100%;
+    }
+
+    .section-header p {
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-wrapper {
+        padding: 40px 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .section-header {
+        margin-bottom: 32px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .section-title {
+        font-size: clamp(1.75rem, 8vw, 2.25rem);
+        text-align: center;
+    }
+
+    .section-header p {
+        font-size: 0.95rem;
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
 .bento-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -662,6 +850,9 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .bento-col-4 {
@@ -681,11 +872,116 @@ body {
 }
 
 @media (max-width: 768px) {
+    .bento-grid {
+        gap: 16px;
+        grid-auto-rows: minmax(250px, auto);
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
 
     .bento-col-4,
     .bento-col-8,
     .bento-col-6 {
         grid-column: span 12;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .bento-item {
+        padding: 24px;
+        width: 100%;
+        max-width: 100%;
+        min-height: auto;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 16px;
+    }
+
+    .bento-item > div {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .bento-title {
+        font-size: 1.25rem;
+        text-align: left;
+        width: 100%;
+    }
+
+    .bento-desc {
+        font-size: 0.95rem;
+        text-align: left;
+        width: 100%;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+
+    /* Adjust demo positioning on mobile */
+    .bento-demo {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: 80px;
+        height: 80px;
+        margin-top: 16px;
+        opacity: 0.6;
+        align-self: flex-end;
+    }
+
+    .bento-item:hover .bento-demo {
+        opacity: 0.8;
+    }
+}
+
+@media (max-width: 480px) {
+    .bento-grid {
+        gap: 12px;
+        grid-auto-rows: minmax(200px, auto);
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .bento-item {
+        padding: 20px;
+        width: 100%;
+        max-width: 100%;
+        gap: 12px;
+    }
+
+    .bento-item > div {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .bento-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 12px;
+    }
+
+    .bento-title {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .bento-desc {
+        font-size: 0.875rem;
+        text-align: left;
+        width: 100%;
+        max-width: 100%;
+        line-height: 1.5;
+        word-wrap: break-word;
+    }
+
+    /* Smaller demo on very small screens */
+    .bento-demo {
+        width: 60px;
+        height: 60px;
+        margin-top: 12px;
     }
 }
 
@@ -1799,10 +2095,20 @@ body {
     z-index: 1;
 }
 
-/* Hide on mobile - globe is too heavy */
+/* Mobile responsive adjustments for globe demo */
 @media (max-width: 1024px) {
     .globe-demo-section {
-        display: none;
+        padding: 40px 16px 60px;
+    }
+
+    .globe-demo-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .globe-demo-content {
+        max-width: 100%;
+        text-align: center;
     }
 }
 
@@ -2043,10 +2349,20 @@ body {
     z-index: 1;
 }
 
-/* Hide on mobile */
+/* Mobile responsive adjustments for planetary demo */
 @media (max-width: 1024px) {
     .planetary-demo-section {
-        display: none;
+        padding: 40px 16px 60px;
+    }
+
+    .planetary-demo-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .planetary-demo-content {
+        max-width: 100%;
+        text-align: center;
     }
 }
 
@@ -3110,7 +3426,17 @@ body {
 
 @media (max-width: 1024px) {
     .ai-demo-section {
-        display: none;
+        padding: 40px 16px 60px;
+    }
+
+    .ai-demo-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .ai-demo-content {
+        max-width: 100%;
+        text-align: center;
     }
 }
 
@@ -3449,7 +3775,17 @@ body {
 
 @media (max-width: 1024px) {
     .duo-demo-section {
-        display: none;
+        padding: 40px 16px 60px;
+    }
+
+    .duo-demo-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .duo-demo-content {
+        max-width: 100%;
+        text-align: center;
     }
 }
 
@@ -3673,7 +4009,17 @@ body {
 
 @media (max-width: 1024px) {
     .scout-demo-section {
-        display: none;
+        padding: 40px 16px 60px;
+    }
+
+    .scout-demo-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .scout-demo-content {
+        max-width: 100%;
+        text-align: center;
     }
 }
 
