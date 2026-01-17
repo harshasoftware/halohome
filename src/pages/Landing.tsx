@@ -414,11 +414,18 @@ const Hero = memo(() => {
                     </div>
                 </div>
 
-                {/* Right side - 3D Spline embed (placeholder until scene is ready) */}
+                {/* Right side - Hero houses image */}
                 <div className="hero-right">
-                    {/* <div className="hero-spline-wrapper">
-                        <Spline scene="https://prod.spline.design/YOUR_SCENE_ID/scene.splinecode" />
-                    </div> */}
+                    <div className="hero-image-wrapper">
+                        <picture>
+                            <source srcSet="/images/hero-houses.webp" type="image/webp" />
+                            <img 
+                                src="/images/hero-houses.png" 
+                                alt="Modern and traditional houses - 3D isometric view"
+                                className="hero-houses-image"
+                            />
+                        </picture>
+                    </div>
                 </div>
             </div>
         </section>

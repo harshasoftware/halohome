@@ -526,26 +526,41 @@ body {
     min-height: 400px;
 }
 
-/* Hero Spline 3D embed wrapper */
-.hero-spline-wrapper {
+/* Hero image wrapper */
+.hero-image-wrapper {
     width: 100%;
-    height: 500px;
     max-width: 600px;
-    border-radius: 24px;
-    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
 }
 
-.hero-spline-wrapper iframe {
+.hero-houses-image {
     width: 100%;
-    height: 100%;
-    border: none;
-    pointer-events: auto;
+    height: auto;
+    max-width: 600px;
+    object-fit: contain;
+    animation: heroFadeUp 0.8s ease-out 0.3s both;
 }
 
 @media (max-width: 1280px) {
-    .hero-spline-wrapper {
-        height: 400px;
+    .hero-image-wrapper {
+        max-width: 500px;
+    }
+    
+    .hero-houses-image {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .hero-image-wrapper {
+        max-width: 400px;
+    }
+    
+    .hero-houses-image {
+        max-width: 400px;
     }
 }
 
@@ -667,7 +682,7 @@ body {
     }
 
     .hero-right {
-        display: none; /* Hide on mobile until 3D content is added */
+        display: none; /* Hide on mobile for cleaner layout */
     }
 }
 
