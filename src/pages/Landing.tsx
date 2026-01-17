@@ -100,7 +100,13 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
                         onClick={() => {
                             const waitlistSection = document.querySelector('.waitlist-section');
                             if (waitlistSection) {
-                                waitlistSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                const navHeight = 80; // Approximate navbar height
+                                const elementPosition = waitlistSection.getBoundingClientRect().top;
+                                const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+                                window.scrollTo({
+                                    top: offsetPosition,
+                                    behavior: 'smooth'
+                                });
                             }
                         }}
                         className="p-2 text-black hover:bg-black/10 rounded-full transition-colors"
@@ -397,6 +403,18 @@ const Hero = memo(() => {
 
     return (
         <section className={`hero-wrapper ${isSearchFocused ? 'search-focused' : ''}`}>
+            {/* Mobile background image - translucent behind entire hero section */}
+            <div className="hero-mobile-bg-image">
+                <picture>
+                    <source srcSet="/images/hero-houses.webp" type="image/webp" />
+                    <img 
+                        src="/images/hero-houses.png" 
+                        alt=""
+                        className="hero-houses-bg"
+                        aria-hidden="true"
+                    />
+                </picture>
+            </div>
             <div className="hero-split-container">
                 {/* Left side - Content */}
                 <div className="hero-left">
@@ -1073,6 +1091,33 @@ export default function Landing() {
         }
     }, []);
 
+    // Handle hash navigation (e.g., /#waitlist)
+    useEffect(() => {
+        const handleHashNavigation = () => {
+            if (window.location.hash === '#waitlist') {
+                setTimeout(() => {
+                    const waitlistSection = document.querySelector('.waitlist-section');
+                    if (waitlistSection) {
+                        const navHeight = 80;
+                        const elementPosition = waitlistSection.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 100);
+            }
+        };
+
+        // Handle on mount
+        handleHashNavigation();
+
+        // Handle hash change
+        window.addEventListener('hashchange', handleHashNavigation);
+        return () => window.removeEventListener('hashchange', handleHashNavigation);
+    }, []);
+
     // Prewarm scout resources (WASM + cities data) in background when browser is idle
     // This ensures resources are ready by the time user navigates to globe/project pages
     useEffect(() => {
@@ -1166,7 +1211,7 @@ export default function Landing() {
                 </div>
 
                 {/* Mobile App Waitlist - Right after scan demo */}
-                <div className="bg-section-white section-block waitlist-section">
+                <div id="waitlist" className="bg-section-white section-block waitlist-section">
                     <MobileAppWaitlist />
                 </div>
 

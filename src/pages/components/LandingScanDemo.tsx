@@ -290,7 +290,23 @@ export const LandingScanDemo = memo(() => {
           </div>
 
           <div className="scan-cta-group">
-            <a href="/guest" className="demo-cta scan-cta">
+            <a 
+              href="#waitlist" 
+              className="demo-cta scan-cta"
+              onClick={(e) => {
+                e.preventDefault();
+                const waitlistSection = document.querySelector('.waitlist-section');
+                if (waitlistSection) {
+                  const navHeight = 80; // Approximate navbar height
+                  const elementPosition = waitlistSection.getBoundingClientRect().top;
+                  const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+                  window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                  });
+                }
+              }}
+            >
               Join Waitlist
               <span className="demo-cta-arrow">→</span>
             </a>

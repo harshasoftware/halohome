@@ -7,7 +7,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Search, MapPin, Building2, Compass, Target, Sparkles,
   ArrowRight, Check, Smartphone, Scan, Box, Grid3X3,
@@ -156,9 +156,29 @@ const SCAN_APP_STEPS = [
 // Main Component
 // ============================================================================
 const MethodologyBlog: React.FC = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleWaitlistClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    navigate('/');
+    // Wait for navigation to complete, then scroll to waitlist section
+    setTimeout(() => {
+      const waitlistSection = document.querySelector('.waitlist-section');
+      if (waitlistSection) {
+        const navHeight = 80; // Approximate navbar height
+        const elementPosition = waitlistSection.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 300); // Increased timeout to ensure page has loaded
+  };
 
   return (
     <div className="page-root">
@@ -391,8 +411,9 @@ const MethodologyBlog: React.FC = () => {
                     Try Scouting
                     <ArrowRight className="w-5 h-5" />
                   </Link>
-                  <Link
-                    to="/#waitlist"
+                  <a
+                    href="/"
+                    onClick={handleWaitlistClick}
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold transition-all border-2"
                     style={{ 
                       borderColor: 'var(--text-primary, #18181B)', 
@@ -402,7 +423,7 @@ const MethodologyBlog: React.FC = () => {
                   >
                     <Smartphone className="w-5 h-5" />
                     Join Scan App Waitlist
-                  </Link>
+                  </a>
                 </div>
               </div>
             </ScrollReveal>

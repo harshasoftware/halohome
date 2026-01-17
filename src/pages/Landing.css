@@ -493,7 +493,7 @@ body {
     padding: 120px 24px 40px; /* Reduced padding to fit content better */
     z-index: 1;
     background-color: #FFFFFF; /* Clean White */
-    overflow: visible; /* Allow content to be visible */
+    overflow: hidden; /* Changed to hidden to contain background image */
     box-sizing: border-box;
 }
 
@@ -516,6 +516,14 @@ body {
     min-width: 0; /* Prevent flex item overflow */
     overflow: visible; /* Allow content to be visible */
     box-sizing: border-box;
+    position: relative; /* For absolute positioning of background image on mobile */
+}
+
+/* Hide mobile background image on desktop */
+@media (min-width: 1025px) {
+    .hero-mobile-bg-image {
+        display: none;
+    }
 }
 
 .hero-right {
@@ -615,6 +623,10 @@ body {
 
 /* Mobile: stack vertically and center align */
 @media (max-width: 1024px) {
+    .hero-wrapper {
+        background-color: transparent; /* Remove white background on mobile to show image */
+    }
+
     .hero-split-container {
         flex-direction: column;
         text-align: center;
@@ -684,6 +696,40 @@ body {
     .hero-right {
         display: none; /* Hide on mobile for cleaner layout */
     }
+
+    /* Mobile background image - translucent behind entire hero section */
+    .hero-mobile-bg-image {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.2; /* Slightly more visible since white background is removed */
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .hero-houses-bg {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+        transform: scale(1.1); /* Slightly larger for better coverage */
+    }
+
+    .hero-split-container {
+        position: relative;
+        z-index: 1; /* Ensure content is above background image */
+    }
+
+    .hero-content-stack {
+        position: relative;
+        z-index: 1; /* Ensure content is above background image */
+    }
 }
 
 .hero-text-content.hero-text-hidden {
@@ -718,8 +764,17 @@ body {
         min-height: 90vh;
         max-height: 90vh;
         padding: 80px 16px 30px; /* Reduced padding for mobile */
-        overflow: visible;
+        overflow: hidden; /* Contain background image */
         box-sizing: border-box;
+        position: relative; /* For absolute positioning of background image */
+    }
+
+    .hero-mobile-bg-image {
+        opacity: 0.18; /* Slightly more visible on smaller screens */
+    }
+
+    .hero-houses-bg {
+        transform: scale(1.2); /* Larger scale for better coverage on mobile */
     }
 
     .hero-content-stack {
@@ -791,8 +846,17 @@ body {
         min-height: 90vh;
         max-height: 90vh;
         padding: 70px 12px 25px; /* Further reduced padding for small screens */
-        overflow: visible;
+        overflow: hidden; /* Contain background image */
         box-sizing: border-box;
+        position: relative; /* For absolute positioning of background image */
+    }
+
+    .hero-mobile-bg-image {
+        opacity: 0.15; /* More visible on very small screens */
+    }
+
+    .hero-houses-bg {
+        transform: scale(1.3); /* Larger scale for very small screens */
     }
 
     .hero-content-stack {
