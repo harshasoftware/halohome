@@ -1,301 +1,154 @@
 /**
- * MethodologyBlog - Technical methodology and precision explanation
+ * MethodologyBlog - Vastu methodology and process explanation
  *
- * Visual overview of the scientific foundation behind HaloHome:
- * - Ephemeris data source (NASA JPL DE431)
- * - Calculation accuracy (True Node, ΔT, spherical geodesy)
- * - Dual zodiac systems (Tropical & Sidereal)
- * - 8 house systems
- * - Cardinal angles (MC, IC, ASC, DSC)
- * - Orb of influence visualization
- * - Celestial bodies tracked
+ * Explains the two main processes:
+ * 1. Scouting - Property/ZIP code analysis workflow
+ * 2. Scan App - LiDAR mobile scanning and 3D layout generation
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Telescope, Target, Globe, Compass, Sun, Moon,
-  ChevronRight, Sparkles, ArrowUpRight, CircleDot,
-  Orbit, Timer, Navigation, TrendingUp, Star
+  Search, MapPin, Building2, Compass, Target, Sparkles,
+  ArrowRight, Check, Smartphone, Scan, Box, Grid3X3,
+  Navigation, TrendingUp, Home, Zap, Globe, Layers
 } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import Footer from '@/components/Footer';
-import BlogNavbar from '@/components/BlogNavbar';
 import { ScrollReveal } from '@/components/landing/ScrollReveal';
 import { SpotlightCard } from '@/components/landing/SpotlightCard';
-import { MysticalParticles } from '@/components/landing/MysticalParticles';
 import './MethodologyBlog.css';
-import './ScoutAlgorithmBlog.css';
 import './Landing.css';
 
 // ============================================================================
-// Orb of Influence Interactive Chart
+// Process Steps Data
 // ============================================================================
-interface OrbChartProps {
-  className?: string;
-}
 
-const OrbInfluenceChart: React.FC<OrbChartProps> = ({ className }) => {
-  const [hoveredDistance, setHoveredDistance] = useState<number | null>(null);
-  const [activePoint, setActivePoint] = useState<number | null>(null);
-
-  // Gaussian decay function: intensity = e^(-(d/σ)²)
-  const getIntensity = (distance: number): number => {
-    const sigma = 300; // km - controls width of influence
-    return Math.exp(-Math.pow(distance / sigma, 2)) * 100;
-  };
-
-  // Generate curve points
-  const points: { x: number; y: number; distance: number }[] = [];
-  for (let d = 0; d <= 800; d += 10) {
-    const intensity = getIntensity(d);
-    const x = 50 + (d / 800) * 500; // Map 0-800km to 50-550px
-    const y = 250 - (intensity / 100) * 200; // Map 0-100% to 250-50px
-    points.push({ x, y, distance: d });
-  }
-
-  // Create SVG path
-  const pathD = points.map((p, i) =>
-    `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-  ).join(' ');
-
-  // Key distance markers
-  const markers = [
-    { distance: 0, label: 'On Line', color: '#a855f7' },
-    { distance: 100, label: '100km', color: '#8b5cf6' },
-    { distance: 300, label: '300km', color: '#6366f1' },
-    { distance: 500, label: '500km', color: '#3b82f6' },
-  ];
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const svg = e.currentTarget;
-    const rect = svg.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const distance = Math.max(0, Math.min(800, ((x - 50) / 500) * 800));
-    setHoveredDistance(Math.round(distance));
-  }, []);
-
-  return (
-    <div className={`orb-chart-container ${className || ''}`}>
-      <svg
-        viewBox="0 0 600 300"
-        className="orb-chart-svg"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoveredDistance(null)}
-      >
-        {/* Gradient definition */}
-        <defs>
-          <linearGradient id="orbGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#6366f1" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
-          </linearGradient>
-          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#a855f7" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
-        </defs>
-
-        {/* Grid lines */}
-        <g className="orb-grid">
-          {[25, 50, 75, 100].map((pct) => (
-            <line
-              key={pct}
-              x1="50"
-              y1={250 - (pct / 100) * 200}
-              x2="550"
-              y2={250 - (pct / 100) * 200}
-              stroke="rgba(255,255,255,0.05)"
-              strokeDasharray="4 4"
-            />
-          ))}
-          {[0, 200, 400, 600, 800].map((km) => (
-            <line
-              key={km}
-              x1={50 + (km / 800) * 500}
-              y1="50"
-              x2={50 + (km / 800) * 500}
-              y2="250"
-              stroke="rgba(255,255,255,0.05)"
-              strokeDasharray="4 4"
-            />
-          ))}
-        </g>
-
-        {/* Filled area under curve */}
-        <path
-          d={`${pathD} L 550 250 L 50 250 Z`}
-          fill="url(#orbGradient)"
-          className="orb-area"
-        />
-
-        {/* Main curve */}
-        <path
-          d={pathD}
-          fill="none"
-          stroke="url(#lineGradient)"
-          strokeWidth="3"
-          className="orb-curve"
-        />
-
-        {/* Marker points */}
-        {markers.map((m) => {
-          const intensity = getIntensity(m.distance);
-          const x = 50 + (m.distance / 800) * 500;
-          const y = 250 - (intensity / 100) * 200;
-          const isActive = activePoint === m.distance;
-
-          return (
-            <g key={m.distance}>
-              <circle
-                cx={x}
-                cy={y}
-                r={isActive ? 10 : 7}
-                fill={m.color}
-                className="orb-marker"
-                onMouseEnter={() => setActivePoint(m.distance)}
-                onMouseLeave={() => setActivePoint(null)}
-                style={{ cursor: 'pointer' }}
-              />
-              {isActive && (
-                <text
-                  x={x}
-                  y={y - 20}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="12"
-                  fontWeight="500"
-                >
-                  {Math.round(intensity)}% intensity
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Hover indicator */}
-        {hoveredDistance !== null && (
-          <g>
-            <line
-              x1={50 + (hoveredDistance / 800) * 500}
-              y1="50"
-              x2={50 + (hoveredDistance / 800) * 500}
-              y2="250"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-            />
-            <circle
-              cx={50 + (hoveredDistance / 800) * 500}
-              cy={250 - (getIntensity(hoveredDistance) / 100) * 200}
-              r="5"
-              fill="white"
-            />
-          </g>
-        )}
-
-        {/* Axis labels */}
-        <text x="300" y="285" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12">
-          Distance from Planetary Line (km)
-        </text>
-        <text x="20" y="150" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="12" transform="rotate(-90, 20, 150)">
-          Influence Intensity
-        </text>
-
-        {/* Distance labels */}
-        {[0, 200, 400, 600, 800].map((km) => (
-          <text
-            key={km}
-            x={50 + (km / 800) * 500}
-            y="268"
-            textAnchor="middle"
-            fill="rgba(255,255,255,0.4)"
-            fontSize="10"
-          >
-            {km}
-          </text>
-        ))}
-      </svg>
-
-      {/* Live value display */}
-      {hoveredDistance !== null && (
-        <div className="orb-tooltip">
-          <span className="orb-tooltip-distance">{hoveredDistance} km</span>
-          <span className="orb-tooltip-intensity">
-            {Math.round(getIntensity(hoveredDistance))}% influence
-          </span>
-        </div>
-      )}
-
-      {/* Legend */}
-      <div className="orb-legend">
-        {markers.map((m) => (
-          <div key={m.distance} className="orb-legend-item">
-            <span className="orb-legend-dot" style={{ background: m.color }} />
-            <span>{m.label}: {Math.round(getIntensity(m.distance))}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// Data Constants
-// ============================================================================
-const CELESTIAL_BODIES = [
-  { name: 'Sun', symbol: '☉', type: 'Luminary', color: '#fbbf24' },
-  { name: 'Moon', symbol: '☽', type: 'Luminary', color: '#e2e8f0' },
-  { name: 'Mercury', symbol: '☿', type: 'Personal', color: '#94a3b8' },
-  { name: 'Venus', symbol: '♀', type: 'Personal', color: '#f472b6' },
-  { name: 'Mars', symbol: '♂', type: 'Personal', color: '#ef4444' },
-  { name: 'Jupiter', symbol: '♃', type: 'Social', color: '#f97316' },
-  { name: 'Saturn', symbol: '♄', type: 'Social', color: '#78716c' },
-  { name: 'Uranus', symbol: '♅', type: 'Transpersonal', color: '#22d3ee' },
-  { name: 'Neptune', symbol: '♆', type: 'Transpersonal', color: '#6366f1' },
-  { name: 'Pluto', symbol: '♇', type: 'Transpersonal', color: '#a855f7' },
-  { name: 'Chiron', symbol: '⚷', type: 'Extended', color: '#84cc16' },
-  { name: 'North Node', symbol: '☊', type: 'Extended', color: '#64748b' },
-];
-
-const HOUSE_SYSTEMS = [
-  { name: 'Placidus', desc: 'Time-based, most popular in modern Western astrology' },
-  { name: 'Whole Sign', desc: 'Ancient system where each sign equals one house' },
-  { name: 'Koch', desc: 'Time-based, uses birthplace latitude differently' },
-  { name: 'Equal', desc: 'Each house spans exactly 30° from Ascendant' },
-  { name: 'Campanus', desc: 'Space-based division of the prime vertical' },
-  { name: 'Regiomontanus', desc: 'Space-based division of the celestial equator' },
-  { name: 'Porphyry', desc: 'Trisects the arcs between angles' },
-  { name: 'Morinus', desc: 'Divides the equator independently' },
-];
-
-const CARDINAL_ANGLES = [
+const SCOUTING_STEPS = [
   {
-    name: 'MC',
-    fullName: 'Midheaven',
-    desc: 'Career, public image, life direction',
+    step: 1,
+    title: 'Search by Address or ZIP Code',
+    icon: <Search className="w-6 h-6" />,
+    description: 'Enter a property address or ZIP code to begin analysis. Our system uses satellite imagery and building footprint data to identify properties.',
+    details: [
+      'ZIP code searches analyze all properties in the area',
+      'Address searches focus on a specific property',
+      'Automatic boundary detection from satellite data',
+    ],
+  },
+  {
+    step: 2,
+    title: 'Boundary Detection & Orientation',
+    icon: <Compass className="w-6 h-6" />,
+    description: 'We detect the property boundary and calculate its orientation relative to true north. This is critical for accurate Vastu zone mapping.',
+    details: [
+      'Satellite imagery analysis for boundary detection',
+      'Orientation calculation in degrees from north',
+      'Shape analysis (rectangular, irregular, etc.)',
+    ],
+  },
+  {
+    step: 3,
+    title: '8 Direction Zone Analysis',
+    icon: <Grid3X3 className="w-6 h-6" />,
+    description: 'Each property is divided into 8 Vastu zones (N, NE, E, SE, S, SW, W, NW) plus the center. Each zone is analyzed for its element, deity, and ideal uses.',
+    details: [
+      'Zone scoring based on orientation alignment',
+      'Element balance calculation (Water, Fire, Earth, Air, Space)',
+      'Ideal use recommendations per zone',
+    ],
+  },
+  {
+    step: 4,
+    title: 'Entrance Detection',
+    icon: <Navigation className="w-6 h-6" />,
+    description: 'We automatically detect the main entrance direction using building footprint analysis and road access patterns.',
+    details: [
+      'AI-powered entrance detection from satellite data',
+      'Entrance direction scoring (Northeast is most auspicious)',
+      'Pada (sub-zone) analysis within entrance direction',
+    ],
+  },
+  {
+    step: 5,
+    title: 'Harmony Score Calculation',
     icon: <TrendingUp className="w-6 h-6" />,
-    color: '#fbbf24',
+    description: 'A comprehensive harmony score (0-100) is calculated based on zone alignment, entrance direction, property shape, and element balance.',
+    details: [
+      'Weighted scoring across multiple factors',
+      'Comparison with nearby properties',
+      'Detailed breakdown by category',
+    ],
   },
   {
-    name: 'IC',
-    fullName: 'Imum Coeli',
-    desc: 'Roots, home, inner foundation',
-    icon: <Navigation className="w-6 h-6" style={{ transform: 'rotate(180deg)' }} />,
-    color: '#6366f1',
+    step: 6,
+    title: 'Remedies & Recommendations',
+    icon: <Sparkles className="w-6 h-6" />,
+    description: 'Personalized remedies and recommendations are generated to enhance the property\'s harmony score.',
+    details: [
+      'Prioritized action items',
+      'Zone-specific recommendations',
+      'Element balancing suggestions',
+    ],
+  },
+];
+
+const SCAN_APP_STEPS = [
+  {
+    step: 1,
+    title: 'LiDAR Scanning',
+    icon: <Scan className="w-6 h-6" />,
+    description: 'Use your iPhone Pro\'s LiDAR sensor to scan your interior space. Walk around the room while the app captures 3D point cloud data.',
+    details: [
+      'Real-time point cloud generation',
+      'Progress tracking during scan',
+      'Automatic room boundary detection',
+    ],
   },
   {
-    name: 'ASC',
-    fullName: 'Ascendant',
-    desc: 'Self-expression, vitality, new beginnings',
-    icon: <Sun className="w-6 h-6" />,
-    color: '#f97316',
+    step: 2,
+    title: '3D Model Processing',
+    icon: <Box className="w-6 h-6" />,
+    description: 'Our AI processes the LiDAR scan data to create an accurate 3D model of your interior with precise measurements and room layout.',
+    details: [
+      'Point cloud to mesh conversion',
+      'Wall, floor, and ceiling detection',
+      'Furniture and fixture identification',
+    ],
   },
   {
-    name: 'DSC',
-    fullName: 'Descendant',
-    desc: 'Relationships, partnerships, others',
-    icon: <Moon className="w-6 h-6" />,
-    color: '#a855f7',
+    step: 3,
+    title: 'Vastu Zone Mapping',
+    icon: <Grid3X3 className="w-6 h-6" />,
+    description: 'The 3D model is overlaid with Vastu zones, showing which areas of your room correspond to each of the 8 directions.',
+    details: [
+      'Room orientation detection',
+      'Zone boundaries visualization',
+      'Element mapping per zone',
+    ],
+  },
+  {
+    step: 4,
+    title: 'Interior Analysis',
+    icon: <Home className="w-6 h-6" />,
+    description: 'Each room is analyzed for furniture placement, color schemes, and spatial arrangement according to Vastu principles.',
+    details: [
+      'Furniture placement recommendations',
+      'Color scheme suggestions by zone',
+      'Spatial flow analysis',
+    ],
+  },
+  {
+    step: 5,
+    title: 'Personalized Remedies',
+    icon: <Sparkles className="w-6 h-6" />,
+    description: 'Get specific interior design remedies tailored to your room\'s layout, including placement suggestions and decorative elements.',
+    details: [
+      'Room-specific recommendations',
+      'Visual placement guides',
+      'Remedy priority ranking',
+    ],
   },
 ];
 
@@ -308,391 +161,255 @@ const MethodologyBlog: React.FC = () => {
   }, []);
 
   return (
-    <div className="blog-page methodology-page min-h-screen bg-[#050505] text-white overflow-hidden relative">
+    <div className="page-root">
       <div className="bg-noise" />
-      <MysticalParticles />
 
-      {/* Navigation */}
-      <BlogNavbar />
+      {/* Navigation - Matching Landing Page */}
+      <nav className="nav-fixed">
+        <div className="nav-container">
+          <Link to="/" className="nav-logo">
+            <FontAwesomeIcon icon={faHouse} className="mr-2" />
+            Halo Home
+          </Link>
 
-      {/* Hero */}
-      <header className="blog-hero methodology-hero relative z-10 pt-40 pb-20 text-center px-4">
-        <ScrollReveal>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm font-medium mb-6">
-            <Telescope className="w-4 h-4" />
-            <span>Technical Deep-Dive</span>
-          </div>
-          <h1 className="blog-title text-5xl md:text-7xl font-serif mb-6 leading-tight">
-            The Science Behind<br />Your Stars
-          </h1>
-          <p className="blog-subtitle text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-8">
-            Professional-grade astrocartography powered by NASA-grade ephemeris data
-            and ancient wisdom — precision you can trust.
-          </p>
-          <div className="blog-meta flex items-center justify-center gap-3 text-zinc-500 text-sm">
-            <span>8 min read</span>
-            <span className="blog-meta-dot">•</span>
-            <span>Last updated: December 2024</span>
-          </div>
-        </ScrollReveal>
-      </header>
-
-      {/* Content */}
-      <article className="blog-content methodology-content max-w-5xl mx-auto px-4 pb-24 relative z-10 space-y-24">
-        {/* Ephemeris Stats Section */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Telescope className="w-6 h-6" />
-              Ephemeris Foundation
-            </h2>
-            <p className="methodology-intro">
-              Our calculations are powered by the same high-precision ephemeris data
-              used by professional astronomers and space agencies worldwide.
-            </p>
-
-            <div className="ephemeris-grid">
-              <SpotlightCard className="ephemeris-card">
-                <div className="ephemeris-icon-wrap">
-                  <Globe className="w-6 h-6 text-blue-400" />
-                </div>
-                <div className="ephemeris-content">
-                  <div className="ephemeris-value">NASA JPL DE431</div>
-                  <div className="ephemeris-label">Ephemeris Source</div>
-                  <p className="ephemeris-desc">
-                    Development Ephemeris 431 — the gold standard for planetary positions,
-                    used by NASA for spacecraft navigation.
-                  </p>
-                </div>
-              </SpotlightCard>
-
-              <SpotlightCard className="ephemeris-card">
-                <div className="ephemeris-icon-wrap">
-                  <Target className="w-6 h-6 text-purple-400" />
-                </div>
-                <div className="ephemeris-content">
-                  <div className="ephemeris-value">0.01 Arc-Seconds</div>
-                  <div className="ephemeris-label">Angular Precision</div>
-                  <p className="ephemeris-desc">
-                    Sub-arcminute accuracy means your planetary lines are positioned
-                    within a few hundred meters of their true location.
-                  </p>
-                </div>
-              </SpotlightCard>
-
-              <SpotlightCard className="ephemeris-card">
-                <div className="ephemeris-icon-wrap">
-                  <Timer className="w-6 h-6 text-emerald-400" />
-                </div>
-                <div className="ephemeris-content">
-                  <div className="ephemeris-value">30,000 Years</div>
-                  <div className="ephemeris-label">Temporal Coverage</div>
-                  <p className="ephemeris-desc">
-                    Full planetary data from 13,000 BCE to 17,000 CE — covering every
-                    historical birth date with the same precision.
-                  </p>
-                </div>
-              </SpotlightCard>
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* Calculation Accuracy */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Target className="w-6 h-6" />
-              Calculation Precision
-            </h2>
-            <p className="methodology-intro">
-              We go beyond standard astrology software with corrections that matter
-              for location-based accuracy.
-            </p>
-
-            <div className="accuracy-grid">
-              <SpotlightCard className="accuracy-card">
-                <div className="accuracy-header">
-                  <CircleDot className="w-5 h-5" />
-                  <h3>True Node</h3>
-                </div>
-                <p>
-                  ±1.7° more accurate than Mean Node calculations. We apply Meeus Ch 48
-                  wobble corrections for the Moon's actual orbital crossing.
-                </p>
-                <div className="accuracy-badge">High Precision</div>
-              </SpotlightCard>
-
-              <SpotlightCard className="accuracy-card">
-                <div className="accuracy-header">
-                  <Timer className="w-5 h-5" />
-                  <h3>ΔT Corrections</h3>
-                </div>
-                <p>
-                  Earth's rotation isn't constant. We apply dynamical time corrections
-                  (~70 seconds for 2024) to ensure precise planetary positions.
-                </p>
-                <div className="accuracy-badge">UTC → TT Conversion</div>
-              </SpotlightCard>
-
-              <SpotlightCard className="accuracy-card">
-                <div className="accuracy-header">
-                  <Globe className="w-5 h-5" />
-                  <h3>Spherical Geodesy</h3>
-                </div>
-                <p>
-                  We calculate distances on Earth's curved surface using great circle
-                  math — the same formulas trusted by aviation navigation.
-                </p>
-                <div className="accuracy-badge">Not Flat-Map</div>
-              </SpotlightCard>
-
-              <SpotlightCard className="accuracy-card">
-                <div className="accuracy-header">
-                  <Navigation className="w-5 h-5" />
-                  <h3>Topocentric Coords</h3>
-                </div>
-                <p>
-                  Observer-relative positioning accounts for your actual location on
-                  Earth, not just the planet's center — critical for the Moon.
-                </p>
-                <div className="accuracy-badge">Parallax Corrected</div>
-              </SpotlightCard>
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* Dual Zodiac Systems */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Compass className="w-6 h-6" />
-              Dual Zodiac Support
-            </h2>
-            <p className="methodology-intro">
-              We support both major astrological traditions equally, with real-time
-              switching and no compromise on accuracy.
-            </p>
-
-            <div className="zodiac-comparison">
-              <SpotlightCard className="zodiac-card tropical">
-                <div className="zodiac-badge">Western</div>
-                <h3>Tropical Zodiac</h3>
-                <p>
-                  Season-based system aligned with Earth's equinoxes. 0° Aries begins
-                  at the Spring Equinox, making it tied to our relationship with the Sun.
-                </p>
-                <ul className="zodiac-features">
-                  <li>Standard in Western astrology</li>
-                  <li>Based on seasonal cycles</li>
-                  <li>Fixed to equinoxes</li>
-                </ul>
-              </SpotlightCard>
-
-              <div className="zodiac-divider">
-                <span>OR</span>
-              </div>
-
-              <SpotlightCard className="zodiac-card sidereal">
-                <div className="zodiac-badge">Vedic</div>
-                <h3>Sidereal Zodiac</h3>
-                <p>
-                  Star-based system accounting for precession. Uses Lahiri ayanamsa
-                  (~24° offset from Tropical), aligning signs with their constellations.
-                </p>
-                <ul className="zodiac-features">
-                  <li>Standard in Jyotish</li>
-                  <li>Based on fixed stars</li>
-                  <li>Precession-corrected</li>
-                </ul>
-              </SpotlightCard>
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* House Systems */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Orbit className="w-6 h-6" />
-              8 House Systems
-            </h2>
-            <p className="methodology-intro">
-              Switch between house systems instantly. Each offers a different lens
-              for understanding celestial influence.
-            </p>
-
-            <div className="house-grid">
-              {HOUSE_SYSTEMS.map((house, i) => (
-                <SpotlightCard key={house.name} className="house-card">
-                  <span className="house-number">{i + 1}</span>
-                  <h4>{house.name}</h4>
-                  <p>{house.desc}</p>
-                </SpotlightCard>
-              ))}
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* Cardinal Angles */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Star className="w-6 h-6" />
-              The Four Cardinal Angles
-            </h2>
-            <p className="methodology-intro">
-              Each planet creates four lines on your astrocartography map — one for
-              each angle. Understanding these is key to reading your map.
-            </p>
-
-            <div className="angles-grid">
-              {CARDINAL_ANGLES.map((angle) => (
-                <SpotlightCard
-                  key={angle.name}
-                  className="angle-card"
-                  // @ts-ignore - custom style property
-                  style={{ '--angle-color': angle.color }}
-                >
-                  <div className="angle-icon" style={{ color: angle.color }}>
-                    {angle.icon}
-                  </div>
-                  <div className="angle-name">{angle.name}</div>
-                  <div className="angle-fullname">{angle.fullName}</div>
-                  <p className="angle-desc">{angle.desc}</p>
-                </SpotlightCard>
-              ))}
-            </div>
-
-            <div className="angles-math">
-              <span className="math-label">Lines per chart:</span>
-              <span className="math-equation">10 planets × 4 angles = <strong>40 planetary lines</strong></span>
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* Orb of Influence */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Sparkles className="w-6 h-6" />
-              Orb of Influence
-            </h2>
-            <p className="methodology-intro">
-              Unlike tools with arbitrary cutoffs, we use continuous decay functions.
-              Influence fades gradually with distance — no artificial cliffs.
-            </p>
-
-            <SpotlightCard className="p-0 overflow-hidden">
-              <div className="p-8">
-                <OrbInfluenceChart className="methodology-orb-chart" />
-              </div>
-            </SpotlightCard>
-
-            <div className="orb-explanation">
-              <div className="orb-point">
-                <div className="orb-point-icon">✓</div>
-                <div>
-                  <strong>Gaussian decay</strong> — Inspired by kernel density estimation
-                </div>
-              </div>
-              <div className="orb-point">
-                <div className="orb-point-icon">✓</div>
-                <div>
-                  <strong>No binary cutoffs</strong> — Closer is stronger, but never zero
-                </div>
-              </div>
-              <div className="orb-point">
-                <div className="orb-point-icon">✓</div>
-                <div>
-                  <strong>Major aspects: ±2°</strong> — Standard orb for trines, squares, sextiles
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* Celestial Bodies */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <h2 className="methodology-section-title">
-              <Sun className="w-6 h-6" />
-              12 Celestial Bodies
-            </h2>
-            <p className="methodology-intro">
-              We track all 10 major planets plus Chiron and the North Node — each
-              with specialized calculation methods for maximum accuracy.
-            </p>
-
-            <div className="bodies-list">
-              {CELESTIAL_BODIES.map((body) => (
-                <div key={body.name} className="body-row">
-                  <span className="body-symbol" style={{ color: body.color }}>
-                    {body.symbol}
-                  </span>
-                  <span className="body-name">{body.name}</span>
-                  <span className="body-type">{body.type}</span>
-                </div>
-              ))}
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* Scout Preview */}
-        <section className="blog-section">
-          <ScrollReveal>
-            <SpotlightCard className="scout-preview">
-              <h2 className="methodology-section-title">
-                <Target className="w-6 h-6" />
-                The Scout Engine
-              </h2>
-              <p className="methodology-intro">
-                Our proprietary location scoring goes beyond simple line proximity.
-                Scout analyzes three dimensions for every city.
-              </p>
-
-              <div className="scout-dimensions">
-                <div className="scout-dimension">
-                  <div className="scout-bar benefit" />
-                  <span className="scout-label">Benefit</span>
-                  <span className="scout-desc">How positive the planetary energy is (0-100)</span>
-                </div>
-                <div className="scout-dimension">
-                  <div className="scout-bar intensity" />
-                  <span className="scout-label">Intensity</span>
-                  <span className="scout-desc">How strongly you'll feel the influence (0-100)</span>
-                </div>
-                <div className="scout-dimension">
-                  <div className="scout-bar stability" />
-                  <span className="scout-label">Stability</span>
-                  <span className="scout-desc">How consistent the influence is over time (0-100)</span>
-                </div>
-              </div>
-
-              <Link to="/blog/scout-algorithm" className="scout-link">
-                Read the full Scout Engine deep-dive
-                <ArrowUpRight className="w-4 h-4" />
-              </Link>
-            </SpotlightCard>
-          </ScrollReveal>
-        </section>
-
-        {/* CTA */}
-        <section className="blog-cta-section text-center mt-20 mb-12">
-          <ScrollReveal>
-            <h3 className="text-3xl font-serif text-white mb-4">Experience Precision Astrocartography</h3>
-            <p className="text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
-              Enter your birth data and explore your planetary lines with
-              professional-grade accuracy.
-            </p>
-            <Link to="/guest" className="blog-cta-btn inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-semibold hover:bg-zinc-200 transition-colors">
+          <div className="nav-links hidden md:flex items-center">
+            <a href="/#features" className="nav-link">Features</a>
+            <a href="/#pricing" className="nav-link">Pricing</a>
+            <a href="/sample-report" className="nav-link">Sample Report</a>
+            <a href="/blog/methodology" className="nav-link">Methodology</a>
+            <a href="/guest" className="nav-link nav-link-install flex items-center gap-2 px-4 py-2 rounded-full font-medium shadow-sm hover:shadow-md transition-all" style={{ textDecoration: 'none' }}>
               Launch App
-              <ChevronRight className="w-5 h-5" />
-            </Link>
-          </ScrollReveal>
-        </section>
-      </article>
+            </a>
+          </div>
+        </div>
+      </nav>
 
-      {/* Footer */}
+      <main>
+        {/* Hero Section */}
+        <div className="bg-section-beige section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center mb-12">
+                <span className="inline-block px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-600 text-xs font-semibold uppercase tracking-wider mb-4">
+                  Methodology
+                </span>
+                <h1 className="text-4xl md:text-6xl font-serif mb-6" style={{ color: 'var(--text-primary, #18181B)' }}>
+                  How Halo Home Works
+                </h1>
+                <p className="text-lg max-w-3xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  Two powerful processes for property harmony analysis: Scouting for property search and ZIP code analysis, and Scan App for detailed interior analysis using LiDAR technology.
+                </p>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+
+        {/* Scouting Process Section */}
+        <div className="bg-section-white section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center justify-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <Search className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-serif" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    Scouting Process
+                  </h2>
+                </div>
+                <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  Property and ZIP code analysis using satellite imagery, boundary detection, and Vastu principles
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <div className="space-y-8 max-w-4xl mx-auto">
+              {SCOUTING_STEPS.map((step, index) => (
+                <ScrollReveal key={step.step} delay={index * 100}>
+                  <SpotlightCard className="process-step-card p-8">
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl" style={{ backgroundColor: '#D97706' }}>
+                          {step.step}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="text-orange-600">{step.icon}</div>
+                          <h3 className="text-2xl font-serif" style={{ color: 'var(--text-primary, #18181B)' }}>
+                            {step.title}
+                          </h3>
+                        </div>
+                        <p className="text-lg mb-4" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                          {step.description}
+                        </p>
+                        <ul className="space-y-2">
+                          {step.details.map((detail, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Check className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                              <span style={{ color: 'var(--text-secondary, #52525B)' }}>{detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </SpotlightCard>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Scan App Process Section */}
+        <div className="bg-section-beige section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center justify-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <Smartphone className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-serif" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    Scan App Process
+                  </h2>
+                </div>
+                <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  iPhone LiDAR scanning for detailed interior analysis and 3D layout generation
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <div className="space-y-8 max-w-4xl mx-auto">
+              {SCAN_APP_STEPS.map((step, index) => (
+                <ScrollReveal key={step.step} delay={index * 100}>
+                  <SpotlightCard className="process-step-card p-8">
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl" style={{ backgroundColor: '#D97706' }}>
+                          {step.step}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="text-orange-600">{step.icon}</div>
+                          <h3 className="text-2xl font-serif" style={{ color: 'var(--text-primary, #18181B)' }}>
+                            {step.title}
+                          </h3>
+                        </div>
+                        <p className="text-lg mb-4" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                          {step.description}
+                        </p>
+                        <ul className="space-y-2">
+                          {step.details.map((detail, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Check className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                              <span style={{ color: 'var(--text-secondary, #52525B)' }}>{detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </SpotlightCard>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Key Features Section */}
+        <div className="bg-section-white section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-serif mb-4" style={{ color: 'var(--text-primary, #18181B)' }}>
+                  Key Technologies
+                </h2>
+                <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  The advanced technologies powering our Vastu analysis
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <SpotlightCard className="p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Globe className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    Satellite Imagery
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                    High-resolution satellite data for accurate boundary detection and property analysis
+                  </p>
+                </SpotlightCard>
+
+                <SpotlightCard className="p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Layers className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    AI Processing
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                    Machine learning algorithms for entrance detection, shape analysis, and zone mapping
+                  </p>
+                </SpotlightCard>
+
+                <SpotlightCard className="p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Zap className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    LiDAR Technology
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                    iPhone Pro LiDAR sensors for precise 3D interior scanning and layout generation
+                  </p>
+                </SpotlightCard>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="bg-section-beige section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center max-w-2xl mx-auto">
+                <h2 className="text-3xl md:text-4xl font-serif mb-4" style={{ color: 'var(--text-primary, #18181B)' }}>
+                  Experience Vastu Analysis
+                </h2>
+                <p className="text-lg mb-8" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  Try our property scouting feature or join the waitlist for the Scan App to analyze your interior space.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link
+                    to="/guest"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold transition-all shadow-lg hover:shadow-xl"
+                    style={{ backgroundColor: 'var(--text-primary, #18181B)', color: '#FFFFFF' }}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Try Scouting
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                  <Link
+                    to="/#waitlist"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold transition-all border-2"
+                    style={{ 
+                      borderColor: 'var(--text-primary, #18181B)', 
+                      color: 'var(--text-primary, #18181B)',
+                      backgroundColor: 'transparent'
+                    }}
+                  >
+                    <Smartphone className="w-5 h-5" />
+                    Join Scan App Waitlist
+                  </Link>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </main>
+
       <Footer showInstallButton={false} />
     </div>
   );
