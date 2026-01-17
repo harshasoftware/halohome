@@ -1,4 +1,4 @@
-// Service Worker for Astrocartography.world PWA
+// Service Worker for halohome.app PWA
 // Cache version is auto-updated on each build via vite plugin
 const CACHE_VERSION = '__BUILD_TIMESTAMP__';
 const CACHE_NAME = `astrocartography-v${CACHE_VERSION}`;

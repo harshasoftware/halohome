@@ -37,7 +37,7 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                     </p>
                     <div className="flex gap-3 pt-4">
                         <a
-                            href="https://instagram.com/astrocartography.world"
+                            href="https://instagram.com/halohome.app"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-10 h-10 rounded-full border border-zinc-300 bg-white/50 text-zinc-600 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 flex items-center justify-center transition-colors duration-300"

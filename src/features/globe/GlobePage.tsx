@@ -2172,8 +2172,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
                           href="/"
                           className="flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                         >
-                          <img src="/logo.png" alt="Astrocartography.world Logo" className="w-6 h-6" />
-                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: 'Cinzel, serif' }}>Astrocartography.world</span>
+                          <img src="/logo.png" alt="halohome.app Logo" className="w-6 h-6" />
+                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: 'Cinzel, serif' }}>halohome.app</span>
                         </a>
                       }
                     />
