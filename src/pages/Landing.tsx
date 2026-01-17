@@ -97,9 +97,14 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
                 {/* Mobile Nav Actions */}
                 <div className="md:hidden flex items-center gap-3">
                     <button
-                        onClick={onInstall}
+                        onClick={() => {
+                            const waitlistSection = document.querySelector('.waitlist-section');
+                            if (waitlistSection) {
+                                waitlistSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }}
                         className="p-2 text-black hover:bg-black/10 rounded-full transition-colors"
-                        aria-label="Install App"
+                        aria-label="Join Waitlist"
                     >
                         <Download size={20} />
                     </button>
@@ -1008,7 +1013,7 @@ const MobileAppWaitlist = () => {
                                 ) : (
                                     <>
                                         Notify Me
-                                        <ArrowRight className="w-4 h-4" />
+                                        <ArrowRight className="w-4 h-4 text-white" />
                                     </>
                                 )}
                             </button>
