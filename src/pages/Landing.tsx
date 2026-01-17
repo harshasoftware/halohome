@@ -812,42 +812,42 @@ const TESTIMONIALS = [
         name: 'Michael T.',
         role: 'Homeowner',
         location: 'Austin, TX',
-        quote: "The Harmony app is fantastic. I was impressed by how accurate the harmony score was, and the remedies provided were perfect. My home feels more balanced now."
+        quote: "The Halo Home App is fantastic. I was impressed by how accurate the harmony score was, and the remedies provided were perfect. My home feels more balanced now."
     },
     {
         id: 52,
         name: 'James R.',
         role: 'First-time Buyer',
         location: 'San Francisco',
-        quote: "Harmony has changed the way I look at homes. Getting a detailed harmony score with practical tips was so easy. No need for a consultant anymore!"
+        quote: "Halo Home App has changed the way I look at homes. Getting a detailed harmony score with practical tips was so easy. No need for a consultant anymore!"
     },
     {
         id: 25,
         name: 'Aarav P.',
         role: 'Real Estate Investor',
         location: 'New York',
-        quote: "Harmony has transformed how I evaluate properties. Receiving a detailed harmony score and practical tips was incredibly easy. Game-changer for my business."
+        quote: "Halo Home App has transformed how I evaluate properties. Receiving a detailed harmony score and practical tips was incredibly easy. Game-changer for my business."
     },
     {
         id: 44,
         name: 'Jessica S.',
         role: 'Interior Designer',
         location: 'Los Angeles',
-        quote: "Harmony has made traditional consultations unnecessary for me. The app's detailed analysis and suggestions were incredibly helpful and easy to implement."
+        quote: "Halo Home App has made traditional consultations unnecessary for me. The app's detailed analysis and suggestions were incredibly helpful and easy to implement."
     },
     {
         id: 18,
         name: 'John D.',
         role: 'Homeowner',
         location: 'Chicago',
-        quote: "Using Harmony was effortless. The app gave me a clear harmony score and actionable remedies to improve my home's energy. I already feel a noticeable difference."
+        quote: "Using Halo Home App was effortless. The app gave me a clear harmony score and actionable remedies to improve my home's energy. I already feel a noticeable difference."
     },
     {
         id: 63,
         name: 'Sarah L.',
         role: 'Home Buyer',
         location: 'Seattle',
-        quote: "I've always been curious about home harmony but found it complicated. Harmony made it simple and accessible. The insights were invaluable for my search."
+        quote: "I've always been curious about home harmony but found it complicated. Halo Home App made it simple and accessible. The insights were invaluable for my search."
     }
 ];
 
@@ -1097,7 +1097,7 @@ export default function Landing() {
                 </div>
 
                 {/* 1. Globe Demo - Lead with the WOW factor */}
-                <div className="bg-section-pink section-block">
+                <div className="bg-section-beige section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
                             <LandingZipDemo />
@@ -1106,7 +1106,7 @@ export default function Landing() {
                 </div>
 
                 {/* 2. Duo Demo - Emotional hook */}
-                <div className="bg-section-green section-block">
+                <div className="bg-section-white section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
                             <LandingDuoDemo />
@@ -1115,7 +1115,7 @@ export default function Landing() {
                 </div>
 
                 {/* 3. Planetary Demo - Depth & credibility */}
-                <div className="bg-section-pink section-block">
+                <div className="bg-section-beige section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
                             <LandingPlanetaryDemo />
@@ -1124,7 +1124,7 @@ export default function Landing() {
                 </div>
 
                 {/* 4. Scout Algorithm Demo - Precision & accuracy showcase */}
-                <div className="bg-section-green section-block">
+                <div className="bg-section-white section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
                             <LandingScoutDemo />

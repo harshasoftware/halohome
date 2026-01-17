@@ -27,27 +27,163 @@ const STEP_DESCRIPTIONS: Record<DemoStep, string> = {
   ranking: "Smart weighting ensures no single zone dominates. Your harmony score truly reflects the overall balance of your property.",
 };
 
+// Mock property data for boundary detection demo
+interface DemoProperty {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  shape: 'rectangle' | 'L-shaped' | 'irregular';
+  lShapeWidth?: number;
+  lShapeHeight?: number;
+  polygonPoints?: Array<{ x: number; y: number }>;
+  address: string;
+}
+
+const DEMO_PROPERTIES: DemoProperty[] = [
+  { 
+    id: 1, x: 40, y: 30, width: 80, height: 70, address: '123 Oak St', shape: 'rectangle'
+  },
+  { 
+    id: 2, x: 140, y: 35, width: 75, height: 65, address: '456 Maple', shape: 'L-shaped',
+    lShapeWidth: 50, lShapeHeight: 35
+  },
+  { 
+    id: 3, x: 230, y: 40, width: 70, height: 60, address: '789 Pine', shape: 'irregular',
+    polygonPoints: [{ x: 0, y: 0 }, { x: 70, y: 8 }, { x: 65, y: 60 }, { x: 5, y: 55 }]
+  },
+  { 
+    id: 4, x: 50, y: 120, width: 85, height: 75, address: '101 Main', shape: 'rectangle'
+  },
+  { 
+    id: 5, x: 150, y: 125, width: 80, height: 70, address: '321 Elm', shape: 'L-shaped',
+    lShapeWidth: 55, lShapeHeight: 40
+  },
+];
+
 // Animated visualization for each step
 const StepVisualization = memo(({ step }: { step: DemoStep }) => {
+  const [detectionProgress, setDetectionProgress] = useState(0);
+  const [showExact, setShowExact] = useState(false);
+
+  useEffect(() => {
+    if (step !== 'boundary') {
+      setDetectionProgress(0);
+      setShowExact(false);
+      return;
+    }
+
+    // Reset and start animation
+    setDetectionProgress(0);
+    setShowExact(false);
+
+    let interval: NodeJS.Timeout | null = null;
+
+    // Start animation after a brief delay
+    const startTimeout = setTimeout(() => {
+      // Animate boundary detection
+      interval = setInterval(() => {
+        setDetectionProgress((prev) => {
+          if (prev >= 100) {
+            setShowExact(true);
+            if (interval) clearInterval(interval);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 30);
+    }, 200);
+
+    return () => {
+      clearTimeout(startTimeout);
+      if (interval) clearInterval(interval);
+    };
+  }, [step]);
+
+  const getPropertyClipPath = (prop: DemoProperty) => {
+    if (prop.shape === 'irregular' && prop.polygonPoints) {
+      return `polygon(${prop.polygonPoints.map(p => `${p.x}px ${p.y}px`).join(', ')})`;
+    }
+    if (prop.shape === 'L-shaped' && prop.lShapeWidth && prop.lShapeHeight) {
+      return `polygon(0 0, ${prop.width}px 0, ${prop.width}px ${prop.lShapeHeight}px, ${prop.lShapeWidth}px ${prop.lShapeHeight}px, ${prop.lShapeWidth}px ${prop.height}px, 0 ${prop.height}px)`;
+    }
+    return 'none';
+  };
+
   return (
     <div className="scout-visualization">
       {step === 'boundary' && (
-        <div className="scout-viz-distance">
-          <div className="scout-viz-globe">
-            <div className="scout-viz-globe-surface" />
-            <div className="scout-viz-arc" />
-            <div className="scout-viz-city" />
-            <div className="scout-viz-line" />
+        <div className="scout-boundary-demo">
+          {/* Map grid background */}
+          <div className="scout-map-grid">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={`h-${i}`} className="scout-grid-line horizontal" style={{ top: `${i * 30}px` }} />
+            ))}
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={`v-${i}`} className="scout-grid-line vertical" style={{ left: `${i * 40}px` }} />
+            ))}
           </div>
-          <div className="scout-viz-comparison">
-            <div className="scout-viz-method bad">
-              <span className="scout-viz-value">~Area</span>
-              <span className="scout-viz-label">Estimate</span>
+
+          {/* Properties */}
+          <div className="scout-properties-container">
+            {DEMO_PROPERTIES.map((prop) => {
+              const isDetected = detectionProgress >= (prop.id * 20);
+              const showBoundary = isDetected || (detectionProgress > 0 && prop.id === 1);
+              
+              return (
+                <div
+                  key={prop.id}
+                  className={`scout-demo-property ${isDetected ? 'detected' : ''}`}
+                  style={{
+                    left: `${prop.x}px`,
+                    top: `${prop.y}px`,
+                    width: `${prop.width}px`,
+                    height: `${prop.height}px`,
+                    clipPath: getPropertyClipPath(prop),
+                    WebkitClipPath: getPropertyClipPath(prop),
+                  }}
+                >
+                  {/* Approximate boundary (shown first) */}
+                  {!showExact && showBoundary && (
+                    <div className="scout-boundary-approx" />
+                  )}
+                  
+                  {/* Exact boundary (shown after detection) */}
+                  {showExact && isDetected && (
+                    <div className="scout-boundary-exact" />
+                  )}
+
+                  {/* Detection scan line */}
+                  {showBoundary && !isDetected && detectionProgress > 0 && (
+                    <div 
+                      className="scout-scan-line"
+                      style={{ 
+                        height: `${(detectionProgress - (prop.id - 1) * 20) * 5}%`,
+                        opacity: Math.min(1, (detectionProgress - (prop.id - 1) * 20) / 10)
+                      }}
+                    />
+                  )}
+
+                  {/* Property label */}
+                  {isDetected && (
+                    <div className="scout-property-label">{prop.address}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Comparison indicator */}
+          <div className="scout-boundary-comparison">
+            <div className={`scout-comparison-item ${!showExact ? 'active' : ''}`}>
+              <div className="scout-comparison-box approx" />
+              <span className="scout-comparison-label">Approximate</span>
             </div>
-            <div className="scout-viz-arrow">→</div>
-            <div className="scout-viz-method good">
-              <span className="scout-viz-value">Exact</span>
-              <span className="scout-viz-label">Parcel Data</span>
+            <div className="scout-comparison-arrow">→</div>
+            <div className={`scout-comparison-item ${showExact ? 'active' : ''}`}>
+              <div className="scout-comparison-box exact" />
+              <span className="scout-comparison-label">Exact Parcel</span>
             </div>
           </div>
         </div>
