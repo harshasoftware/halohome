@@ -2386,6 +2386,14 @@ body {
     }
 }
 
+.zip-demo-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 24px 120px;
+    position: relative;
+    z-index: 1;
+}
+
 .zip-demo-container {
     display: flex;
     align-items: center;
@@ -2397,6 +2405,90 @@ body {
 .zip-demo-content {
     flex: 1;
     max-width: 460px;
+}
+
+/* Mobile responsive for zip demo */
+@media (max-width: 1024px) {
+    .zip-demo-section {
+        padding: 40px 16px 60px;
+    }
+
+    .zip-demo-container {
+        flex-direction: column;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .zip-demo-content {
+        max-width: 100%;
+        text-align: center;
+        width: 100%;
+    }
+
+    .zip-demo-wrapper {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .zip-demo-section {
+        padding: 40px 16px 60px;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .zip-demo-container {
+        flex-direction: column;
+        gap: 32px;
+        align-items: center;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .zip-demo-content {
+        max-width: 100%;
+        text-align: center;
+        width: 100%;
+        padding: 0 8px;
+        box-sizing: border-box;
+    }
+
+    .zip-demo-title {
+        font-size: 2rem;
+        line-height: 1.2;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .zip-demo-wrapper {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 480px) {
+    .zip-demo-section {
+        padding: 32px 12px 50px;
+    }
+
+    .zip-demo-content {
+        padding: 0 4px;
+    }
+
+    .zip-demo-title {
+        font-size: 1.75rem;
+    }
+
+    .zip-demo-wrapper {
+        padding: 0 8px;
+    }
 }
 
 .zip-demo-title {
@@ -2550,6 +2642,18 @@ body {
 
 .globe-demo-wrapper canvas {
     pointer-events: none;
+}
+
+/* Zip demo wrapper */
+.zip-demo-wrapper {
+    position: relative;
+    width: 580px;
+    height: 580px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
 }
 
 .zip-scan-wrapper {
