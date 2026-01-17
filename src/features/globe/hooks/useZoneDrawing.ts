@@ -7,9 +7,15 @@
 
 import { useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
-import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
+import { useGlobeInteractionStore, type DrawingModeType } from '@/stores/globeInteractionStore';
 import type { PlanetaryLine, AspectLine, ParanLine } from '@/lib/astro-types';
 import type { ZoneAnalysis } from '../ai';
+import {
+  calculatePolygonAreaSqFt,
+  isAreaWithinLimit,
+  formatArea,
+  PROPERTY_SIZE_LIMIT_SQFT,
+} from '@/lib/geo-utils';
 
 interface UseZoneDrawingOptions {
   planetaryLines: PlanetaryLine[];
@@ -21,21 +27,33 @@ interface UseZoneDrawingOptions {
 interface UseZoneDrawingReturn {
   // State
   isDrawing: boolean;
+  drawingMode: DrawingModeType;
   drawingPoints: Array<{ lat: number; lng: number }>;
-  drawnZone: { points: Array<{ lat: number; lng: number }> } | null;
+  drawnZone: { points: Array<{ lat: number; lng: number }>; mode?: DrawingModeType } | null;
+  searchZone: { points: Array<{ lat: number; lng: number }> } | null;
+  propertyZone: { points: Array<{ lat: number; lng: number }> } | null;
   zoneAnalysis: ZoneAnalysis | null;
 
   // Actions
   startDrawing: () => void;
+  startSearchZone: () => void;
+  startPropertyZone: () => void;
   stopDrawing: () => void;
   toggleDrawing: () => void;
   addPoint: (lat: number, lng: number) => void;
-  completeDrawing: () => void;
+  setPoints: (points: Array<{ lat: number; lng: number }>) => void;
+  completeDrawing: (providedPoints?: Array<{ lat: number; lng: number }>) => void;
   clearZone: () => void;
+  clearSearchZone: () => void;
+  clearPropertyZone: () => void;
 
   // Computed
   canComplete: boolean;
   pointsCount: number;
+  hasSearchZone: boolean;
+  hasPropertyZone: boolean;
+  currentAreaSqFt: number | null;
+  isOverPropertyLimit: boolean;
 }
 
 export function useZoneDrawing({
@@ -46,11 +64,16 @@ export function useZoneDrawing({
 }: UseZoneDrawingOptions): UseZoneDrawingReturn {
   // Get state and actions from store
   const isDrawing = useGlobeInteractionStore((s) => s.isDrawingZone);
+  const drawingMode = useGlobeInteractionStore((s) => s.drawingMode);
   const drawingPoints = useGlobeInteractionStore((s) => s.zoneDrawingPoints);
   const drawnZone = useGlobeInteractionStore((s) => s.drawnZone);
+  const searchZone = useGlobeInteractionStore((s) => s.searchZone);
+  const propertyZone = useGlobeInteractionStore((s) => s.propertyZone);
   const zoneAnalysis = useGlobeInteractionStore((s) => s.zoneAnalysis);
 
   const startDrawingZone = useGlobeInteractionStore((s) => s.startDrawingZone);
+  const startDrawingSearchZone = useGlobeInteractionStore((s) => s.startDrawingSearchZone);
+  const startDrawingPropertyZone = useGlobeInteractionStore((s) => s.startDrawingPropertyZone);
   const stopDrawingZone = useGlobeInteractionStore((s) => s.stopDrawingZone);
   const toggleDrawingZone = useGlobeInteractionStore((s) => s.toggleDrawingZone);
   const addZonePoint = useGlobeInteractionStore((s) => s.addZonePoint);
@@ -59,6 +82,10 @@ export function useZoneDrawing({
   const setDrawnZone = useGlobeInteractionStore((s) => s.setDrawnZone);
   const setZoneAnalysis = useGlobeInteractionStore((s) => s.setZoneAnalysis);
   const storeClearZone = useGlobeInteractionStore((s) => s.clearZone);
+  const storeClearSearchZone = useGlobeInteractionStore((s) => s.clearSearchZone);
+  const storeClearPropertyZone = useGlobeInteractionStore((s) => s.clearPropertyZone);
+  const storeCompleteSearchZone = useGlobeInteractionStore((s) => s.completeSearchZone);
+  const storeCompletePropertyZone = useGlobeInteractionStore((s) => s.completePropertyZone);
 
   // Add point handler
   const addPoint = useCallback(
@@ -79,19 +106,59 @@ export function useZoneDrawing({
     }
   }, [isDrawing, storeClearZone, toggleDrawingZone]);
 
+  // Set points directly (used when DrawingManager provides coordinates)
+  const setPoints = useCallback((points: Array<{ lat: number; lng: number }>) => {
+    setZoneDrawingPoints(points);
+  }, [setZoneDrawingPoints]);
+
   // Complete drawing and analyze the zone
-  const completeDrawing = useCallback(() => {
-    if (drawingPoints.length < 3) {
+  // Accepts optional coordinates for when DrawingManager provides them directly
+  const completeDrawing = useCallback((providedPoints?: Array<{ lat: number; lng: number }>) => {
+    // Use provided points or fall back to store's drawing points
+    const pointsToUse = providedPoints || drawingPoints;
+
+    if (pointsToUse.length < 3) {
       toast.error('Draw at least 3 points to define a zone');
       return;
     }
 
-    const points = [...drawingPoints];
+    const points = [...pointsToUse];
 
-    // Clear drawing state and set zone atomically
-    setZoneDrawingPoints([]);
-    setDrawnZone({ points });
-    setIsDrawingZone(false);
+    // Validate property zone size limit (200,000 sqft max)
+    if (drawingMode === 'property') {
+      const areaSqFt = calculatePolygonAreaSqFt(points);
+      if (!isAreaWithinLimit(areaSqFt, PROPERTY_SIZE_LIMIT_SQFT)) {
+        toast.error(
+          `Property exceeds 200,000 sqft limit. Current size: ${formatArea(areaSqFt)}. Please draw a smaller boundary.`
+        );
+        return;
+      }
+      toast.success(`Property boundary set: ${formatArea(areaSqFt)}`);
+    }
+
+    // If points were provided externally (from DrawingManager), set them in store first
+    if (providedPoints) {
+      setZoneDrawingPoints(providedPoints);
+    }
+
+    // Complete based on drawing mode
+    if (drawingMode === 'search') {
+      // For search mode with provided points, we need to set them then complete
+      if (providedPoints) {
+        setZoneDrawingPoints(providedPoints);
+      }
+      storeCompleteSearchZone();
+    } else if (drawingMode === 'property') {
+      if (providedPoints) {
+        setZoneDrawingPoints(providedPoints);
+      }
+      storeCompletePropertyZone();
+    } else {
+      // Fallback for generic drawing
+      setZoneDrawingPoints([]);
+      setDrawnZone({ points, mode: null });
+      setIsDrawingZone(false);
+    }
 
     // Calculate bounding box
     const lats = points.map((p) => p.lat);
@@ -190,9 +257,12 @@ export function useZoneDrawing({
     toast.success(`Zone analyzed: ${linesInZone.length} lines found`);
   }, [
     drawingPoints,
+    drawingMode,
     planetaryLines,
     aspectLines,
     paranLines,
+    storeCompleteSearchZone,
+    storeCompletePropertyZone,
     setZoneDrawingPoints,
     setDrawnZone,
     setIsDrawingZone,
@@ -200,33 +270,66 @@ export function useZoneDrawing({
     onAnalysisComplete,
   ]);
 
-  // Clear zone handler
+  // Clear zone handlers
   const clearZone = useCallback(() => {
     storeClearZone();
   }, [storeClearZone]);
 
+  const clearSearchZone = useCallback(() => {
+    storeClearSearchZone();
+  }, [storeClearSearchZone]);
+
+  const clearPropertyZone = useCallback(() => {
+    storeClearPropertyZone();
+  }, [storeClearPropertyZone]);
+
   // Computed values
   const canComplete = drawingPoints.length >= 3;
   const pointsCount = drawingPoints.length;
+  const hasSearchZone = searchZone !== null && searchZone.points.length >= 3;
+  const hasPropertyZone = propertyZone !== null && propertyZone.points.length >= 3;
+
+  // Compute current area for real-time display during drawing
+  const currentAreaSqFt = useMemo(() => {
+    if (drawingPoints.length < 3) return null;
+    return calculatePolygonAreaSqFt(drawingPoints);
+  }, [drawingPoints]);
+
+  const isOverPropertyLimit = useMemo(() => {
+    if (currentAreaSqFt === null) return false;
+    return !isAreaWithinLimit(currentAreaSqFt, PROPERTY_SIZE_LIMIT_SQFT);
+  }, [currentAreaSqFt]);
 
   return {
     // State
     isDrawing,
+    drawingMode,
     drawingPoints,
     drawnZone,
+    searchZone,
+    propertyZone,
     zoneAnalysis,
 
     // Actions
     startDrawing: startDrawingZone,
+    startSearchZone: startDrawingSearchZone,
+    startPropertyZone: startDrawingPropertyZone,
     stopDrawing: stopDrawingZone,
     toggleDrawing,
     addPoint,
+    setPoints,
     completeDrawing,
     clearZone,
+    clearSearchZone,
+    clearPropertyZone,
 
     // Computed
     canComplete,
     pointsCount,
+    hasSearchZone,
+    hasPropertyZone,
+    currentAreaSqFt,
+    isOverPropertyLimit,
   };
 }
 

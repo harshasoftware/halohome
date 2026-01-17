@@ -17,7 +17,6 @@ export interface GlobeLocationTooltipProps {
   cityName?: string;
   isVisible: boolean;
   onDismiss: () => void;
-  hasBirthData: boolean;
 }
 
 export const GlobeLocationTooltip: React.FC<GlobeLocationTooltipProps> = ({
@@ -28,7 +27,6 @@ export const GlobeLocationTooltip: React.FC<GlobeLocationTooltipProps> = ({
   cityName,
   isVisible,
   onDismiss,
-  hasBirthData,
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -83,12 +81,8 @@ export const GlobeLocationTooltip: React.FC<GlobeLocationTooltipProps> = ({
   if (!isVisible) return null;
 
   const hintText = isMobile
-    ? hasBirthData
-      ? 'Double-tap to analyze'
-      : 'Double-tap to set birth location'
-    : hasBirthData
-      ? 'Double-click to analyze'
-      : 'Double-click to set birth location';
+    ? 'Double-tap to analyze Vastu'
+    : 'Double-click to analyze Vastu';
 
   const contextHint = isMobile
     ? 'Long-press for more options'

@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Astrocarto</title>
+    <title>Halo Home</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
-    <meta name="description" content="Discover your cosmic geography. Explore where the stars align for you on an interactive 3D globe." />
+    <meta name="description" content="Harmonize your living space. AI-powered Vastu analysis for your home and property." />
 
-    <meta property="og:title" content="Astrocarto" />
-    <meta property="og:description" content="Discover your cosmic geography. Explore where the stars align for you on an interactive 3D globe." />
+    <meta property="og:title" content="Halo Home" />
+    <meta property="og:description" content="Harmonize your living space. AI-powered Vastu analysis for your home and property." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og-image.png" />
     <meta property="og:image:type" content="image/png" />
@@ -19,11 +19,11 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="/twitter-large.png" />
     <meta property="og:url" content="https://astrocartography.world/" />
-    <meta property="og:site_name" content="Astrocarto" />
+    <meta property="og:site_name" content="Halo Home" />
     <meta property="og:locale" content="en_US" />
     <link rel="canonical" href="https://astrocartography.world/" />
-    <!-- Theme color - always dark to match app -->
-    <meta name="theme-color" content="#050505" />
+    <!-- Theme color - light to match app -->
+    <meta name="theme-color" content="#ffffff" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/images/ios/152.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/images/ios/167.png" />
@@ -32,13 +32,13 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Astrocarto" />
+    <meta name="apple-mobile-web-app-title" content="Halo Home" />
     <!-- iOS Splash Screens -->
     <link rel="apple-touch-startup-image" href="/images/ios/1024.png" />
     <style>
-      /* Dark theme to match app - prevents white flash */
+      /* Default light theme for initial load */
       html, body {
-        background-color: #050505;
+        background-color: #ffffff;
         margin: 0;
         padding: 0;
       }
@@ -49,7 +49,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #050505;
+        background: #ffffff;
         z-index: 9999;
         opacity: 1;
         transition: opacity 0.3s ease-out;
@@ -60,22 +60,18 @@
       }
       .loader-content {
         text-align: center;
-        color: #a1a1aa;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #64748b;
+        font-family: 'Cinzel', serif;
       }
       .loader-logo {
-        font-size: 1.5rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #ffffff;
+        color: #18181b;
         margin-bottom: 1rem;
       }
       .loader-spinner {
         width: 24px;
         height: 24px;
-        border: 2px solid rgba(255,255,255,0.1);
-        border-top-color: rgba(255,255,255,0.6);
+        border: 2px solid rgba(0,0,0,0.1);
+        border-top-color: #f59e0b;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
         margin: 0 auto;
@@ -84,15 +80,17 @@
         to { transform: rotate(360deg); }
       }
     </style>
-    <meta name="twitter:site" content="@astrocarto_app" />
-    <meta name="twitter:title" content="Astrocarto" />
-    <meta name="twitter:description" content="Discover your cosmic geography. Explore where the stars align for you on an interactive 3D globe." />
+    <meta name="twitter:site" content="@halohome_app" />
+    <meta name="twitter:title" content="Halo Home" />
+    <meta name="twitter:description" content="Harmonize your living space. AI-powered Vastu analysis for your home and property." />
     <link rel="preconnect" href="https://maps.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://framerusercontent.com" crossorigin />
     <link rel="preconnect" href="https://eypsystctqwvphvcrmxb.supabase.co" crossorigin />
     <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Load Cinzel font for branding -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap" rel="stylesheet" />
     <!-- Google Ads tracking is loaded via React (see src/lib/gtag.ts) -->
   </head>
 
@@ -100,7 +98,12 @@
     <!-- Initial loader - fades out when React mounts -->
     <div id="initial-loader">
       <div class="loader-content">
-        <div class="loader-logo">Astrocarto</div>
+        <div class="loader-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>
+            <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+        </div>
         <div class="loader-spinner"></div>
       </div>
     </div>

@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Sparkles, TrendingUp, ChevronDown, ChevronUp, Navigation, Globe } from 'lucide-react';
+import { Sparkles, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { SkeletonAstrologyAnalysis } from '@/components/ui/skeleton-chart';
 import { PLANET_COLORS } from '@/lib/astro-types';
 import type { LocationAnalysis, LineInfluence, InfluenceLevel } from '@/lib/location-line-utils';
@@ -15,8 +14,6 @@ import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
 interface AstrologyTabProps {
   analysis: LocationAnalysis | null;
   loading?: boolean;
-  onRelocate?: (lat: number, lng: number) => void;
-  onViewRelocationChart?: () => void;
 }
 
 const INFLUENCE_LEVEL_LABELS: Record<InfluenceLevel, string> = {
@@ -127,7 +124,7 @@ const LineInfluenceItem: React.FC<{ influence: LineInfluence; index: number }> =
   );
 };
 
-export const AstrologyTab: React.FC<AstrologyTabProps> = ({ analysis, loading = false, onRelocate, onViewRelocationChart }) => {
+export const AstrologyTab: React.FC<AstrologyTabProps> = ({ analysis, loading = false }) => {
   const [showAllLines, setShowAllLines] = useState(false);
 
   if (loading) {
@@ -263,29 +260,6 @@ export const AstrologyTab: React.FC<AstrologyTabProps> = ({ analysis, loading = 
           </p>
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="space-y-2">
-        {onViewRelocationChart && (
-          <Button
-            onClick={onViewRelocationChart}
-            variant="outline"
-            className="w-full border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/30"
-          >
-            <Globe className="w-4 h-4 mr-2 text-purple-600" />
-            View Relocation Chart
-          </Button>
-        )}
-        {onRelocate && (
-          <Button
-            onClick={() => onRelocate(analysis.latitude, analysis.longitude)}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            <Navigation className="w-4 h-4 mr-2" />
-            Relocate Here
-          </Button>
-        )}
-      </div>
 
       {/* Legend */}
       <div className="pt-2 border-t border-slate-200 dark:border-slate-700">

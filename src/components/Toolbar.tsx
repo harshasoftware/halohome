@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from '@/components/ui/separator';
 import { Plus, LogIn, LogOut, Crown, Edit3, FolderPlus, Trash2, Share2, Download, Upload, Users, Sparkles, Settings, Moon, Sun, SlidersHorizontal, FileDown, MapPin, User, Hexagon, X, Check, CircleUserRound, MessageSquare, Compass, Heart, Loader2, CircleDot, LayoutGrid, Navigation, Telescope, Menu } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import { MobileDrawerMenu } from './MobileDrawerMenu';
 import { AccountMenu } from './AccountMenu';
 import { LeftActionBar } from './LeftActionBar';
@@ -63,7 +65,7 @@ import { useAstroModeState, useHasBirthData } from '@/stores/astroStore';
 
 // Feature flag to hide cloud/auth features for now (set to false to re-enable)
 const HIDE_CLOUD_FEATURES = true;
-const APP_URL = 'https://astrocarto.app';
+const APP_URL = 'https://halohome.app';
 
 /**
  * ToolbarProps - Simplified interface using Zustand stores for UI state
@@ -147,11 +149,19 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const zoneState = useZoneState();
   const {
     isDrawing: isDrawingZone,
+    drawingMode,
     hasZone: hasDrawnZone,
+    hasSearchZone,
+    hasPropertyZone,
     pointsCount: zoneDrawingPointsCount,
     toggleDrawing: onToggleZoneDrawing,
+    startSearchZone: onStartSearchZone,
+    startPropertyZone: onStartPropertyZone,
     completeDrawing: onCompleteZoneDrawing,
     clearZone: onClearZone,
+    clearSearchZone: onClearSearchZone,
+    clearPropertyZone: onClearPropertyZone,
+    stopDrawing: onStopDrawing,
   } = zoneState;
 
   // === Pending Birth Location from Store ===
@@ -449,8 +459,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             <Menu className="w-5 h-5" />
           </button>
           <a href="/" className="flex items-center gap-2 select-none" style={{ textDecoration: 'none' }}>
-            <img src="/logo.png" alt="Astrocarto Logo" className="w-7 h-7" />
-            <span className="font-semibold text-slate-800 dark:text-zinc-200 text-base tracking-tight" style={{ fontFamily: 'Cinzel, serif' }}>astrocarto.app</span>
+            <FontAwesomeIcon icon={faHouse} className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <span className="font-bold text-slate-800 dark:text-zinc-200 text-lg" style={{ letterSpacing: '-0.02em' }}>Halo Home</span>
           </a>
           {/* Account Menu - simplified on mobile (charts/favorites in drawer) */}
           <AccountMenu isMobile />
@@ -478,8 +488,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                   className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
                     hasBirthData
                       ? isAIChatOpen
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-slate-600 dark:text-zinc-400 active:text-amber-600 dark:active:text-amber-400'
+                        ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
+                        : 'text-slate-600 dark:text-zinc-400 active:text-[#d4a5a5] dark:active:text-[#d4a5a5]'
                       : 'text-slate-300 dark:text-zinc-600'
                   }`}
                 >
@@ -521,19 +531,19 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="3"
-                          className="text-amber-200 dark:text-amber-900"
-                        />
-                        {/* Progress circle */}
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="29"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          className="text-amber-500"
-                          strokeDasharray={`${2 * Math.PI * 29}`}
+                        className="text-[#d4a5a5]/40 dark:text-[#d4a5a5]/20"
+                      />
+                      {/* Progress circle */}
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="29"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        className="text-[#d4a5a5]"
+                        strokeDasharray={`${2 * Math.PI * 29}`}
                           strokeDashoffset={`${2 * Math.PI * 29 * (1 - scoutProgress.percent / 100)}`}
                           transform="rotate(-90 32 32)"
                           style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
@@ -542,11 +552,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                     )}
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors ${
                       scoutProgress?.phase === 'computing'
-                        ? 'bg-amber-400'
+                        ? 'bg-[#d4a5a5]/80'
                         : mobileScoutSheetOpen
-                          ? 'bg-amber-500 active:bg-amber-600'
+                          ? 'bg-[#d4a5a5] active:bg-[#c49595]'
                           : hasBirthData
-                            ? 'bg-amber-600 active:bg-amber-700'
+                            ? 'bg-[#d4a5a5] active:bg-[#c49595]'
                             : 'bg-slate-400 active:bg-slate-500'
                     }`}>
                       <Telescope className={`w-7 h-7 text-white ${scoutProgress?.phase === 'computing' ? 'animate-pulse' : ''}`} />
@@ -554,11 +564,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                   </div>
                   <span className={`text-[10px] font-medium tabular-nums ${
                     scoutProgress?.phase === 'computing'
-                      ? 'text-amber-600 dark:text-amber-400'
+                      ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
                       : mobileScoutSheetOpen
-                        ? 'text-amber-600 dark:text-amber-400'
+                        ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
                         : hasBirthData
-                          ? 'text-amber-600 dark:text-amber-400'
+                          ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
                           : 'text-slate-500 dark:text-zinc-400'
                   }`}>
                     {scoutProgress?.phase === 'computing' ? `${Math.round(scoutProgress.percent)}%` : 'Scout'}
@@ -659,9 +669,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     );
   }
 
-  // Desktop toolbar
-  // Hide left action bar when birth chart or filters panel is open
-  const showLeftActionBar = isLegendMinimized && !isNatalChartOpen;
+  // Desktop toolbar - always show left action bar
+  const showLeftActionBar = true;
 
   return (
     <>
@@ -691,11 +700,19 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onToggleCompatibility={onToggleCompatibility}
             onOpenPartnerModal={onOpenPartnerModal}
             isDrawingZone={isDrawingZone}
+            drawingMode={drawingMode}
             hasDrawnZone={hasDrawnZone}
+            hasSearchZone={hasSearchZone}
+            hasPropertyZone={hasPropertyZone}
             zoneDrawingPointsCount={zoneDrawingPointsCount}
             onToggleZoneDrawing={onToggleZoneDrawing}
+            onStartSearchZone={onStartSearchZone}
+            onStartPropertyZone={onStartPropertyZone}
             onCompleteZoneDrawing={onCompleteZoneDrawing}
             onClearZone={onClearZone}
+            onClearSearchZone={onClearSearchZone}
+            onClearPropertyZone={onClearPropertyZone}
+            onStopDrawing={onStopDrawing}
             onOpenExport={onOpenExport}
             onOpenShareChart={() => setShowAstroShareModal(true)}
             onOpenScoutPanel={handleOpenScoutPanel}
@@ -714,11 +731,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         {/* Left: Logo and chart name */}
         <div className="flex items-center gap-3">
           <a href="/" className="flex items-center gap-2 select-none" style={{ textDecoration: 'none' }}>
-            <img src="/logo.png" alt="Astrocarto Logo" className="w-7 h-7" />
+            <FontAwesomeIcon icon={faHouse} className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
             {/* Show brand name when no birth data */}
             {!hasBirthData && (
-              <span className="text-lg font-semibold text-slate-800 dark:text-zinc-200 tracking-wide uppercase">
-                Astrocarto
+              <span className="text-lg font-bold text-slate-800 dark:text-zinc-200" style={{ letterSpacing: '-0.02em' }}>
+                Halo Home
               </span>
             )}
           </a>
@@ -753,7 +770,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleOpenScoutPanel}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#d4a5a5]/10 dark:bg-[#d4a5a5]/20 border border-[#d4a5a5]/30 dark:border-[#d4a5a5]/30 hover:bg-[#d4a5a5]/20 dark:hover:bg-[#d4a5a5]/30 transition-colors cursor-pointer"
                 >
                   <div className="relative w-5 h-5">
                     <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
@@ -764,7 +781,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
-                        className="text-amber-200 dark:text-amber-900"
+                        className="text-[#d4a5a5]/30"
                       />
                       <circle
                         cx="10"
@@ -774,15 +791,15 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                         stroke="currentColor"
                         strokeWidth="2"
                         strokeLinecap="round"
-                        className="text-amber-500"
+                        className="text-[#d4a5a5]"
                         strokeDasharray={`${2 * Math.PI * 8}`}
                         strokeDashoffset={`${2 * Math.PI * 8 * (1 - scoutProgress.percent / 100)}`}
                         style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
                       />
                     </svg>
-                    <Telescope className="absolute inset-0 w-3 h-3 m-auto text-amber-600 dark:text-amber-400" />
+                    <Telescope className="absolute inset-0 w-3 h-3 m-auto text-[#d4a5a5]" />
                   </div>
-                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300 tabular-nums">
+                  <span className="text-xs font-medium text-[#d4a5a5] tabular-nums">
                     {Math.round(scoutProgress.percent)}%
                   </span>
                 </button>
@@ -799,7 +816,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setSubscriptionModalOpen(true)}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98]"
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-[#d4a5a5] hover:bg-[#c49595] text-black shadow-lg shadow-[#d4a5a5]/25 hover:shadow-[#d4a5a5]/40 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Crown className="w-4 h-4" />
                   Upgrade

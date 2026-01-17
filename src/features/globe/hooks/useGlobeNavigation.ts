@@ -7,7 +7,7 @@
 
 import { useCallback, useRef, MutableRefObject } from 'react';
 import { toast } from 'sonner';
-import type { GlobeMethods } from 'react-globe.gl';
+import type { VastuGlobeMapMethods } from '../components/VastuGlobeMap';
 
 interface PointOfView {
   lat: number;
@@ -15,8 +15,13 @@ interface PointOfView {
   altitude?: number;
 }
 
+// Compatible interface for map/globe methods
+interface MapMethods {
+  pointOfView: (pov?: { lat?: number; lng?: number; altitude?: number }, transitionMs?: number) => { lat: number; lng: number; altitude: number } | void;
+}
+
 interface UseGlobeNavigationOptions {
-  globeRef: MutableRefObject<GlobeMethods | undefined>;
+  globeRef: MutableRefObject<VastuGlobeMapMethods | MapMethods | null | undefined>;
   isMobile?: boolean;
   defaultAltitude?: number;
   mobileAltitude?: number;

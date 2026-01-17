@@ -127,8 +127,8 @@ serve(async (req) => {
       throw error;
     }
 
-    // Use APP_URL if set, otherwise use astrocarto.app
-    const appUrl = Deno.env.get("APP_URL") || "https://astrocarto.app";
+    // Use APP_URL if set, otherwise use halohome.app
+    const appUrl = Deno.env.get("APP_URL") || "https://halohome.app";
 
     return new Response(JSON.stringify({
       shortCode,

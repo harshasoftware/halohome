@@ -1,12 +1,12 @@
 /**
  * LocationAnalysisCard Component
- * Displays analysis of planetary line influences at a specific coordinate
+ * Displays Vastu analysis of energy influences at a specific coordinate
  */
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, MapPin, ChevronDown, ChevronUp, Sparkles, TrendingUp, Navigation, Compass, RotateCcw } from 'lucide-react';
+import { X, MapPin, ChevronDown, ChevronUp, Sparkles, TrendingUp } from 'lucide-react';
 import { PLANET_COLORS } from '@/lib/astro-types';
 import type { LocationAnalysis, LineInfluence, InfluenceLevel } from '@/lib/location-line-utils';
 import { getInfluenceLevelColor } from '@/lib/location-line-utils';
@@ -15,14 +15,6 @@ interface LocationAnalysisCardProps {
   analysis: LocationAnalysis;
   onClose: () => void;
   isMobile?: boolean;
-  // Relocation actions
-  onRelocate?: (lat: number, lng: number) => void;
-  onResetRelocation?: () => void;
-  isRelocated?: boolean;
-  // Local Space actions
-  onLocalSpace?: (lat: number, lng: number) => void;
-  onResetLocalSpace?: () => void;
-  isLocalSpace?: boolean;
 }
 
 const INFLUENCE_LEVEL_LABELS: Record<InfluenceLevel, string> = {
@@ -128,12 +120,6 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
   analysis,
   onClose,
   isMobile = false,
-  onRelocate,
-  onResetRelocation,
-  isRelocated = false,
-  onLocalSpace,
-  onResetLocalSpace,
-  isLocalSpace = false,
 }) => {
   const [showAllLines, setShowAllLines] = useState(false);
   const displayedLines = showAllLines ? analysis.lines : analysis.lines.slice(0, 5);
@@ -174,50 +160,6 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
           {/* Coordinates */}
           <div className="text-center text-base text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3">
             {analysis.latitude.toFixed(4)}°, {analysis.longitude.toFixed(4)}°
-          </div>
-
-          {/* Action Buttons - At top for quick access */}
-          <div className="flex gap-3">
-            {/* Relocation Button */}
-            {isRelocated && onResetRelocation ? (
-              <Button
-                onClick={onResetRelocation}
-                variant="outline"
-                className="flex-1 h-12 text-base border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset Relocation
-              </Button>
-            ) : onRelocate ? (
-              <Button
-                onClick={() => onRelocate(analysis.latitude, analysis.longitude)}
-                className="flex-1 h-12 text-base bg-purple-600 hover:bg-purple-700"
-              >
-                <Navigation className="w-4 h-4 mr-2" />
-                Relocate Here
-              </Button>
-            ) : null}
-
-            {/* Local Space Button */}
-            {isLocalSpace && onResetLocalSpace ? (
-              <Button
-                onClick={onResetLocalSpace}
-                variant="outline"
-                className="flex-1 h-12 text-base border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset Local Space
-              </Button>
-            ) : onLocalSpace ? (
-              <Button
-                onClick={() => onLocalSpace(analysis.latitude, analysis.longitude)}
-                variant="outline"
-                className="flex-1 h-12 text-base border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-              >
-                <Compass className="w-4 h-4 mr-2" />
-                Local Space
-              </Button>
-            ) : null}
           </div>
 
           {/* Aggregate Score - Large display */}
@@ -321,10 +263,10 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
           {analysis.lines.length === 0 && (
             <div className="text-center py-8">
               <p className="text-base text-slate-500 dark:text-slate-400">
-                No significant planetary influences at this location.
+                No significant energy influences at this location.
               </p>
               <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
-                Try double-clicking closer to a planetary line.
+                Try analyzing a different location on the map.
               </p>
             </div>
           )}
@@ -376,54 +318,6 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
         {/* Coordinates */}
         <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded px-2 py-1">
           {analysis.latitude.toFixed(4)}°, {analysis.longitude.toFixed(4)}°
-        </div>
-
-        {/* Action Buttons - At top for quick access */}
-        <div className="flex gap-2">
-          {/* Relocation Button */}
-          {isRelocated && onResetRelocation ? (
-            <Button
-              onClick={onResetRelocation}
-              variant="outline"
-              size="sm"
-              className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-            >
-              <RotateCcw className="w-3 h-3 mr-1" />
-              Reset Relocation
-            </Button>
-          ) : onRelocate ? (
-            <Button
-              onClick={() => onRelocate(analysis.latitude, analysis.longitude)}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
-              size="sm"
-            >
-              <Navigation className="w-3 h-3 mr-1" />
-              Relocate Here
-            </Button>
-          ) : null}
-
-          {/* Local Space Button */}
-          {isLocalSpace && onResetLocalSpace ? (
-            <Button
-              onClick={onResetLocalSpace}
-              variant="outline"
-              size="sm"
-              className="flex-1 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-            >
-              <RotateCcw className="w-3 h-3 mr-1" />
-              Reset Local Space
-            </Button>
-          ) : onLocalSpace ? (
-            <Button
-              onClick={() => onLocalSpace(analysis.latitude, analysis.longitude)}
-              variant="outline"
-              size="sm"
-              className="flex-1 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-            >
-              <Compass className="w-3 h-3 mr-1" />
-              Local Space
-            </Button>
-          ) : null}
         </div>
 
         {/* Aggregate Score */}
@@ -511,10 +405,10 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
         {analysis.lines.length === 0 && (
           <div className="text-center py-4">
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              No significant planetary influences at this location.
+              No significant energy influences at this location.
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              Try double-clicking closer to a planetary line.
+              Try analyzing a different location on the map.
             </p>
           </div>
         )}

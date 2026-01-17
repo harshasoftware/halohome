@@ -199,7 +199,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
                     <span>Bookmark favorite locations</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Sparkles className="h-3 w-3 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+                    <Sparkles className="h-3 w-3 text-[#d4a5a5] dark:text-[#d4a5a5] flex-shrink-0" />
                     <span>Access AI astrology insights</span>
                   </li>
                 </ul>
@@ -209,7 +209,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
               <div className="px-4 py-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-center gap-2">
                 <img
                   src="/logo.png"
-                  alt="Astrocarto"
+                  alt="HaloHome"
                   className="w-5 h-5 object-contain"
                 />
                 <span className="text-xs text-slate-500 dark:text-zinc-400">Free forever, no credit card</span>
@@ -288,10 +288,10 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
         )}
         {/* Subscription Management */}
         <DropdownMenuItem onClick={() => navigate('/ai-subscription')}>
-          <Crown className="mr-2 h-4 w-4 text-amber-500" />
+          <Crown className="mr-2 h-4 w-4 text-[#d4a5a5]" />
           Manage Subscription
           {subscriptionStatus && subscriptionStatus.planType !== 'free' && (
-            <span className="ml-auto text-xs text-amber-500">
+            <span className="ml-auto text-xs text-[#d4a5a5]">
               {subscriptionStatus.planType === 'starter' ? 'Traveler' : 'Mystic'}
             </span>
           )}

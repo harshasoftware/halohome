@@ -1,13 +1,13 @@
 /**
- * AI Subscription Page
- * Allows users to manage their AI subscription and view usage
+ * Subscription Page
+ * Allows users to manage their property analysis subscription
  * Styled to match landing page aesthetic
  */
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Sparkles,
+  MapPin,
   Zap,
   Crown,
   Check,
@@ -17,6 +17,8 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
+  Home,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth-context';
 import { useAISubscription } from '@/features/globe/ai/useAISubscription';
@@ -47,7 +49,7 @@ export default function AISubscription() {
     if (subscriptionStatus === 'success') {
       toast({
         title: 'Subscription activated!',
-        description: 'Your AI subscription is now active. Enjoy unlimited insights!',
+        description: 'Your subscription is now active. Start scanning properties!',
       });
       refreshStatus();
     } else if (subscriptionStatus === 'canceled') {
@@ -82,13 +84,13 @@ export default function AISubscription() {
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
         <div className="glass-card rounded-3xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-amber-500" />
+            <Home className="w-8 h-8 text-amber-500" />
           </div>
           <h2 className="text-2xl text-white mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
             Sign in Required
           </h2>
           <p className="text-zinc-400 mb-6">
-            Please sign in to manage your AI subscription
+            Please sign in to manage your subscription
           </p>
           <button
             onClick={() => navigate('/')}
@@ -114,9 +116,9 @@ export default function AISubscription() {
           </button>
           <div>
             <h1 className="text-xl text-white" style={{ fontFamily: 'Cinzel, serif' }}>
-              AI Subscription
+              Subscription
             </h1>
-            <p className="text-sm text-zinc-500">Manage your Astro Guide AI access</p>
+            <p className="text-sm text-zinc-500">Manage your property analysis access</p>
           </div>
         </div>
       </header>
@@ -151,30 +153,34 @@ export default function AISubscription() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      status.planType === 'pro' ? 'bg-amber-500/20 border border-amber-500/30' :
-                      status.planType === 'starter' ? 'bg-amber-500/10 border border-amber-500/20' :
+                      status.planType === 'sage' ? 'bg-amber-500/20 border border-amber-500/30' :
+                      status.planType === 'pioneer' ? 'bg-amber-500/15 border border-amber-500/25' :
+                      status.planType === 'seeker' ? 'bg-amber-500/10 border border-amber-500/20' :
                       'bg-white/5 border border-white/10'
                     }`}>
-                      {status.planType === 'pro' ? (
+                      {status.planType === 'sage' ? (
                         <Crown className="w-7 h-7 text-amber-500" />
+                      ) : status.planType === 'pioneer' ? (
+                        <MapPin className="w-7 h-7 text-amber-400" />
                       ) : (
-                        <Zap className="w-7 h-7 text-amber-400" />
+                        <Search className="w-7 h-7 text-amber-400" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-3">
                         <span className="text-xl text-white" style={{ fontFamily: 'Cinzel, serif' }}>
-                          {status.planType === 'free' ? 'Explorer' :
-                           status.planType === 'starter' ? 'Traveler' : 'Mystic'}
+                          {status.planType === 'free' ? 'Free' :
+                           status.planType === 'seeker' ? 'Seeker' :
+                           status.planType === 'pioneer' ? 'Pioneer' : 'Sage'}
                         </span>
-                        {status.hasSonarProAccess && (
+                        {status.planType === 'sage' && (
                           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500 text-black">
                             Pro
                           </span>
                         )}
                       </div>
                       <p className="text-zinc-400">
-                        {status.questionsRemaining} of {status.questionsLimit} questions remaining
+                        {status.questionsRemaining} of {status.questionsLimit} ZIP scans remaining
                       </p>
                     </div>
                   </div>
@@ -210,7 +216,7 @@ export default function AISubscription() {
               </div>
             ) : (
               <div className="text-center py-6">
-                <p className="text-zinc-400">You're on the free plan with 5 questions per month.</p>
+                <p className="text-zinc-400">You're on the free plan with 1 ZIP scan per month.</p>
               </div>
             )}
           </div>
@@ -220,21 +226,20 @@ export default function AISubscription() {
         <section>
           <div className="text-center mb-8">
             <h2 className="text-2xl text-white mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
-              Unlock the Stars
+              Start Living in Harmony.
             </h2>
-            <p className="text-zinc-400">Choose the perfect plan for your journey.</p>
+            <p className="text-zinc-400">Choose the perfect plan to find your harmonious home.</p>
           </div>
 
-          <div className="pricing-grid">
-            {/* Explorer - Free */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Free */}
             <div className="pricing-card glass-card">
-              <h3 className="text-xl font-medium text-zinc-300">Explorer</h3>
+              <h3 className="text-xl font-medium text-zinc-300">Free</h3>
               <div className="price-amount">$0</div>
               <ul className="feature-list">
-                <li className="feature-item"><Check className="check-icon" /> 3D Globe with Lines</li>
-                <li className="feature-item"><Check className="check-icon" /> Overall Rankings</li>
-                <li className="feature-item"><Check className="check-icon" /> City Scores</li>
-                <li className="feature-item"><Check className="check-icon" /> 5 AI Questions/mo</li>
+                <li className="feature-item"><Check className="check-icon" /> 1 property only</li>
+                <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                <li className="feature-item"><Check className="check-icon" /> Basic insights</li>
               </ul>
               <button
                 className="plan-btn"
@@ -244,50 +249,80 @@ export default function AISubscription() {
               </button>
             </div>
 
-            {/* Traveler - Featured */}
+            {/* Seeker */}
             <div className="pricing-card glass-card relative border-amber-500/30" style={{ background: 'rgba(245, 158, 11, 0.05)' }}>
               <div className="absolute top-0 right-0 p-4">
                 <span className="bg-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                  {status?.planType === 'starter' ? 'Current' : 'Limited Offer'}
+                  {status?.planType === 'seeker' ? 'Current' : 'Popular'}
                 </span>
               </div>
               <h3 className="text-xl font-medium text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                Traveler
+                <Search className="w-5 h-5 text-amber-400" />
+                Seeker
               </h3>
-              <div className="price-amount">$10<span className="price-period">/mo</span></div>
-              <p className="text-sm text-amber-400 -mt-4 mb-4">
-                Use code <span className="font-mono font-bold">NEWYEARPLAN</span> at checkout!
-              </p>
+              <div className="price-amount">$19<span className="price-period">/mo</span></div>
               <ul className="feature-list">
-                <li className="feature-item"><Check className="check-icon" /> Everything in Explorer</li>
-                <li className="feature-item"><Check className="check-icon" /> Category Analysis</li>
-                <li className="feature-item"><Check className="check-icon" /> Detailed Interpretations</li>
-                <li className="feature-item"><Check className="check-icon" /> 50 AI Questions/mo</li>
+                <li className="feature-item"><Check className="check-icon" /> 3 locations</li>
+                <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
               </ul>
               <button
-                onClick={() => handleSubscribe('starter')}
-                disabled={loadingPlan !== null || status?.planType === 'starter' || status?.planType === 'pro'}
+                onClick={() => handleSubscribe('seeker')}
+                disabled={loadingPlan !== null || status?.planType === 'seeker' || ['pioneer', 'sage'].includes(status?.planType || '')}
                 className="plan-btn primary !bg-amber-500 hover:!bg-amber-600 !border-amber-500 flex items-center justify-center gap-2"
               >
-                {loadingPlan === 'starter' ? (
+                {loadingPlan === 'seeker' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
-                ) : status?.planType === 'starter' ? (
+                ) : status?.planType === 'seeker' ? (
                   'Current Plan'
-                ) : status?.planType === 'pro' ? (
+                ) : ['pioneer', 'sage'].includes(status?.planType || '') ? (
                   'Downgrade N/A'
                 ) : (
-                  'Subscribe Now'
+                  'Get Started'
                 )}
               </button>
-              {status?.planType !== 'starter' && status?.planType !== 'pro' && (
-                <p className="text-xs text-zinc-500 text-center mt-3">First 100 users · Ends Jan 15</p>
-              )}
             </div>
 
-            {/* Mystic - Premium */}
+            {/* Pioneer */}
             <div className="pricing-card glass-card relative">
-              {status?.planType === 'pro' && (
+              {status?.planType === 'pioneer' && (
+                <div className="absolute top-0 right-0 p-4">
+                  <span className="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    Current
+                  </span>
+                </div>
+              )}
+              <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-amber-400" />
+                Pioneer
+              </h3>
+              <div className="price-amount">$49<span className="price-period">/mo</span></div>
+              <ul className="feature-list">
+                <li className="feature-item"><Check className="check-icon" /> 10 locations</li>
+                <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
+                <li className="feature-item"><Check className="check-icon" /> Compare properties</li>
+              </ul>
+              <button
+                onClick={() => handleSubscribe('pioneer')}
+                disabled={loadingPlan !== null || status?.planType === 'pioneer' || status?.planType === 'sage'}
+                className="plan-btn flex items-center justify-center gap-2"
+              >
+                {loadingPlan === 'pioneer' ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : status?.planType === 'pioneer' ? (
+                  'Current Plan'
+                ) : status?.planType === 'sage' ? (
+                  'Downgrade N/A'
+                ) : (
+                  'Get Started'
+                )}
+              </button>
+            </div>
+
+            {/* Sage */}
+            <div className="pricing-card glass-card relative">
+              {status?.planType === 'sage' && (
                 <div className="absolute top-0 right-0 p-4">
                   <span className="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                     Current
@@ -296,30 +331,36 @@ export default function AISubscription() {
               )}
               <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2">
                 <Crown className="w-5 h-5 text-amber-400" />
-                Mystic
+                Sage
               </h3>
-              <div className="price-amount">$20<span className="price-period">/mo</span></div>
+              <div className="price-amount">$99<span className="price-period">/mo</span></div>
               <ul className="feature-list">
-                <li className="feature-item"><Check className="check-icon" /> Everything in Traveler</li>
-                <li className="feature-item"><Check className="check-icon" /> 200 AI Questions/mo</li>
-                <li className="feature-item"><Check className="check-icon" /> PDF Report Exports</li>
-                <li className="feature-item"><Check className="check-icon" /> Priority Support</li>
-                <li className="feature-item"><Check className="check-icon" /> Early Access Features</li>
+                <li className="feature-item"><Check className="check-icon" /> Unlimited properties</li>
+                <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
+                <li className="feature-item"><Check className="check-icon" /> Priority processing</li>
               </ul>
               <button
-                onClick={() => handleSubscribe('pro')}
-                disabled={loadingPlan !== null || status?.planType === 'pro'}
+                onClick={() => handleSubscribe('sage')}
+                disabled={loadingPlan !== null || status?.planType === 'sage'}
                 className="plan-btn flex items-center justify-center gap-2"
               >
-                {loadingPlan === 'pro' ? (
+                {loadingPlan === 'sage' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
-                ) : status?.planType === 'pro' ? (
+                ) : status?.planType === 'sage' ? (
                   'Current Plan'
                 ) : (
-                  'Go Limitless'
+                  'Get Started'
                 )}
               </button>
             </div>
+          </div>
+
+          {/* Add-on pricing */}
+          <div className="mt-8 text-center">
+            <p className="text-zinc-500 text-sm">
+              Need more? Add-on scans available for <span className="text-amber-400 font-medium">$8 each</span>
+            </p>
           </div>
         </section>
 
@@ -328,14 +369,14 @@ export default function AISubscription() {
           <section>
             <h2 className="text-lg text-white mb-6 flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
               <History className="w-5 h-5 text-zinc-400" />
-              Recent Usage
+              Recent Scans
             </h2>
             <div className="glass-card rounded-3xl overflow-hidden">
               <div className="divide-y divide-white/5">
                 {usageHistory.slice(0, 10).map((entry) => (
                   <div key={entry.id} className="px-6 py-4 flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-zinc-300 truncate">{entry.question || 'AI Question'}</p>
+                      <p className="text-sm text-zinc-300 truncate">{entry.question || 'ZIP Scan'}</p>
                       <p className="text-xs text-zinc-500">
                         {new Date(entry.createdAt).toLocaleDateString()} at{' '}
                         {new Date(entry.createdAt).toLocaleTimeString()}

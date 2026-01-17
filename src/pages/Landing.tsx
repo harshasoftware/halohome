@@ -5,13 +5,13 @@ import {
     Download, Globe, Sparkles, MapPin, MessageCircle, ScrollText,
     Navigation, Repeat, Star, Hexagon, Building2, Crown, Loader2,
     ArrowRight, Check, Menu, X, Heart, Smartphone, Mail, Quote,
-    Share, Plus
+    Share, Plus, Search
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAndroid, faApple } from '@fortawesome/free-brands-svg-icons';
+import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { LandingConstellations } from './components/Constellations';
 
 // Error boundary for lazy-loaded demo components
@@ -75,7 +75,10 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
     return (
         <nav className={`nav-fixed ${isScrolled ? 'nav-scrolled' : ''}`}>
             <div className="nav-container">
-                <div className="nav-logo">Astrocarto</div>
+                <div className="nav-logo">
+                    <FontAwesomeIcon icon={faHouse} className="mr-2" />
+                    Halo Home
+                </div>
 
                 {/* Desktop Nav */}
                 <div className="nav-links hidden md:flex items-center">
@@ -83,10 +86,7 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
                     <a href="#pricing" className="nav-link">Pricing</a>
                     <a href="/sample-report" className="nav-link">Sample Report</a>
                     <a href="/blog/methodology" className="nav-link">Methodology</a>
-                    <button onClick={onInstall} className="nav-link flex items-center gap-2">
-                        <Download size={16} /> Install
-                    </button>
-                    <a href="/guest" className="px-4 py-2 text-sm font-medium text-black bg-white rounded-full hover:bg-gray-200 transition-colors">
+                    <a href="/guest" className="nav-link nav-link-install flex items-center gap-2 px-4 py-2 rounded-full font-medium shadow-sm hover:shadow-md transition-all" style={{ textDecoration: 'none' }}>
                         Launch App
                     </a>
                 </div>
@@ -113,8 +113,7 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
                     <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Pricing</a>
                     <a href="/sample-report" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Sample Report</a>
                     <a href="/blog/methodology" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Methodology</a>
-                    <a href="#" onClick={() => { onInstall(); setMobileMenuOpen(false); }} className="nav-link text-lg">Install App</a>
-                    <a href="/guest" className="px-6 py-3 text-center font-medium text-black bg-white rounded-full">
+                    <a href="/guest" onClick={() => setMobileMenuOpen(false)} className="px-6 py-3 text-center font-medium text-white bg-zinc-900 hover:bg-[#F0A6B3] rounded-full transition-colors">
                         Launch App
                     </a>
                 </div>
@@ -329,17 +328,17 @@ const OrbitingPlanets = memo(() => {
 });
 
 const HERO_HEADLINES = [
-    "Navigate Your\n Cosmic Destiny",
-    "Find Where\nYou Belong",
-    "Map Your\nLife Path",
-    "Discover Your\nPower Places",
+    "Start Living\nin Harmony.",
+    "Find Your\nPerfect Home.",
+    "Scout Any\nZIP Code.",
+    "Balance Your\nSpace.",
 ];
 
 const HERO_SUBHEADLINES = [
-    "Discover where you belong in the universe.",
-    "Map your planetary lines for love and career.",
-    "Find your power places with AI astrology.",
-    "Real-time astrocartography for your life path."
+    "Apply ancient sciences of creating harmonious spaces.",
+    "AI-powered Vastu analysis for every ZIP code.",
+    "Get harmony scores and actionable remedies instantly.",
+    "Discover properties aligned with nature's energy."
 ];
 
 import LandingHeroSearch from './components/LandingHeroSearch';
@@ -390,30 +389,33 @@ const Hero = memo(() => {
 
     return (
         <section className={`hero-wrapper ${isSearchFocused ? 'search-focused' : ''}`}>
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                {/* Abstract background elements */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-900/10 rounded-full blur-[128px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-900/10 rounded-full blur-[128px]" />
+            <div className="hero-split-container">
+                {/* Left side - Content */}
+                <div className="hero-left">
+                    <div className="hero-content-stack">
+                        <div className={`hero-text-content ${isSearchFocused ? 'hero-text-hidden' : ''}`}>
+                            <h1 className="hero-title text-stone-900 relative z-10">
+                                <span ref={textRef} className="block whitespace-pre-wrap">
+                                    {HERO_HEADLINES[index]}
+                                </span>
+                            </h1>
 
-                {/* Orbiting Planets - lazy loaded, works on both mobile and desktop */}
-                <OrbitingPlanets />
-            </div>
+                            <p ref={subTextRef} className="hero-subtitle text-gradient text-xl md:text-2xl font-light leading-relaxed">
+                                {HERO_SUBHEADLINES[index]}
+                            </p>
+                        </div>
 
-            <div className="hero-content-stack">
-                <div className={`hero-text-content ${isSearchFocused ? 'hero-text-hidden' : ''}`}>
-                    <h1 className="hero-title text-white relative z-10">
-                        <span ref={textRef} className="block text-center whitespace-pre-wrap">
-                            {HERO_HEADLINES[index]}
-                        </span>
-                    </h1>
-
-                    <p ref={subTextRef} className="hero-subtitle text-gradient text-xl md:text-2xl font-light text-center leading-relaxed">
-                        {HERO_SUBHEADLINES[index]}
-                    </p>
+                        <div className="hero-search-container relative z-10">
+                            <LandingHeroSearch onFocusChange={handleSearchFocusChange} />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="hero-search-container relative z-10">
-                    <LandingHeroSearch onFocusChange={handleSearchFocusChange} />
+                {/* Right side - 3D Spline embed (placeholder until scene is ready) */}
+                <div className="hero-right">
+                    {/* <div className="hero-spline-wrapper">
+                        <Spline scene="https://prod.spline.design/YOUR_SCENE_ID/scene.splinecode" />
+                    </div> */}
                 </div>
             </div>
         </section>
@@ -430,8 +432,8 @@ const DemoGlobe = memo(() => (
 const DemoAIChat = memo(() => (
     <div className="bento-demo">
         <div className="demo-ai-chat">
-            <div className="chat-bubble user">Best city for career?</div>
-            <div className="chat-bubble ai"><span className="sparkle">✨</span> Based on your Jupiter line...</div>
+            <div className="chat-bubble user">Best room for my office?</div>
+            <div className="chat-bubble ai"><span className="sparkle">✨</span> Based on your North direction...</div>
         </div>
     </div>
 ));
@@ -560,71 +562,71 @@ const DemoDuo = memo(() => (
 // Memoize features array outside component to prevent recreation
 const FEATURES = [
         {
-            title: "3D Interactive Globe",
-            desc: "Spin and explore your planetary lines in real-time on a beautiful glowing interactive globe.",
+            title: "Scout Any Location",
+            desc: "Just enter any ZIP code to instantly check the harmony of properties in any area. No consultants needed.",
             icon: <Globe />,
             col: "bento-col-8",
             demo: <DemoGlobe />
         },
         {
-            title: "AI Astrologer",
-            desc: "Ask deep questions about your chart and location energies. Powered by advanced LLMs.",
+            title: "AI Harmony Analysis",
+            desc: "Get detailed harmony scores with practical tips. Our AI makes Vastu simple and accessible.",
             icon: <Sparkles />,
             col: "bento-col-4",
             demo: <DemoAIChat />
         },
         {
-            title: "Full Planetary Suite",
-            desc: "Includes Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto.",
+            title: "Harmony Score",
+            desc: "See and compare the harmony score of different spaces you're considering. Make informed decisions.",
             icon: <Star />,
             col: "bento-col-4",
             demo: <DemoPlanets />
         },
         {
-            title: "Zone Analysis",
-            desc: "Draw custom zones to aggregate planetary influences for specific regions.",
+            title: "8 Direction Analysis",
+            desc: "Full analysis of all eight Vastu directions and their energies for complete spatial understanding.",
+            icon: <Navigation />,
+            col: "bento-col-4",
+            demo: <DemoLocalSpace />
+        },
+        {
+            title: "Property Boundaries",
+            desc: "Analyze parcel shape, orientation, and Vastu compliance with accurate boundary data.",
             icon: <Hexagon />,
             col: "bento-col-4",
             demo: <DemoZone />
         },
         {
-            title: "City Intelligence",
-            desc: "Detailed breakdown of weather, flight data, and cultural vibe matching.",
+            title: "Room Placement",
+            desc: "AI suggestions for optimal room placement based on ancient Vastu principles.",
             icon: <Building2 />,
-            col: "bento-col-4",
+            col: "bento-col-6",
             demo: <DemoCity />
         },
         {
-            title: "Natal Chart Analysis",
-            desc: "Deep dive into your personality with Western or Vedic birth chart breakdown.",
-            icon: <ScrollText />,
+            title: "Actionable Remedies",
+            desc: "Get practical remedies and corrections according to the ancient science of interior harmony.",
+            icon: <Repeat />,
             col: "bento-col-6",
-            demo: <DemoNatal />
+            demo: <DemoRelocation />
         },
         {
-            title: "Local Space Lines",
-            desc: "Discover how planetary energies manifest in your immediate surroundings.",
-            icon: <Navigation />,
-            col: "bento-col-6",
-            demo: <DemoLocalSpace />
-        },
-        {
-            title: "Duo Compatibility",
-            desc: "Compare two charts to find ideal honeymoon spots, relocation cities, or travel destinations where both people thrive.",
+            title: "Compare Properties",
+            desc: "Side-by-side comparison of multiple homes to find the one with the best harmony score.",
             icon: <Heart />,
             col: "bento-col-4",
             demo: <DemoDuo />
         },
         {
-            title: "Relocation Charts",
-            desc: "Calculate how your chart changes when you move to a new city.",
-            icon: <Repeat />,
+            title: "Entrance Analysis",
+            desc: "Determine the best entry points for positive energy flow into your home.",
+            icon: <ScrollText />,
             col: "bento-col-4",
-            demo: <DemoRelocation />
+            demo: <DemoNatal />
         },
         {
-            title: "Find Your Places",
-            desc: "Discover where you'd thrive for love, career, creativity, or personal growth.",
+            title: "ZIP Code Scout",
+            desc: "Scan entire neighborhoods to find the best Vastu-aligned properties in any area.",
             icon: <MapPin />,
             col: "bento-col-4",
             demo: <DemoFindPlaces />
@@ -635,8 +637,8 @@ const Features = memo(() => (
     <section id="features" className="section-wrapper">
         <ScrollReveal>
             <div className="section-header">
-                <h2 className="section-title">Cosmic Features</h2>
-                <p className="text-zinc-400 text-lg">Everything you need to map your life path.</p>
+                <h2 className="section-title">Actionable Insights & Remedies</h2>
+                <p className="text-zinc-400 text-lg">Our platform gives you remedies and actionable insights according to the ancient science of interior harmony.</p>
             </div>
         </ScrollReveal>
 
@@ -670,76 +672,97 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
         <section id="pricing" className="section-wrapper">
             <ScrollReveal>
                 <div className="section-header">
-                    <h2 className="section-title">Unlock the Stars</h2>
-                    <p className="text-zinc-400 text-lg">Choose the perfect plan for your journey.</p>
+                    <h2 className="section-title">Start Living in Harmony.</h2>
+                    <p className="text-zinc-400 text-lg">Choose the perfect plan to find your harmonious home.</p>
                 </div>
             </ScrollReveal>
 
-            <div className="pricing-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Free Tier */}
                 <ScrollReveal delay={0} className="h-full">
                     <div className="pricing-card glass-card h-full">
-                        <h3 className="text-xl font-medium text-zinc-300">Explorer</h3>
+                        <h3 className="text-xl font-medium text-zinc-300">Free</h3>
                         <div className="price-amount">$0</div>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> 3D Globe with Planetary Lines</li>
-                            <li className="feature-item"><Check className="check-icon" /> Overall Location Rankings</li>
-                            <li className="feature-item"><Check className="check-icon" /> City Names & Scores</li>
-                            <li className="feature-item"><Check className="check-icon" /> 5 AI Questions/mo</li>
+                            <li className="feature-item"><Check className="check-icon" /> 1 property only</li>
+                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                            <li className="feature-item"><Check className="check-icon" /> Basic insights</li>
                         </ul>
-                        <a href="/guest" className="plan-btn text-center block mt-auto" style={{ textDecoration: 'none' }}>Explore Now</a>
+                        <a href="/guest" className="plan-btn text-center block mt-auto" style={{ textDecoration: 'none' }}>Get Started</a>
                     </div>
                 </ScrollReveal>
 
-                {/* Pro Tier */}
-                <ScrollReveal delay={200} className="h-full">
-                    <SpotlightCard className="pricing-card border-amber-500/30 bg-white/5 h-full">
+                {/* Seeker Tier */}
+                <ScrollReveal delay={150} className="h-full">
+                    <SpotlightCard className="pricing-card border-[#F0A6B3]/30 bg-white/5 h-full">
                         <div className="absolute top-0 right-0 p-4">
-                            <span className="bg-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Limited Offer</span>
+                            <span className="bg-[#F0A6B3] text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Popular</span>
                         </div>
-                        <h3 className="text-xl font-medium text-white flex items-center gap-2"><Sparkles size={18} className="text-yellow-400" /> Traveler</h3>
-                        <div className="price-amount">$10<span className="price-period">/mo</span></div>
-                        <p className="text-sm text-amber-400 -mt-2 mb-3">
-                            Use code <span className="font-mono font-bold">NEWYEARPLAN</span> at checkout!
-                        </p>
+                        <h3 className="text-xl font-medium text-white flex items-center gap-2"><Search size={18} className="text-[#F0A6B3]" /> Seeker</h3>
+                        <div className="price-amount">$19<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> Everything in Explorer</li>
-                            <li className="feature-item"><Check className="check-icon" /> Category Analysis (Career, Love, Health...)</li>
-                            <li className="feature-item"><Check className="check-icon" /> Detailed Line Interpretations</li>
-                            <li className="feature-item"><Check className="check-icon" /> 50 AI Questions/mo</li>
+                            <li className="feature-item"><Check className="check-icon" /> 3 locations</li>
+                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                            <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('starter', 'subscription')}
+                            onClick={() => handleBuy('seeker', 'subscription')}
                             disabled={!!loading}
-                            className="plan-btn primary flex items-center justify-center gap-2 mt-auto !bg-amber-500 hover:!bg-amber-600 !border-amber-500"
+                            className="plan-btn primary flex items-center justify-center gap-2 mt-auto !bg-zinc-900 hover:!bg-zinc-800 !border-zinc-900"
                         >
-                            {loading === 'starter' ? <Loader2 className="animate-spin" /> : 'Subscribe Now'}
+                            {loading === 'seeker' ? <Loader2 className="animate-spin" /> : 'Get Started'}
                         </button>
-                        <p className="text-xs text-zinc-500 text-center mt-3">First 100 users · Ends Jan 15</p>
                     </SpotlightCard>
                 </ScrollReveal>
 
-                {/* Premium Tier */}
-                <ScrollReveal delay={400} className="h-full">
+                {/* Pioneer Tier */}
+                <ScrollReveal delay={300} className="h-full">
                     <div className="pricing-card glass-card h-full">
-                        <h3 className="text-xl font-medium text-zinc-300">Mystic</h3>
-                        <div className="price-amount">$20<span className="price-period">/mo</span></div>
+                        <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><MapPin size={18} className="text-[#F0A6B3]" /> Pioneer</h3>
+                        <div className="price-amount">$49<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> Everything in Traveler</li>
-                            <li className="feature-item"><Check className="check-icon" /> 200 AI Questions/mo</li>
-                            <li className="feature-item"><Check className="check-icon" /> PDF Report Exports</li>
-                            <li className="feature-item"><Check className="check-icon" /> Priority Support</li>
-                            <li className="feature-item"><Check className="check-icon" /> Early Access to Features</li>
+                            <li className="feature-item"><Check className="check-icon" /> 10 locations</li>
+                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                            <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
+                            <li className="feature-item"><Check className="check-icon" /> Compare properties</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('pro', 'subscription')}
+                            onClick={() => handleBuy('pioneer', 'subscription')}
                             disabled={!!loading}
                             className="plan-btn flex items-center justify-center gap-2 mt-auto"
                         >
-                            {loading === 'pro' ? <Loader2 className="animate-spin" /> : 'Go Limitless'}
+                            {loading === 'pioneer' ? <Loader2 className="animate-spin" /> : 'Get Started'}
                         </button>
                     </div>
                 </ScrollReveal>
+
+                {/* Sage Tier */}
+                <ScrollReveal delay={450} className="h-full">
+                    <div className="pricing-card glass-card h-full">
+                        <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><Crown size={18} className="text-[#F0A6B3]" /> Sage</h3>
+                        <div className="price-amount">$99<span className="price-period">/mo</span></div>
+                        <ul className="feature-list flex-1">
+                            <li className="feature-item"><Check className="check-icon" /> Unlimited properties</li>
+                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
+                            <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
+                            <li className="feature-item"><Check className="check-icon" /> Priority processing</li>
+                        </ul>
+                        <button
+                            onClick={() => handleBuy('sage', 'subscription')}
+                            disabled={!!loading}
+                            className="plan-btn flex items-center justify-center gap-2 mt-auto"
+                        >
+                            {loading === 'sage' ? <Loader2 className="animate-spin" /> : 'Get Started'}
+                        </button>
+                    </div>
+                </ScrollReveal>
+            </div>
+
+            {/* Add-on pricing */}
+            <div className="mt-8 text-center">
+                <p className="text-zinc-500 text-sm">
+                    Need more? Add-on scans available for <span className="text-[#F0A6B3] font-medium">$8 each</span>
+                </p>
             </div>
         </section>
     );
@@ -747,10 +770,11 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
 
 const FAQ = () => {
     const faqs = [
-        { q: "What is astrocartography?", a: "Astrocartography maps your birth chart onto the Earth, showing where different planetary energies are strongest for you. It helps you find ideal locations for various life goals." },
-        { q: "Do I need my exact birth time?", a: "Yes, for accurate line placement, an exact birth time is highly recommended. Even a few minutes can shift lines significantly." },
-        { q: "How accurate are the planetary lines?", a: "We use high-precision ephemeris (AA+ algorithms), True Node calculations, proper dynamical time conversions, and spherical geodesy. Most consumer tools introduce 50-200km errors through shortcuts; ours achieves sub-arcminute precision.", link: "/blog/planetary-precision" },
-        { q: "How accurate is the AI?", a: "Our AI is trained on thousands of astrological texts and principles, providing high-quality interpretations. However, always trust your intuition as well." },
+        { q: "What is a Harmony Score?", a: "The Harmony Score is our proprietary rating system that evaluates properties based on Vastu Shastra principles. It analyzes orientation, room placement, entrance direction, and energy flow to give you a clear picture of a property's spatial harmony." },
+        { q: "How does ZIP code scanning work?", a: "When you scan a ZIP code, our AI analyzes all available properties in that area, ranking them by their harmony scores. This helps you quickly identify the best Vastu-aligned homes without visiting each one individually." },
+        { q: "Do I need to be a Vastu expert to use this?", a: "Not at all! We've made the ancient science of Vastu simple and accessible. Just enter any address and get instant, easy-to-understand insights with practical remedies you can implement right away." },
+        { q: "Can I use this for my current home?", a: "Yes! Even if your home wasn't built with Vastu in mind, our AI provides actionable remedies and adjustments to improve energy flow and create more harmony without major renovations." },
+        { q: "How accurate is the analysis?", a: "Our AI combines authentic Vastu principles with precise parcel boundary data and directional analysis. The harmony scores are based on thousands of property evaluations and traditional Vastu guidelines." },
     ];
 
     return (
@@ -785,24 +809,45 @@ const FAQ = () => {
 const TESTIMONIALS = [
     {
         id: 32,
-        name: 'Elena R.',
-        role: 'Designer',
-        location: 'Lisbon',
-        quote: "I relocated to my Jupiter line last year. The opportunities that opened up were exactly what I'd been seeking for years."
+        name: 'Michael T.',
+        role: 'Homeowner',
+        location: 'Austin, TX',
+        quote: "The Harmony app is fantastic. I was impressed by how accurate the harmony score was, and the remedies provided were perfect. My home feels more balanced now."
     },
     {
-        id: 51,
-        name: 'Marcus T.',
-        role: 'Entrepreneur',
-        location: 'Austin',
-        quote: "The precision of the calculations gave me confidence in my relocation decision. The AI insights were surprisingly on point."
+        id: 52,
+        name: 'James R.',
+        role: 'First-time Buyer',
+        location: 'San Francisco',
+        quote: "Harmony has changed the way I look at homes. Getting a detailed harmony score with practical tips was so easy. No need for a consultant anymore!"
     },
     {
         id: 25,
-        name: 'Aiko T.',
-        role: 'Artist',
-        location: 'Kyoto',
-        quote: "A tool that respects the complexity of astrology without oversimplifying. The interface is intuitive and the data is precise."
+        name: 'Aarav P.',
+        role: 'Real Estate Investor',
+        location: 'New York',
+        quote: "Harmony has transformed how I evaluate properties. Receiving a detailed harmony score and practical tips was incredibly easy. Game-changer for my business."
+    },
+    {
+        id: 44,
+        name: 'Jessica S.',
+        role: 'Interior Designer',
+        location: 'Los Angeles',
+        quote: "Harmony has made traditional consultations unnecessary for me. The app's detailed analysis and suggestions were incredibly helpful and easy to implement."
+    },
+    {
+        id: 18,
+        name: 'John D.',
+        role: 'Homeowner',
+        location: 'Chicago',
+        quote: "Using Harmony was effortless. The app gave me a clear harmony score and actionable remedies to improve my home's energy. I already feel a noticeable difference."
+    },
+    {
+        id: 63,
+        name: 'Sarah L.',
+        role: 'Home Buyer',
+        location: 'Seattle',
+        quote: "I've always been curious about home harmony but found it complicated. Harmony made it simple and accessible. The insights were invaluable for my search."
     }
 ];
 
@@ -810,12 +855,12 @@ const Testimonials = memo(() => (
     <section className="section-wrapper">
         <ScrollReveal>
             <div className="section-header">
-                <h2 className="section-title">What People Are Saying</h2>
-                <p className="text-zinc-400 text-lg">Real experiences from our community.</p>
+                <h2 className="section-title">Loved by Homeowners</h2>
+                <p className="text-zinc-400 text-lg">See what people are saying about finding harmony in their spaces.</p>
             </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {TESTIMONIALS.map((testimonial, i) => (
                 <ScrollReveal key={testimonial.id} delay={i * 150}>
                     <SpotlightCard className="p-6 rounded-xl h-full flex flex-col">
@@ -854,7 +899,7 @@ const Testimonials = memo(() => (
     </section>
 ));
 
-// Mobile App Waitlist Section
+// iOS Scan App Waitlist Section
 const MobileAppWaitlist = () => {
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -896,38 +941,30 @@ const MobileAppWaitlist = () => {
         <section className="section-wrapper max-w-3xl">
             <ScrollReveal>
                 <div className="section-header">
-                    <h2 className="section-title text-3xl">Mobile App Coming Soon</h2>
+                    <h2 className="section-title text-3xl">Scan: Interior 3D Analysis</h2>
                     <p className="text-zinc-400 text-lg">
-                        Take your astrocartography journey on the go.
+                        Coming to iPhone Pro. Use LiDAR to create a 3D model of your interior and get room-by-room harmony insights.
                     </p>
                 </div>
             </ScrollReveal>
 
-            {/* Globe flight animation - desktop only */}
-            <div className="hidden md:block w-full max-w-lg mx-auto -mb-8 translate-y-8">
-                <DotLottieReact
-                    src="/globe-flight.lottie"
-                    loop
-                    autoplay
-                />
-            </div>
+            {/* Kitchen 3D animation - desktop only (placeholder until Spline scene is ready) */}
+            {/* <div className="hidden md:block w-full max-w-lg mx-auto -mb-8 translate-y-8 h-80 rounded-2xl overflow-hidden">
+                <Spline scene="https://prod.spline.design/YOUR_SCENE_ID/scene.splinecode" />
+            </div> */}
 
             <ScrollReveal delay={100}>
                 <SpotlightCard className="p-8 rounded-xl text-center relative z-10">
-                    {/* Platform badges */}
+                    {/* Platform badge - iOS only */}
                     <div className="flex items-center justify-center gap-4 mb-6">
                         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
                             <FontAwesomeIcon icon={faApple} className="w-5 h-5 text-zinc-300" />
-                            <span className="text-sm text-zinc-300">iOS</span>
-                        </div>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-                            <FontAwesomeIcon icon={faAndroid} className="w-5 h-5 text-zinc-300" />
-                            <span className="text-sm text-zinc-300">Android</span>
+                            <span className="text-sm text-zinc-300">iPhone Pro with LiDAR</span>
                         </div>
                     </div>
 
                     <p className="text-zinc-400 mb-6">
-                        Get notified when we launch native apps for iOS and Android.
+                        Join the waitlist for Scan — our iOS app that uses Apple's LiDAR to create 3D interior models and analyze room harmony.
                     </p>
 
                     {/* Email form */}
@@ -948,13 +985,13 @@ const MobileAppWaitlist = () => {
                                         if (status === 'error') setStatus('idle');
                                     }}
                                     placeholder="Enter your email"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-[#F0A6B3]/30 text-white placeholder-zinc-500 focus:outline-none focus:border-[#F0A6B3]/60 transition-all"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={status === 'loading'}
-                                className="px-6 py-3 rounded-xl bg-white text-black font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                                className="px-6 py-3 rounded-xl bg-zinc-900 text-white font-medium hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                             >
                                 {status === 'loading' ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -973,8 +1010,8 @@ const MobileAppWaitlist = () => {
                     )}
 
                     <p className="mt-6 text-sm text-zinc-500">
-                        In the meantime, our web app works great on mobile browsers—
-                        <a href="/guest" className="text-white hover:text-zinc-300 underline underline-offset-2 ml-1 transition-colors">
+                        Want ZIP code analysis now? Scout works on any browser—
+                        <a href="/guest" className="text-[#F0A6B3] hover:text-[#e8939f] underline underline-offset-2 ml-1 transition-colors">
                             try it now
                         </a>
                     </p>
@@ -1048,59 +1085,83 @@ export default function Landing() {
     return (
         <div className="page-root">
             <div className="bg-noise" />
-            <MysticalParticles />
-            <LandingConstellations />
+            {/* <MysticalParticles /> */}
+            {/* <LandingConstellations /> */}
 
+            {/* <Navbar onInstall={handleInstall} /> */}
             <Navbar onInstall={handleInstall} />
 
             <main>
-                <Hero />
+                <div className="bg-section-hero">
+                    <Hero />
+                </div>
 
-                {/* 1. Globe Demo - Lead with the WOW factor, show the product immediately */}
-                <DemoErrorBoundary>
-                    <Suspense fallback={null}>
-                        <LandingGlobeDemo />
-                    </Suspense>
-                </DemoErrorBoundary>
+                {/* 1. Globe Demo - Lead with the WOW factor */}
+                <div className="bg-section-pink section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingGlobeDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
 
                 {/* 2. AI Demo - Personal value proposition */}
-                <DemoErrorBoundary>
-                    <Suspense fallback={null}>
-                        <LandingAIDemo />
-                    </Suspense>
-                </DemoErrorBoundary>
+                <div className="bg-section-beige section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingAIDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
 
-                {/* 3. Duo Demo - Emotional hook (relationships drive conversions) */}
-                <DemoErrorBoundary>
-                    <Suspense fallback={null}>
-                        <LandingDuoDemo />
-                    </Suspense>
-                </DemoErrorBoundary>
+                {/* 3. Duo Demo - Emotional hook */}
+                <div className="bg-section-green section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingDuoDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
 
                 {/* 4. Planetary Demo - Depth & credibility */}
-                <DemoErrorBoundary>
-                    <Suspense fallback={null}>
-                        <LandingPlanetaryDemo />
-                    </Suspense>
-                </DemoErrorBoundary>
+                <div className="bg-section-pink section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingPlanetaryDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
 
                 {/* 5. Scout Algorithm Demo - Precision & accuracy showcase */}
-                <DemoErrorBoundary>
-                    <Suspense fallback={null}>
-                        <LandingScoutDemo />
-                    </Suspense>
-                </DemoErrorBoundary>
+                <div className="bg-section-green section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingScoutDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
 
                 {/* 6. Features Summary - Quick overview for skimmers */}
-                <Features />
+                <div className="bg-section-white section-block">
+                    <Features />
+                </div>
 
-                <Pricing onPurchase={handlePurchase} />
+                <div className="bg-section-white section-block">
+                    <Pricing onPurchase={handlePurchase} />
+                </div>
 
                 {/* Testimonials - Social proof after pricing */}
-                <Testimonials />
+                <div className="bg-section-orange section-block">
+                    <Testimonials />
+                </div>
 
-                <FAQ />
-                <MobileAppWaitlist />
+                <div className="bg-section-white section-block">
+                    <FAQ />
+                </div>
+
+                <div className="bg-section-white section-block">
+                    <MobileAppWaitlist />
+                </div>
             </main>
 
             <Footer onInstall={handleInstall} />

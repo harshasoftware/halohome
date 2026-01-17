@@ -42,6 +42,7 @@ interface RightPanelStackProps {
   renderFavorites?: (data: unknown) => React.ReactNode;
   renderScout?: (data: unknown) => React.ReactNode;
   renderCharts?: (data: unknown) => React.ReactNode;
+  renderVastu?: (data: unknown) => React.ReactNode;
 
   // Optional footer (sticky at bottom)
   footer?: React.ReactNode;
@@ -65,6 +66,7 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
   renderFavorites,
   renderScout,
   renderCharts,
+  renderVastu,
   footer,
 }) => {
   const currentPanel = stack[currentIndex];
@@ -97,6 +99,8 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
         return renderScout?.(currentPanel.data);
       case 'charts':
         return renderCharts?.(currentPanel.data);
+      case 'vastu':
+        return renderVastu?.(currentPanel.data);
       default:
         return null;
     }
@@ -114,6 +118,7 @@ const RightPanelStackComponent: React.FC<RightPanelStackProps> = ({
       case 'favorites': return '⭐';
       case 'scout': return '🔭';
       case 'charts': return '👥';
+      case 'vastu': return '🧭';
       default: return '📄';
     }
   };

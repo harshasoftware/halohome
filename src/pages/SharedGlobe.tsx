@@ -70,7 +70,7 @@ const SharedHeader = ({
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = useCallback(() => {
-    navigator.clipboard.writeText(`https://astrocarto.app/s/${shortCode}`);
+    navigator.clipboard.writeText(`https://halohome.app/s/${shortCode}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [shortCode]);
@@ -81,7 +81,7 @@ const SharedHeader = ({
         {/* Left side - Title and info */}
         <div className="flex items-center gap-4">
           <Link to="/" className="text-white font-bold text-lg hover:text-blue-400 transition-colors">
-            astrocarto.app
+            halohome.app
           </Link>
           <Badge variant="secondary" className="bg-white/10 text-white/70">
             <Eye className="w-3 h-3 mr-1" />

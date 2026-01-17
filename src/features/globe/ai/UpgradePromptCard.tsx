@@ -1,30 +1,30 @@
 /**
  * UpgradePromptCard Component
- * Inline upgrade prompt shown in chat when user reaches question limit
- * Displays Traveler and Mystic plans with direct Stripe checkout
+ * Inline upgrade prompt shown when user reaches scan limit
+ * Displays Seeker and Pioneer plans with direct Stripe checkout
  */
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Crown, Check, Loader2, Zap } from 'lucide-react';
+import { Search, MapPin, Check, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth-context';
 import { toast } from 'sonner';
 
 interface UpgradePromptCardProps {
-  questionsUsed?: number;
-  questionsLimit?: number;
+  scansUsed?: number;
+  scansLimit?: number;
 }
 
 export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
-  questionsUsed = 5,
-  questionsLimit = 5,
+  scansUsed = 1,
+  scansLimit = 1,
 }) => {
   const { user } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSubscribe = async (planId: 'starter' | 'pro') => {
+  const handleSubscribe = async (planId: 'seeker' | 'pioneer') => {
     setLoadingPlan(planId);
 
     try {
@@ -69,18 +69,18 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-2">
           <Zap className="w-3.5 h-3.5 text-amber-500" />
           <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-            {questionsUsed}/{questionsLimit} questions used
+            {scansUsed}/{scansLimit} ZIP scans used
           </span>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-          Unlock unlimited cosmic insights
+          Start Living in Harmony
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Choose a plan to continue exploring
+          Choose the perfect plan to find your harmonious home
         </p>
       </div>
 
-      {/* Traveler Plan - Most Popular */}
+      {/* Seeker Plan - Most Popular */}
       <Card className="relative overflow-hidden border-2 border-amber-500/50 bg-amber-500/5 dark:bg-amber-500/10">
         <div className="absolute top-0 right-0">
           <div className="bg-amber-500 text-black text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">
@@ -91,21 +91,21 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <Search className="w-3.5 h-3.5 text-amber-500" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Traveler</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">50 questions/mo</p>
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Seeker</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">3 ZIP scans/mo</p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-800 dark:text-white">$10</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white">$19</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">/mo</span>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2.5">
-            {['Detailed Interpretations', 'Save Locations', 'Priority Access'].map((feature) => (
+            {['3 locations', 'Harmony Score', 'Insights & Remedies'].map((feature) => (
               <span key={feature} className="inline-flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300">
                 <Check className="w-2.5 h-2.5 text-green-500" />
                 {feature}
@@ -114,43 +114,40 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           </div>
 
           <Button
-            onClick={() => handleSubscribe('starter')}
+            onClick={() => handleSubscribe('seeker')}
             disabled={loadingPlan !== null}
             className="w-full h-8 text-xs bg-amber-500 hover:bg-amber-600 text-black"
           >
-            {loadingPlan === 'starter' ? (
+            {loadingPlan === 'seeker' ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <>
-                <Sparkles className="w-3 h-3 mr-1.5" />
-                Subscribe to Traveler
-              </>
+              'Get Started'
             )}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Mystic Plan - Premium */}
+      {/* Pioneer Plan */}
       <Card className="border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
         <CardContent className="p-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <MapPin className="w-3.5 h-3.5 text-amber-500" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Mystic</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">200 questions/mo</p>
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Pioneer</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">10 ZIP scans/mo</p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-800 dark:text-white">$20</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white">$49</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">/mo</span>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2.5">
-            {['Advanced Insights', 'PDF Exports', 'Priority Support'].map((feature) => (
+            {['10 locations', 'Harmony Score', 'Compare properties'].map((feature) => (
               <span key={feature} className="inline-flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300">
                 <Check className="w-2.5 h-2.5 text-green-500" />
                 {feature}
@@ -159,18 +156,15 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           </div>
 
           <Button
-            onClick={() => handleSubscribe('pro')}
+            onClick={() => handleSubscribe('pioneer')}
             disabled={loadingPlan !== null}
             variant="outline"
             className="w-full h-8 text-xs border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
           >
-            {loadingPlan === 'pro' ? (
+            {loadingPlan === 'pioneer' ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <>
-                <Crown className="w-3 h-3 mr-1.5" />
-                Subscribe to Mystic
-              </>
+              'Get Started'
             )}
           </Button>
         </CardContent>

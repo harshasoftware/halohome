@@ -252,6 +252,54 @@ async function checkStreetView(lat: number, lng: number) {
   }
 }
 
+// Get addresses in an area for scout zone house counting
+async function getAddressesInArea(lat: number, lng: number, radius: number = 5000, pageToken?: string) {
+  try {
+    // Build the URL - searching for places that are likely residential or addresses
+    let url: string;
+
+    if (pageToken) {
+      // For pagination, use only the pagetoken parameter
+      url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${pageToken}&key=${GOOGLE_API_KEY}`;
+    } else {
+      // Initial search - use type parameter to find addresses/establishments
+      // Note: Google doesn't have a direct "residential address" type, so we search broadly
+      url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${GOOGLE_API_KEY}`;
+    }
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      console.warn('Places API error:', data.status, data.error_message);
+      return { places: [], nextPageToken: null };
+    }
+
+    const places = (data.results || []).map((place: {
+      place_id: string;
+      name: string;
+      vicinity?: string;
+      formatted_address?: string;
+      geometry?: { location?: { lat: number; lng: number } };
+      types?: string[];
+    }) => ({
+      placeId: place.place_id,
+      address: place.vicinity || place.formatted_address || place.name,
+      lat: place.geometry?.location?.lat,
+      lng: place.geometry?.location?.lng,
+      types: place.types || [],
+    })).filter((p: { lat?: number; lng?: number }) => p.lat !== undefined && p.lng !== undefined);
+
+    return {
+      places,
+      nextPageToken: data.next_page_token || null,
+    };
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    return { places: [], nextPageToken: null };
+  }
+}
+
 // Check Aerial View availability
 async function checkAerialView(lat: number, lng: number, cityName?: string) {
   try {
@@ -293,7 +341,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, lat, lng, cityName, types, radius } = await req.json();
+    const { action, lat, lng, cityName, types, radius, pageToken } = await req.json();
 
     if (!GOOGLE_API_KEY) {
       return new Response(JSON.stringify({ error: 'Google API key not configured' }), {
@@ -322,6 +370,9 @@ serve(async (req) => {
         break;
       case 'aerialView':
         result = await checkAerialView(lat, lng, cityName);
+        break;
+      case 'addresses':
+        result = await getAddressesInArea(lat, lng, radius, pageToken);
         break;
       case 'all':
         // Fetch all data in parallel

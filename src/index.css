@@ -199,20 +199,21 @@
   @apply shadow-xl shadow-blue-100;
 }
 
-/* Custom scrollbar utility */
+/* Custom scrollbar utility - dusty rose theme */
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-slate-100 dark:bg-slate-800;
+    background: #f5e6e8;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+    background: #d4a5a5;
+    border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-500;
+    background: #c49393;
   }
 
   /* Hide scrollbar utility for cleaner mobile UI */

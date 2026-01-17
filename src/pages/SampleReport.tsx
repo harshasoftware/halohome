@@ -151,7 +151,7 @@ export default function SampleReport() {
 
             {/* Navigation */}
             <nav className="report-nav fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center">
-                <Link to="/" className="report-nav-logo font-serif text-xl font-semibold tracking-wider text-white hover:opacity-80 transition-opacity">Astrocarto</Link>
+                <Link to="/" className="report-nav-logo font-serif text-xl font-semibold tracking-wider text-white hover:opacity-80 transition-opacity">HaloHome</Link>
                 <Link to="/guest" className="report-nav-cta flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-medium text-sm hover:bg-zinc-200 transition-colors">
                     Get Your Report <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -168,7 +168,7 @@ export default function SampleReport() {
                             </div>
                             <h1 className="text-4xl md:text-5xl font-serif text-white mb-2">Astrocartography</h1>
                             <p className="text-zinc-400 text-lg">Personal Location Report</p>
-                            <p className="text-purple-400 text-sm mt-2">astrocarto.app</p>
+                            <p className="text-purple-400 text-sm mt-2">halohome.app</p>
                         </div>
 
                         {/* Birth Information Card */}

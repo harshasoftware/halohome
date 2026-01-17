@@ -206,7 +206,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
                 className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-colors ${
                   hasNatalChartData
                     ? isNatalChartOpen
-                      ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                      ? 'bg-[#d4a5a5]/10 dark:bg-[#d4a5a5]/10 text-[#d4a5a5] dark:text-[#d4a5a5]'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     : 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
                 }`}
@@ -222,7 +222,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
                       : 'Enter birth data first'}
                   </p>
                 </div>
-                {isNatalChartOpen && <Check className="w-4 h-4 text-amber-600" />}
+                {isNatalChartOpen && <Check className="w-4 h-4 text-[#d4a5a5]" />}
               </button>
 
               {/* Draw Zone */}
@@ -380,7 +380,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
               {/* Upgrade / Subscribe */}
               <button
                 onClick={() => handleItemClick(() => setSubscriptionModalOpen(true))}
-                className="w-full flex items-center gap-4 px-4 py-3 text-left text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                className="w-full flex items-center gap-4 px-4 py-3 text-left text-[#d4a5a5] dark:text-[#d4a5a5] hover:bg-[#d4a5a5]/10 dark:hover:bg-[#d4a5a5]/20 transition-colors"
               >
                 <Crown className="w-5 h-5" />
                 <div className="flex-1">
@@ -396,7 +396,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
               {!isInstalled && (isInstallable || isIOS) && (
                 <button
                   onClick={handleInstallClick}
-                  className="w-full flex items-center gap-4 px-4 py-3 text-left text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                  className="w-full flex items-center gap-4 px-4 py-3 text-left text-[#d4a5a5] dark:text-[#d4a5a5] hover:bg-[#d4a5a5]/10 dark:hover:bg-[#d4a5a5]/20 transition-colors"
                 >
                   <Download className="w-5 h-5" />
                   <div className="flex-1">
@@ -438,7 +438,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
                 className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400"
               >
                 <img src="/logo.png" alt="Logo" className="w-5 h-5" />
-                <span style={{ fontFamily: 'Cinzel, serif' }}>astrocarto.app</span>
+                <span style={{ fontFamily: 'Cinzel, serif' }}>halohome.app</span>
               </a>
             </div>
           </motion.div>

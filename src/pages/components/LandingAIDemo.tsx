@@ -26,30 +26,30 @@ interface Conversation {
 // Sample conversations - showing personalized, actionable insights
 const CONVERSATIONS: Conversation[] = [
   {
-    icon: <Heart className="w-4 h-4" />,
-    label: 'Love',
+    icon: <Home className="w-4 h-4" />,
+    label: 'Harmony',
     color: '#FFB6C1',
     messages: [
-      { role: 'user', content: 'Why do my relationships keep failing?' },
-      { role: 'ai', content: 'Your Venus line runs through Bali, not New York where you live. You\'re literally in the wrong place for love. Move to your Venus line and watch everything shift. Want me to find cities along that line?' },
+      { role: 'user', content: 'Is this property good for my family?' },
+      { role: 'ai', content: 'This property has a harmony score of 78. The Northeast is clear which brings prosperity, but the Southwest needs strengthening. I recommend placing heavy furniture in the SW corner and keeping the NE open and bright.' },
     ],
   },
   {
     icon: <Briefcase className="w-4 h-4" />,
-    label: 'Career',
+    label: 'Rooms',
     color: '#FFD700',
     messages: [
-      { role: 'user', content: 'I feel stuck in my career.' },
-      { role: 'ai', content: 'You\'re working against your chart. Your Sun-Jupiter intersection is in Tokyo, not LA. That\'s where you\'d get recognized and promoted. Even a 2-week trip there could unlock opportunities. Should I show you the exact coordinates?' },
+      { role: 'user', content: 'Where should I put my home office?' },
+      { role: 'ai', content: 'Based on this property\'s layout, the West or Southwest zone is ideal for your office. This direction enhances focus and career growth. Avoid the Northeast — it\'s better suited for meditation or prayer rooms.' },
     ],
   },
   {
-    icon: <Home className="w-4 h-4" />,
-    label: 'Home',
+    icon: <Heart className="w-4 h-4" />,
+    label: 'Remedies',
     color: '#C0C0DC',
     messages: [
-      { role: 'user', content: 'I never feel settled anywhere.' },
-      { role: 'ai', content: 'That restlessness? Your Moon line is in Portugal, not where you\'ve been living. Lisbon specifically activates your IC point — that\'s deep ancestral belonging. You\'d finally feel "home" there.' },
+      { role: 'user', content: 'How can I improve the energy in my bedroom?' },
+      { role: 'ai', content: 'Your bedroom is in the Southeast, which creates restless energy. Simple fixes: move the bed to the Southwest corner, add earthy colors like beige or cream, and place a small water feature in the North. This will significantly improve sleep quality.' },
     ],
   },
 ];
@@ -173,20 +173,20 @@ export const LandingAIDemo = memo(() => {
         {/* Left side - Content */}
         <div className="ai-demo-content">
           <h2 className="ai-demo-title text-gradient">
-            Finally, Answers<br />That Make Sense
+            AI That Understands<br />Your Space
           </h2>
 
           <div className="ai-demo-divider" />
 
           <p className="ai-demo-intro">
             <Sparkles className="w-4 h-4 inline mr-2 text-purple-400" />
-            Ask anything. Get real answers.
+            Ask anything about your property.
           </p>
 
           <p className="ai-demo-text">
-            No more vague horoscopes. Ask why you feel stuck, where you'd thrive,
-            or what's blocking your love life. Get specific, actionable guidance
-            based on your actual birth chart and planetary lines.
+            No more confusing Vastu jargon. Ask about room placement, energy flow,
+            or how to improve harmony. Get specific, actionable guidance
+            based on your property's actual layout and orientation.
           </p>
 
           {/* Topic buttons */}
@@ -202,7 +202,7 @@ export const LandingAIDemo = memo(() => {
           </div>
 
           <a href="/guest" className="demo-cta ai-cta">
-            Ask Your First Question Free
+            Ask About Any Property Free
             <span className="demo-cta-arrow">→</span>
           </a>
         </div>
@@ -216,7 +216,7 @@ export const LandingAIDemo = memo(() => {
                 <Sparkles className="w-4 h-4" />
               </div>
               <div className="chat-header-info">
-                <span className="chat-header-name">Cosmic Guide</span>
+                <span className="chat-header-name">Harmony Guide</span>
                 <span className="chat-header-status">
                   <span className="status-dot" />
                   Online
@@ -241,7 +241,7 @@ export const LandingAIDemo = memo(() => {
             <div className="chat-input-area">
               <div className="chat-input">
                 <MapPin className="w-4 h-4 text-zinc-500" />
-                <span className="input-placeholder">Ask about your cosmic path...</span>
+                <span className="input-placeholder">Ask about your property...</span>
                 <button className="send-btn">
                   <Send className="w-4 h-4" />
                 </button>

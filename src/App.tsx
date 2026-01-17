@@ -1,12 +1,12 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import NotFound from "./pages/NotFound";
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { CopilotKit } from "@copilotkit/react-core";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LazyErrorBoundary from "./components/LazyErrorBoundary";
@@ -16,6 +16,7 @@ import { usePreventBrowserZoom } from "./hooks/usePreventBrowserZoom";
 // ============================================================================
 // Dynamic Imports - Route-level Code Splitting
 // ============================================================================
+const VastuWorkspace = lazy(() => import("./pages/VastuWorkspace"));
 const Workspace = lazy(() => import("./pages/Workspace"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const AstroPaymentSuccess = lazy(() => import("./pages/AstroPaymentSuccess"));
@@ -54,16 +55,32 @@ const RouteLoader = () => (
     <div className="text-center">
       <div
         className="uppercase text-slate-900 dark:text-white text-2xl font-semibold tracking-widest mb-4"
-        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+        style={{ fontFamily: "Cinzel, serif" }}
       >
-        Astrocarto
+        Halo Home
       </div>
       <div
-        className="w-6 h-6 mx-auto rounded-full animate-spin border-2 border-slate-200 dark:border-white/10 border-t-slate-500 dark:border-t-white/60"
+        className="w-6 h-6 mx-auto rounded-full animate-spin border-2 border-[#F0A6B3]/30 dark:border-[#F0A6B3]/10 border-t-[#F0A6B3] dark:border-t-[#F0A6B3]"
       />
     </div>
   </div>
 );
+
+// Enforce light theme on /guest route
+const GuestThemeEnforcer = ({ children }: { children: React.ReactNode }) => {
+  const { setTheme } = useTheme();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/guest') {
+      setTheme('light');
+      // Remove the initial loader class since React has mounted
+      document.documentElement.classList.remove('guest-light');
+    }
+  }, [location.pathname, setTheme]);
+
+  return <>{children}</>;
+};
 
 // Component that applies zoom prevention at app level
 const ZoomPrevention = ({ children }: { children: React.ReactNode }) => {
@@ -89,13 +106,19 @@ const App = () => (
             <AuthProvider>
               <CopilotKitWithAuth>
                 <Toaster />
+                <GuestThemeEnforcer>
                 <ErrorBoundary componentName="Routes">
                   <Suspense fallback={<RouteLoader />}>
                     <Routes>
                     {/* Landing page - eagerly loaded for fast initial paint */}
                     <Route path="/" element={<Landing />} />
 
-                    {/* Lazy-loaded routes - Code Split for smaller initial bundle */}
+                    {/* Main app route - Workspace with 2D Map */}
+                    <Route path="/app" element={
+                      <LazyErrorBoundary componentName="Workspace">
+                        <Workspace />
+                      </LazyErrorBoundary>
+                    } />
                     <Route path="/guest" element={
                       <LazyErrorBoundary componentName="Workspace">
                         <Workspace />
@@ -189,6 +212,7 @@ const App = () => (
                   </Routes>
                   </Suspense>
                 </ErrorBoundary>
+                </GuestThemeEnforcer>
               </CopilotKitWithAuth>
             </AuthProvider>
           </TooltipProvider>

@@ -168,13 +168,11 @@ export function useGlobeCallbacks({
         toast.success(`Zooming to ${cityName}`);
       }
 
-      // If birth data exists, compute analysis for the AstrologyTab in CityInfoPanel
-      if (hasBirthData) {
-        const analysis = analyzeLocation(lat, lng, planetaryLines, aspectLines, zenithPoints);
-        setLocationAnalysis(analysis);
-      } else {
-        setLocationAnalysis(null);
-      }
+      // Compute analysis for the CityInfoPanel (works with or without astro data)
+      const analysis = hasBirthData
+        ? analyzeLocation(lat, lng, planetaryLines, aspectLines, zenithPoints)
+        : { latitude: lat, longitude: lng, nearbyLines: [], dominantInfluences: [], overallScore: 0 };
+      setLocationAnalysis(analysis);
 
       // Always show CityInfoPanel (which includes AstrologyTab if birth data exists)
       if (!isMobile) {
@@ -213,22 +211,21 @@ export function useGlobeCallbacks({
     ]
   );
 
-  // Handle double-click location analysis
+  // Handle double-click location analysis (Vastu)
   const handleLocationAnalyze = useCallback(
     (lat: number, lng: number) => {
-      if (!hasBirthData) {
-        toast.info('Set birth data to analyze planetary influences at this location');
-        return;
-      }
+      const locationName = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
 
       // If in local space mode, update the origin
       if (isLocalSpace) {
-        const locationName = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
         setLocalSpaceOrigin(lat, lng, locationName);
         toast.success(`Local Space lines from ${locationName}`);
       }
 
-      const analysis = analyzeLocation(lat, lng, planetaryLines, aspectLines, zenithPoints);
+      // Analyze location for Vastu (works with or without astro data)
+      const analysis = hasBirthData
+        ? analyzeLocation(lat, lng, planetaryLines, aspectLines, zenithPoints)
+        : { latitude: lat, longitude: lng, nearbyLines: [], dominantInfluences: [], overallScore: 0 };
 
       // Always set location analysis for the marker to show
       setLocationAnalysis(analysis);
@@ -237,7 +234,7 @@ export function useGlobeCallbacks({
         // Desktop: push to unified panel stack
         panelStack.push({
           type: 'analysis',
-          title: `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`,
+          title: locationName,
           data: analysis,
         });
       }

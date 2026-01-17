@@ -1,7 +1,7 @@
 /**
  * MethodologyBlog - Technical methodology and precision explanation
  *
- * Visual overview of the scientific foundation behind Astrocarto:
+ * Visual overview of the scientific foundation behind HaloHome:
  * - Ephemeris data source (NASA JPL DE431)
  * - Calculation accuracy (True Node, ΔT, spherical geodesy)
  * - Dual zodiac systems (Tropical & Sidereal)

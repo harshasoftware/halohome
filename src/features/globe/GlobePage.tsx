@@ -1,11 +1,13 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState, Suspense, lazy } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
-import MigrationGlobe from './components/MigrationGlobe';
+import VastuGlobeMap, { type VastuGlobeMapMethods } from './components/VastuGlobeMap';
 import { GlobeContextMenu } from './components/GlobeContextMenu';
 import { GlobeLocationTooltip } from './components/GlobeLocationTooltip';
 import useGlobeData from './hooks/useGlobeData';
 import PersonCard from './components/PersonCard';
-import { GlobeMethods } from 'react-globe.gl';
+import GoogleMapsWrapper from '@/contexts/GoogleMapsWrapper';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -16,8 +18,6 @@ import { useFavoriteCities } from '@/hooks/useFavoriteCities';
 import { AstroLegend } from './components/AstroLegend';
 import { LineInfoCard } from './components/LineInfoCard';
 import { LocationAnalysisCard } from './components/LocationAnalysisCard';
-import { QuickBirthDataModal } from './components/QuickBirthDataModal';
-import { BirthDateTimeModal } from './components/BirthDateTimeModal';
 import { CitySearchBar } from './components/CitySearchBar';
 import { RightPanelStack, usePanelStack } from './components/RightPanelStack';
 import { OnboardingTour } from '@/components/OnboardingTour';
@@ -45,7 +45,6 @@ import {
   useNatalChartResultActions,
 } from '@/stores/natalChartStore';
 import {
-  useShowPartnerModal,
   useCompatibilityActions,
 } from '@/stores/compatibilityStore';
 
@@ -59,7 +58,6 @@ const RelocationPanel = lazy(() => import('./components/RelocationPanel').then(m
 import { FavoritesPanelContent, ChartsPanelContent } from './components/panels';
 import { AstroLoadingOverlay } from './components/panels/AstroLoadingOverlay';
 import { ScoutPanel, type ScoutMarker } from './components/ScoutPanel';
-import { PartnerChartModal } from './components/PartnerChartModal';
 import { useBirthCharts, type BirthChart } from '@/hooks/useBirthCharts';
 import { useRelocationChart } from '@/hooks/useRelocationChart';
 import { useCompatibilityMode, type PartnerChartData } from './hooks/useCompatibilityMode';
@@ -183,7 +181,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   onSelectChart,
 }) => {
   // --- Hooks ---
-  const globeEl = useRef<GlobeMethods | undefined>();
+  const globeEl = useRef<VastuGlobeMapMethods | null>(null);
   const isMobile = useIsMobile(768);
   const [hasMounted, setHasMounted] = useState(false);
   const [scoutMarkers, setScoutMarkers] = useState<ScoutMarker[]>([]);
@@ -210,6 +208,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
   const setSelectedCityForInfo = useGlobeInteractionStore((s) => s.setSelectedCityForInfo);
   const cityLocation = useGlobeInteractionStore((s) => s.cityLocation);
   const setCityLocation = useGlobeInteractionStore((s) => s.setCityLocation);
+  const zipCodeBounds = useGlobeInteractionStore((s) => s.zipCodeBounds);
+  const setZipCodeBounds = useGlobeInteractionStore((s) => s.setZipCodeBounds);
 
   // Zone drawing state - uses extracted hook
   // Note: zoneDrawing hook is initialized after visiblePlanetaryLines is available
@@ -220,7 +220,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
     onPendingBirthChange,
   });
 
-  // Handle landing page prefill - triggers unified birth data flow
+  // Handle landing page prefill - fly to location
   // Track processed prefill to avoid re-processing on re-renders
   const processedPrefillRef = useRef<string | null>(null);
   useEffect(() => {
@@ -230,21 +230,14 @@ const GlobePage: React.FC<GlobePageProps> = ({
 
       if (processedPrefillRef.current !== prefillKey) {
         processedPrefillRef.current = prefillKey;
-        // Trigger the unified birth data flow with the prefilled location
-        birthDataFlow.handleCitySearchSelect(
-          landingPagePrefill.lat,
-          landingPagePrefill.lng,
-          landingPagePrefill.place
-        );
+        // Fly to the location and set marker
+        navigation.flyTo(landingPagePrefill.lat, landingPagePrefill.lng, 0.8, 1000);
+        setCityLocation({ lat: landingPagePrefill.lat, lng: landingPagePrefill.lng, name: landingPagePrefill.place });
         // Notify parent that prefill has been consumed
         onLandingPagePrefillConsumed?.();
       }
     }
-  }, [landingPagePrefill, hasMounted, birthDataFlow.handleCitySearchSelect, onLandingPagePrefillConsumed]);
-
-  // Partner modal state - use compatibilityStore (single source of truth)
-  const showPartnerModal = useShowPartnerModal();
-  const { setShowPartnerModal } = useCompatibilityActions();
+  }, [landingPagePrefill, hasMounted, navigation, onLandingPagePrefillConsumed]);
 
   // UI state from store
   const showAstroLines = useGlobeInteractionStore((s) => s.showAstroLines);
@@ -591,14 +584,11 @@ const GlobePage: React.FC<GlobePageProps> = ({
         partnerName: compatibility.partnerChart?.name,
         isCalculating: compatibility.isCalculating,
         toggleEnabled: () => {
-          if (!compatibility.partnerChart) {
-            // If no partner set, open modal first
-            setShowPartnerModal(true);
-          } else {
-            compatibility.toggle();
-          }
+          compatibility.toggle();
         },
-        openPartnerModal: () => setShowPartnerModal(true),
+        openPartnerModal: () => {
+          // Partner modal removed - no-op
+        },
       });
     }
   }, [
@@ -623,30 +613,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
   );
 
   // --- Context Menu Action Handlers ---
-  // (Defined here because they depend on birthData, relocateTo, enableLocalSpace, etc.)
-
-  // Context menu action: Relocate Here
-  const handleContextRelocate = useCallback((lat: number, lng: number) => {
-    if (!birthData) {
-      toast.info('Set birth data first to use relocation');
-      return;
-    }
-    const name = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
-    relocateTo(lat, lng, name);
-    toast.success('Relocated! Lines recalculated for this location.');
-  }, [birthData, relocateTo]);
-
-  // Context menu action: Set as Local Origin
-  const handleContextSetLocalOrigin = useCallback((lat: number, lng: number, name: string) => {
-    if (!birthData) {
-      toast.info('Set birth data first to use Local Space');
-      return;
-    }
-    enableLocalSpace();
-    setLocalSpaceOrigin(lat, lng, name);
-    toast.success(`Local Space lines from ${name}`);
-  }, [birthData, enableLocalSpace, setLocalSpaceOrigin]);
-
   // Context menu action: Add to Favorites
   const handleContextAddToFavorites = useCallback(async (lat: number, lng: number, name: string) => {
     const wasFavorite = isFavorite(lat, lng);
@@ -662,12 +628,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
     }
     toast.success(wasFavorite ? `Removed ${name} from favorites` : `Added ${name} to favorites`);
   }, [isFavorite, toggleFavorite, setIsAuthModalOpen]);
-
-  // Context menu action: Enter Birth Data
-  const handleContextEnterBirthData = useCallback((lat: number, lng: number) => {
-    // Trigger the birth data flow at this location
-    birthDataFlow.handleGlobeDoubleTap(lat, lng);
-  }, [birthDataFlow]);
 
   // Context menu action: Ask AI about location
   const handleContextAskAI = useCallback((lat: number, lng: number, name: string) => {
@@ -1305,18 +1265,10 @@ const GlobePage: React.FC<GlobePageProps> = ({
     });
   }, [panelStack, selectedCityForInfo, birthData]);
 
-  // Birth data handlers - from useBirthDataFlow hook
-  const handleCoordinateSelect = useCallback((lat: number, lng: number) => {
-    birthDataFlow.handleGlobeDoubleTap(lat, lng);
-  }, [birthDataFlow]);
-
-  const handleQuickBirthDataConfirm = useCallback((data: { lat: number; lng: number; date: string; time: string }) => {
-    birthDataFlow.handleQuickBirthConfirm(data);
-  }, [birthDataFlow]);
-
-  const handleBirthDateTimeConfirm = useCallback((data: { lat: number; lng: number; date: string; time: string; cityName?: string }) => {
-    birthDataFlow.handleBirthDateTimeConfirm(data);
-  }, [birthDataFlow]);
+  // Coordinate select - no-op (birth data modals removed)
+  const handleCoordinateSelect = useCallback((_lat: number, _lng: number) => {
+    // No longer triggers birth data flow - modals removed
+  }, []);
 
   // Handle AI chat actions
   const handleAIChatHighlightLine = useCallback((planet: string, lineType: string) => {
@@ -1356,8 +1308,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
     zoneDrawing.addPoint(lat, lng);
   }, [zoneDrawing]);
 
-  const handleZoneComplete = useCallback(() => {
-    zoneDrawing.completeDrawing();
+  const handleZoneComplete = useCallback((points?: Array<{ lat: number; lng: number }>) => {
+    zoneDrawing.completeDrawing(points);
   }, [zoneDrawing]);
 
   const handleToggleZoneDrawing = useCallback(() => {
@@ -1368,24 +1320,54 @@ const GlobePage: React.FC<GlobePageProps> = ({
     zoneDrawing.clearZone();
   }, [zoneDrawing]);
 
-  // Handle city search selection - either set birthplace or fly to city
-  const handleCitySelect = useCallback((lat: number, lng: number, cityName: string) => {
-    // If no birth data, this is birthplace selection - open date/time modal
-    if (!birthData) {
-      birthDataFlow.handleCitySearchSelect(lat, lng, cityName);
-      // Still fly to the city for visual feedback
-      navigation.flyTo(lat, lng, 1.5, 1000);
-      return;
+  // Handle city search selection - pan/zoom to location and open History panel
+  const handleCitySelect = useCallback((
+    lat: number,
+    lng: number,
+    cityName: string,
+    isZipCode?: boolean,
+    bounds?: { north: number; south: number; east: number; west: number }
+  ) => {
+    // For ZIP codes with bounds, fit the map to the bounding box
+    // Otherwise fly to the location with appropriate zoom
+    if (isZipCode && bounds && globeEl.current?.fitBounds) {
+      globeEl.current.fitBounds(bounds);
+    } else {
+      // ZIP codes use wider zoom (altitude 2.5 = ~zoom 12), addresses use closer zoom (altitude 0.8 = ~zoom 17)
+      const altitude = isZipCode ? 2.5 : 0.8;
+      navigation.flyTo(lat, lng, altitude, 1000);
     }
 
-    // Otherwise, use handleCityClick which properly opens the CityInfoPanel
-    // (handles panel stack for desktop, bottom sheet for mobile, and computes analysis)
-    handleCityClick(lat, lng, cityName);
-  }, [birthData, birthDataFlow, navigation, handleCityClick]);
+    // Set city location marker
+    setCityLocation({ lat, lng, name: cityName });
+
+    // Store ZIP code bounds for displaying boundary on map
+    if (isZipCode && bounds) {
+      setZipCodeBounds(bounds);
+    } else {
+      setZipCodeBounds(null);
+    }
+
+    // Open History panel to show searched location
+    if (!isMobile) {
+      // Check if charts panel is already open
+      const existingIndex = panelStack.stack.findIndex(p => p.type === 'charts');
+      if (existingIndex >= 0) {
+        panelStack.setCurrentIndex(existingIndex);
+      } else {
+        panelStack.push({
+          type: 'charts',
+          title: 'History',
+          data: { searchedLocation: { lat, lng, name: cityName, isZipCode } },
+        });
+      }
+    }
+  }, [navigation, isMobile, panelStack, setZipCodeBounds]);
 
   const handleClearCityLocation = useCallback(() => {
     setCityLocation(null);
-  }, []);
+    setZipCodeBounds(null);
+  }, [setZipCodeBounds]);
 
   // Notify parent of zone state changes for toolbar control
   useEffect(() => {
@@ -1400,56 +1382,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
       });
     }
   }, [zoneDrawing.isDrawing, zoneDrawing.drawnZone, zoneDrawing.pointsCount, onZoneStateChange, handleToggleZoneDrawing, handleZoneComplete, handleClearZone]);
-
-  // Handle partner chart submission from modal
-  const handlePartnerChartSubmit = useCallback(async (partnerData: PartnerChartData) => {
-    let wasSaved = false;
-
-    // Auto-save new partner data as a birth chart
-    if (!partnerData.isSaved) {
-      const savedNewChart = await saveChart({
-        name: partnerData.name,
-        birth_date: partnerData.birthDate,
-        birth_time: partnerData.birthTime,
-        latitude: partnerData.latitude,
-        longitude: partnerData.longitude,
-        city_name: partnerData.cityName || null,
-      });
-
-      if (savedNewChart) {
-        // Update partner data with the saved chart's ID
-        partnerData = {
-          ...partnerData,
-          id: savedNewChart.id,
-          isSaved: true,
-        };
-        wasSaved = true;
-      }
-    }
-
-    compatibility.setPartnerChart(partnerData);
-    compatibility.enable();
-    setShowPartnerModal(false);
-
-    // Immediately push compatibility panel to stack (desktop) so user sees loading state
-    if (!isMobile) {
-      const hasCompatibilityPanel = panelStack.stack.some(p => p.type === 'compatibility');
-      if (!hasCompatibilityPanel) {
-        panelStack.push({
-          type: 'compatibility',
-          title: 'Compatible Spots',
-          data: null,
-        });
-      }
-    }
-
-    // Show appropriate toast message
-    if (wasSaved) {
-      toast.success(`${partnerData.name} added as partner & saved to My Charts`);
-    } else {
-      toast.success(`Duo Mode enabled with ${partnerData.name}`);
-    }
-  }, [compatibility, saveChart, isMobile, panelStack]);
 
   // Handle selecting a partner from saved charts (used in CompatibilityPanel dropdown)
   const handleSelectPartnerFromChart = useCallback((chart: BirthChart) => {
@@ -1500,9 +1432,9 @@ const GlobePage: React.FC<GlobePageProps> = ({
     compatibility.disable();
   }, [compatibility]);
 
-  // Handle editing partner chart (opens modal with existing data)
+  // Handle editing partner chart - no-op (modal removed)
   const handleEditPartner = useCallback(() => {
-    setShowPartnerModal(true);
+    // Partner modal removed - no-op
   }, []);
 
   // Handle clearing partner chart
@@ -1554,15 +1486,9 @@ const GlobePage: React.FC<GlobePageProps> = ({
       <LocationAnalysisCard
         analysis={analysis}
         onClose={handleCloseAnalysisPanel}
-        onRelocate={handleRelocate}
-        onResetRelocation={handleResetRelocation}
-        isRelocated={isRelocated}
-        onLocalSpace={handleLocalSpace}
-        onResetLocalSpace={handleResetLocalSpace}
-        isLocalSpace={isLocalSpace}
       />
     );
-  }, [panelStack, handleRelocate, handleResetRelocation, isRelocated, handleLocalSpace, handleResetLocalSpace, isLocalSpace, handleCloseLocationAnalysis]);
+  }, [panelStack, handleCloseLocationAnalysis]);
 
   const renderCityPanel = useCallback((data: unknown) => {
     const city = data as { lat: number; lng: number; name: string };
@@ -1586,17 +1512,13 @@ const GlobePage: React.FC<GlobePageProps> = ({
           onClose={panelStack.closeCurrent}
           isMobile={false}
           isBottomSheet={false}
-          onViewLocalSpace={handleViewLocalSpaceFromCity}
           isFavorite={isFavorite(city.lat, city.lng)}
           onToggleFavorite={handleToggleFavorite}
           locationAnalysis={cityAnalysis}
-          hasBirthData={!!birthData}
-          onRelocate={handleRelocate}
-          onViewRelocationChart={handleViewRelocationChart}
         />
       </Suspense>
     );
-  }, [panelStack, birthData, astroResult, handleViewLocalSpaceFromCity, isFavorite, handleToggleFavorite, handleRelocate, handleViewRelocationChart]);
+  }, [panelStack, birthData, astroResult, isFavorite, handleToggleFavorite]);
 
   const renderPersonPanel = useCallback((data: unknown) => {
     const person = data as PersonData;
@@ -1872,6 +1794,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
   if (!hasMounted) return null;
 
   return (
+    <GoogleMapsWrapper>
     <div
       className="h-full w-full flex flex-col relative bg-white dark:bg-[#050505]"
       style={isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : undefined}
@@ -1965,14 +1888,14 @@ const GlobePage: React.FC<GlobePageProps> = ({
         />
       )}
 
-      {/* astrocarto.app Banner (bottom right, desktop only, hidden when panel is open) */}
+      {/* halohome.app Banner (bottom right, desktop only, hidden when panel is open) */}
       {!isMobile && !panelStack.isOpen && (
         <a
           href="/"
-          className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-lg shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
         >
-          <img src="/logo.png" alt="astrocarto.app Logo" className="w-7 h-7 mr-2" />
-          <span className="font-semibold text-slate-700 dark:text-slate-200 text-base select-none tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>Astrocarto.app</span>
+          <FontAwesomeIcon icon={faHouse} className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+          <span className="text-sm text-slate-600 dark:text-slate-300 select-none">halohome.app</span>
         </a>
       )}
 
@@ -2140,7 +2063,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
 
           {isMobile ? (
             <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{ transform: 'translateY(-5%)' }}>
-              <MigrationGlobe
+              <VastuGlobeMap
                 ref={globeEl}
                 locations={filteredLocations}
                 migrations={filteredMigrations}
@@ -2156,14 +2079,16 @@ const GlobePage: React.FC<GlobePageProps> = ({
                 isMobile={true}
                 analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
                 cityLocation={cityLocation}
+                zipCodeBounds={zipCodeBounds}
                 relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
                 hasBirthData={!!birthData}
-                pendingBirthLocation={birthDataFlow.pendingBirthCoords}
                 partnerLocation={partnerLocation}
                 selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
                 isDrawingZone={zoneDrawing.isDrawing}
+                drawingMode={zoneDrawing.drawingMode}
                 zoneDrawingPoints={zoneDrawing.drawingPoints}
                 drawnZone={zoneDrawing.drawnZone}
+                searchZone={zoneDrawing.searchZone}
                 onZonePointAdd={handleZonePointAdd}
                 onZoneComplete={handleZoneComplete}
                 isLocalSpaceMode={isLocalSpace}
@@ -2182,7 +2107,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
             <ResizablePanelGroup direction="horizontal" className="flex-1 overflow-hidden">
               <ResizablePanel defaultSize={panelStack.isOpen ? 75 : 100} minSize={50}>
                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                  <MigrationGlobe
+                  <VastuGlobeMap
                     ref={globeEl}
                     locations={filteredLocations}
                     migrations={filteredMigrations}
@@ -2198,13 +2123,15 @@ const GlobePage: React.FC<GlobePageProps> = ({
                     hasBirthData={!!birthData}
                     analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
                     cityLocation={cityLocation}
+                    zipCodeBounds={zipCodeBounds}
                     relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
-                    pendingBirthLocation={birthDataFlow.pendingBirthCoords}
                     partnerLocation={partnerLocation}
                     selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
                     isDrawingZone={zoneDrawing.isDrawing}
+                    drawingMode={zoneDrawing.drawingMode}
                     zoneDrawingPoints={zoneDrawing.drawingPoints}
                     drawnZone={zoneDrawing.drawnZone}
+                    searchZone={zoneDrawing.searchZone}
                     onZonePointAdd={handleZonePointAdd}
                     onZoneComplete={handleZoneComplete}
                     isLocalSpaceMode={isLocalSpace}
@@ -2270,12 +2197,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
           <MobileLocationAnalysisSheet
             analysis={locationAnalysis}
             onClose={handleCloseLocationAnalysis}
-            onRelocate={handleRelocate}
-            onResetRelocation={handleResetRelocation}
-            isRelocated={isRelocated}
-            onLocalSpace={handleLocalSpace}
-            onResetLocalSpace={handleResetLocalSpace}
-            isLocalSpace={isLocalSpace}
           />
         )}
 
@@ -2306,49 +2227,13 @@ const GlobePage: React.FC<GlobePageProps> = ({
           <MobileCityInfoSheet
             city={selectedCityForInfo}
             onClose={handleCloseCityInfo}
-            onViewLocalSpace={handleViewLocalSpaceFromCity}
             isFavorite={isFavorite(selectedCityForInfo.lat, selectedCityForInfo.lng)}
             onToggleFavorite={handleToggleFavorite}
             locationAnalysis={selectedCityAnalysis}
-            hasBirthData={!!birthData}
-            onRelocate={handleRelocate}
           />
         )}
 
       </div>
-
-      {/* Quick Birth Data Modal - shows when double-tapping with no birth data */}
-      <QuickBirthDataModal
-        open={birthDataFlow.showQuickBirthModal}
-        onOpenChange={(open) => {
-          if (!open) birthDataFlow.handleCancelQuickBirth();
-        }}
-        coordinates={birthDataFlow.pendingBirthCoords}
-        onConfirm={handleQuickBirthDataConfirm}
-        isMobile={isMobile}
-        initialCity={birthDataFlow.initialCityForQuickModal}
-      />
-
-      {/* Birth Date/Time Modal - shows when selecting birthplace via search bar */}
-      <BirthDateTimeModal
-        open={birthDataFlow.showBirthDateTimeModal}
-        onOpenChange={(open) => {
-          if (!open) birthDataFlow.handleCancelBirthDateTime();
-        }}
-        birthplace={birthDataFlow.pendingBirthplace}
-        onConfirm={handleBirthDateTimeConfirm}
-        isMobile={isMobile}
-      />
-
-      {/* Partner Chart Modal - for adding/editing partner in compatibility mode */}
-      <PartnerChartModal
-        open={showPartnerModal}
-        onOpenChange={setShowPartnerModal}
-        onConfirm={handlePartnerChartSubmit}
-        savedCharts={savedCharts.filter(c => c.id !== currentChart?.id)}
-        existingPartner={compatibility.partnerChart}
-        isMobile={isMobile}
-      />
 
       {/* Compatibility Panel - Mobile: bottom sheet when compatibility is enabled */}
       {isMobile && compatibility.isEnabled && birthData && (
@@ -2432,7 +2317,6 @@ const GlobePage: React.FC<GlobePageProps> = ({
         cityName={clickTooltip.cityName}
         isVisible={clickTooltip.isVisible}
         onDismiss={handleDismissTooltip}
-        hasBirthData={!!birthData}
       />
 
       {/* Globe Context Menu - shows on right-click (desktop) / long-press (mobile) */}
@@ -2444,12 +2328,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
         cityName={contextMenu.cityName}
         isOpen={contextMenu.isOpen}
         onClose={handleCloseContextMenu}
-        hasBirthData={!!birthData}
         onAnalyzeLocation={handleContextAnalyze}
-        onRelocateHere={handleContextRelocate}
-        onSetLocalOrigin={handleContextSetLocalOrigin}
         onAddToFavorites={handleContextAddToFavorites}
-        onEnterBirthData={handleContextEnterBirthData}
         onAskAI={handleContextAskAI}
         isFavorited={isFavorite(contextMenu.lat, contextMenu.lng)}
       />
@@ -2464,6 +2344,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
         />
       )}
     </div>
+    </GoogleMapsWrapper>
   );
 };
 

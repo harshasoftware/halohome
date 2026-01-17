@@ -1,289 +1,276 @@
 /**
- * LandingPlanetaryDemo - Interactive planetary suite demo for landing page
+ * LandingPlanetaryDemo - Interactive 8 directions demo for landing page
  *
  * Features:
- * - Animated orbital display of all planets
- * - Toggle between Western and Vedic systems
- * - Planet descriptions and meanings
+ * - 8 Direction Analysis visualization with animated lines
+ * - Direction markers with hover tooltips
+ * - Vastu direction meanings and energy descriptions
  */
 
 import React, { useState, useEffect, useRef, memo } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Compass } from 'lucide-react';
 
-type AstroSystem = 'western' | 'vedic';
-
-interface Planet {
+interface Direction {
   name: string;
-  vedicName?: string;
+  vedicName: string;
   symbol: string;
   color: string;
-  orbitRadius: number;
-  orbitDuration: number;
-  size: number;
+  angle: number; // Degrees from top (N=0, E=90, S=180, W=270)
   meaning: string;
-  vedicMeaning?: string;
+  vedicMeaning: string;
+  baguaArea: string;
+  baguaColor: string;
 }
 
-// Full planetary suite with both Western and Vedic interpretations
-const PLANETS: Planet[] = [
+// 8 directions with Vastu and Feng Shui interpretations
+const DIRECTIONS: Direction[] = [
   {
-    name: 'Sun',
-    vedicName: 'Surya',
-    symbol: '☉',
-    color: '#FFD700',
-    orbitRadius: 45,
-    orbitDuration: 20,
-    size: 28,
-    meaning: 'Identity, ego, vitality',
-    vedicMeaning: 'Soul, authority, father',
-  },
-  {
-    name: 'Moon',
-    vedicName: 'Chandra',
-    symbol: '☽',
-    color: '#C0C0DC',
-    orbitRadius: 65,
-    orbitDuration: 25,
-    size: 22,
-    meaning: 'Emotions, intuition, nurturing',
-    vedicMeaning: 'Mind, mother, emotions',
-  },
-  {
-    name: 'Mercury',
-    vedicName: 'Budha',
-    symbol: '☿',
+    name: 'North',
+    vedicName: 'Uttara',
+    symbol: 'N',
     color: '#87CEEB',
-    orbitRadius: 85,
-    orbitDuration: 15,
-    size: 16,
-    meaning: 'Communication, intellect',
-    vedicMeaning: 'Intelligence, speech, commerce',
+    angle: 0,
+    meaning: 'Career, opportunities, wealth flow',
+    vedicMeaning: 'Water element, Kubera (wealth)',
+    baguaArea: 'Career',
+    baguaColor: '#1a1a2e',
   },
   {
-    name: 'Venus',
-    vedicName: 'Shukra',
-    symbol: '♀',
-    color: '#FFB6C1',
-    orbitRadius: 105,
-    orbitDuration: 30,
-    size: 20,
-    meaning: 'Love, beauty, harmony',
-    vedicMeaning: 'Love, luxury, creativity',
+    name: 'Northeast',
+    vedicName: 'Ishanya',
+    symbol: 'NE',
+    color: '#FFD700',
+    angle: 45,
+    meaning: 'Spirituality, wisdom, new beginnings',
+    vedicMeaning: 'Most auspicious, divine energy',
+    baguaArea: 'Knowledge',
+    baguaColor: '#2d4a3e',
   },
   {
-    name: 'Mars',
-    vedicName: 'Mangala',
-    symbol: '♂',
+    name: 'East',
+    vedicName: 'Purva',
+    symbol: 'E',
+    color: '#90EE90',
+    angle: 90,
+    meaning: 'Health, family, social connections',
+    vedicMeaning: 'Sun energy, Indra (vitality)',
+    baguaArea: 'Family',
+    baguaColor: '#2d5a3e',
+  },
+  {
+    name: 'Southeast',
+    vedicName: 'Agneya',
+    symbol: 'SE',
     color: '#FF6347',
-    orbitRadius: 125,
-    orbitDuration: 35,
-    size: 18,
-    meaning: 'Action, energy, passion',
-    vedicMeaning: 'Courage, strength, siblings',
+    angle: 135,
+    meaning: 'Wealth, abundance, prosperity',
+    vedicMeaning: 'Agni (fire), kitchen zone',
+    baguaArea: 'Wealth',
+    baguaColor: '#4a2d5a',
   },
   {
-    name: 'Jupiter',
-    vedicName: 'Guru',
-    symbol: '♃',
+    name: 'South',
+    vedicName: 'Dakshina',
+    symbol: 'S',
     color: '#DEB887',
-    orbitRadius: 150,
-    orbitDuration: 50,
-    size: 26,
-    meaning: 'Expansion, wisdom, luck',
-    vedicMeaning: 'Wisdom, teacher, dharma',
+    angle: 180,
+    meaning: 'Fame, reputation, strength',
+    vedicMeaning: 'Yama, courage & fame',
+    baguaArea: 'Fame',
+    baguaColor: '#8b2500',
   },
   {
-    name: 'Saturn',
-    vedicName: 'Shani',
-    symbol: '♄',
+    name: 'Southwest',
+    vedicName: 'Nairitya',
+    symbol: 'SW',
     color: '#708090',
-    orbitRadius: 175,
-    orbitDuration: 60,
-    size: 24,
-    meaning: 'Structure, discipline, karma',
-    vedicMeaning: 'Karma, longevity, lessons',
+    angle: 225,
+    meaning: 'Relationships, love, partnership',
+    vedicMeaning: 'Earth element, stability',
+    baguaArea: 'Love',
+    baguaColor: '#8b4560',
   },
   {
-    name: 'Uranus',
-    symbol: '♅',
+    name: 'West',
+    vedicName: 'Paschima',
+    symbol: 'W',
+    color: '#C0C0DC',
+    angle: 270,
+    meaning: 'Creativity, children, joy',
+    vedicMeaning: 'Varuna (water), gains',
+    baguaArea: 'Children',
+    baguaColor: '#4a4a5a',
+  },
+  {
+    name: 'Northwest',
+    vedicName: 'Vayavya',
+    symbol: 'NW',
     color: '#40E0D0',
-    orbitRadius: 195,
-    orbitDuration: 70,
-    size: 20,
-    meaning: 'Innovation, rebellion, awakening',
-  },
-  {
-    name: 'Neptune',
-    symbol: '♆',
-    color: '#6495ED',
-    orbitRadius: 215,
-    orbitDuration: 80,
-    size: 20,
-    meaning: 'Dreams, spirituality, illusion',
-  },
-  {
-    name: 'Pluto',
-    symbol: '♇',
-    color: '#9370DB',
-    orbitRadius: 235,
-    orbitDuration: 90,
-    size: 14,
-    meaning: 'Transformation, power, rebirth',
+    angle: 315,
+    meaning: 'Travel, helpful people, mentors',
+    vedicMeaning: 'Vayu (air), movement',
+    baguaArea: 'Helpful People',
+    baguaColor: '#3a3a4a',
   },
 ];
 
-// Vedic-only planets (nodes)
-const VEDIC_NODES = [
-  {
-    name: 'Rahu',
-    symbol: '☊',
-    color: '#4B0082',
-    orbitRadius: 140,
-    orbitDuration: 45,
-    size: 18,
-    meaning: 'North Node - ambition, obsession, material desires',
-  },
-  {
-    name: 'Ketu',
-    symbol: '☋',
-    color: '#8B4513',
-    orbitRadius: 160,
-    orbitDuration: 45,
-    size: 18,
-    meaning: 'South Node - spirituality, past lives, liberation',
-  },
+// 8 Direction line colors for the animation
+const DIRECTION_LINE_COLORS = [
+  { deg: 0, color: '#fbbf24', textColor: '#b45309' },    // N - Gold (darker for text)
+  { deg: 45, color: '#60a5fa', textColor: '#1d4ed8' },   // NE - Blue (darker for text)
+  { deg: 90, color: '#f97316', textColor: '#c2410c' },   // E - Orange
+  { deg: 135, color: '#a78bfa', textColor: '#7c3aed' },  // SE - Purple
+  { deg: 180, color: '#ef4444', textColor: '#dc2626' },  // S - Red
+  { deg: 225, color: '#22c55e', textColor: '#16a34a' },  // SW - Green
+  { deg: 270, color: '#06b6d4', textColor: '#0891b2' },  // W - Cyan
+  { deg: 315, color: '#ec4899', textColor: '#db2777' },  // NW - Pink
 ];
 
-const SystemToggle = memo(({
-  system,
-  onChange
-}: {
-  system: AstroSystem;
-  onChange: (system: AstroSystem) => void;
-}) => (
-  <div className="system-toggle">
-    <button
-      className={`system-btn ${system === 'western' ? 'active' : ''}`}
-      onClick={() => onChange('western')}
-    >
-      <span className="system-icon">♈</span>
-      Western
-    </button>
-    <button
-      className={`system-btn ${system === 'vedic' ? 'active' : ''}`}
-      onClick={() => onChange('vedic')}
-    >
-      <span className="system-icon">ॐ</span>
-      Vedic
-    </button>
-  </div>
-));
-
-const PlanetOrbit = memo(({
-  planet,
-  system,
-  index,
+// Direction marker around the compass
+const DirectionMarker = memo(({
+  direction,
+  lineColor,
+  textColor,
   isHovered,
-  onHover
+  onHover,
+  lineLength,
+  isInView,
+  index
 }: {
-  planet: Planet;
-  system: AstroSystem;
-  index: number;
+  direction: Direction;
+  lineColor: string;
+  textColor: string;
   isHovered: boolean;
-  onHover: (index: number | null) => void;
+  onHover: (name: string | null) => void;
+  lineLength: number;
+  isInView: boolean;
+  index: number;
 }) => {
-  const displayName = system === 'vedic' && planet.vedicName ? planet.vedicName : planet.name;
-  const scale = window.innerWidth < 1280 ? 0.7 : 0.85;
-  const radius = planet.orbitRadius * scale;
-  const size = planet.size * scale;
+  // Position markers at the end of each direction line
+  // CSS rotate uses clockwise from top, so 0=up, 90=right, 180=down, 270=left
+  // Convert to math coordinates where 0=right, 90=up
+  const angleRad = (direction.angle - 90) * (Math.PI / 180);
+  const x = Math.cos(angleRad) * lineLength;
+  const y = Math.sin(angleRad) * lineLength;
 
   return (
     <div
-      className="planet-orbit-group"
+      className={`direction-marker ${isHovered ? 'hovered' : ''} ${isInView ? 'visible' : ''}`}
       style={{
-        '--orbit-radius': `${radius}px`,
-        '--orbit-duration': `${planet.orbitDuration}s`,
-        '--start-angle': `${index * 36}deg`,
+        '--dir-color': lineColor,
+        transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+        background: isHovered ? '#fff' : 'transparent',
+        border: isHovered ? `2px solid ${lineColor}` : 'none',
+        boxShadow: isHovered ? `0 4px 16px ${lineColor}50` : 'none',
+        color: textColor,
+        animationDelay: `${index * 0.1}s`
       } as React.CSSProperties}
+      onMouseEnter={() => onHover(direction.name)}
+      onMouseLeave={() => onHover(null)}
     >
-      {/* Orbit ring */}
-      <div
-        className={`planet-orbit-ring ${isHovered ? 'highlighted' : ''}`}
-        style={{ borderColor: `${planet.color}20` }}
-      />
-
-      {/* Planet */}
-      <div
-        className={`planet-body ${isHovered ? 'hovered' : ''}`}
-        style={{
-          '--planet-size': `${size}px`,
-          '--planet-color': planet.color,
-        } as React.CSSProperties}
-        onMouseEnter={() => onHover(index)}
-        onMouseLeave={() => onHover(null)}
-      >
-        <span className="planet-symbol">{planet.symbol}</span>
-        {isHovered && (
-          <div className="planet-tooltip">
-            <span className="tooltip-name">{displayName}</span>
-            <span className="tooltip-meaning">
-              {system === 'vedic' && planet.vedicMeaning ? planet.vedicMeaning : planet.meaning}
-            </span>
-          </div>
-        )}
-      </div>
+      <span className="direction-symbol" style={{ fontWeight: 700, textShadow: isHovered ? 'none' : '0 1px 2px rgba(255,255,255,0.8)' }}>{direction.symbol}</span>
+      {isHovered && (
+        <div className="direction-tooltip" style={{ background: '#fff', border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', '--tooltip-title-color': textColor } as React.CSSProperties}>
+          <span className="tooltip-title">{direction.vedicName}</span>
+          <span className="tooltip-meaning">{direction.vedicMeaning}</span>
+        </div>
+      )}
     </div>
   );
 });
 
-const VedicNode = memo(({
-  node,
-  index,
-  isHovered,
-  onHover
+// 8 Direction Analysis visualization - animated compass lines
+const DirectionAnalysis = memo(({
+  hoveredDirection,
+  onDirectionHover,
+  isInView
 }: {
-  node: typeof VEDIC_NODES[0];
-  index: number;
-  isHovered: boolean;
-  onHover: (index: number | null) => void;
+  hoveredDirection: string | null;
+  onDirectionHover: (name: string | null) => void;
+  isInView: boolean;
 }) => {
-  const scale = window.innerWidth < 1280 ? 0.7 : 0.85;
-  const radius = node.orbitRadius * scale;
-  const size = node.size * scale;
+  const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 1280;
+  const size = isSmallScreen ? 380 : 480;
+  // Line length must match CSS animation (140px large, 110px small)
+  const lineLength = isSmallScreen ? 110 : 140;
+
+  // Find hovered direction info
+  const hoveredDir = hoveredDirection
+    ? DIRECTIONS.find(d => d.name === hoveredDirection)
+    : null;
+
+  // Get line color for a direction angle
+  const getLineData = (angle: number) => {
+    return DIRECTION_LINE_COLORS.find(l => l.deg === angle) || { color: '#fbbf24', textColor: '#b45309' };
+  };
 
   return (
-    <div
-      className="planet-orbit-group vedic-node"
-      style={{
-        '--orbit-radius': `${radius}px`,
-        '--orbit-duration': `${node.orbitDuration}s`,
-        '--start-angle': `${180 + index * 180}deg`,
-      } as React.CSSProperties}
-    >
-      <div
-        className={`planet-body node-body ${isHovered ? 'hovered' : ''}`}
-        style={{
-          '--planet-size': `${size}px`,
-          '--planet-color': node.color,
-        } as React.CSSProperties}
-        onMouseEnter={() => onHover(100 + index)}
-        onMouseLeave={() => onHover(null)}
-      >
-        <span className="planet-symbol">{node.symbol}</span>
-        {isHovered && (
-          <div className="planet-tooltip">
-            <span className="tooltip-name">{node.name}</span>
-            <span className="tooltip-meaning">{node.meaning}</span>
-          </div>
-        )}
+    <div className={`direction-analysis ${isInView ? 'animate' : ''}`} style={{ width: size, height: size }}>
+      {/* Orbit rings background */}
+      <div className="direction-orbit-group">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="direction-orbit-ring"
+            style={{
+              '--orbit-radius': `${i * 50}px`,
+            } as React.CSSProperties}
+          />
+        ))}
       </div>
+
+      {/* Animated direction lines */}
+      <div className="direction-lines-container">
+        {DIRECTION_LINE_COLORS.map(({ deg, color }, i) => (
+          <div
+            key={deg}
+            className={`direction-line ${isInView ? 'animate' : ''}`}
+            style={{
+              transform: `translate(-50%, -100%) rotate(${deg}deg)`,
+              background: color,
+              animationDelay: `${i * 0.1}s`
+            } as React.CSSProperties}
+          />
+        ))}
+        {/* Center point */}
+        <div className="direction-center" />
+      </div>
+
+      {/* Direction markers - positioned at end of lines */}
+      {DIRECTION_LINE_COLORS.map(({ deg, color, textColor }, i) => {
+        // Find the matching direction data
+        const dir = DIRECTIONS.find(d => d.angle === deg);
+        if (!dir) return null;
+
+        return (
+          <DirectionMarker
+            key={dir.name}
+            direction={dir}
+            lineColor={color}
+            textColor={textColor}
+            isHovered={hoveredDirection === dir.name}
+            onHover={onDirectionHover}
+            lineLength={lineLength}
+            isInView={isInView}
+            index={i}
+          />
+        );
+      })}
+
+      {/* Tooltip for hovered direction */}
+      {hoveredDir && (
+        <div className="direction-info-tooltip" style={{ background: '#fff', border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', '--tooltip-area-color': getLineData(hoveredDir.angle).textColor } as React.CSSProperties}>
+          <span className="tooltip-area">{hoveredDir.baguaArea}</span>
+          <span className="tooltip-direction">{hoveredDir.name}</span>
+          <span className="tooltip-meaning">{hoveredDir.meaning}</span>
+        </div>
+      )}
     </div>
   );
 });
 
 export const LandingPlanetaryDemo = memo(() => {
-  const [system, setSystem] = useState<AstroSystem>('western');
-  const [hoveredPlanet, setHoveredPlanet] = useState<number | null>(null);
+  const [hoveredDirection, setHoveredDirection] = useState<string | null>(null);
   const [isInView, setIsInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -301,103 +288,64 @@ export const LandingPlanetaryDemo = memo(() => {
     return () => observer.disconnect();
   }, []);
 
-  // Filter planets based on system (Vedic traditionally uses 7 classical planets + nodes)
-  const visiblePlanets = system === 'vedic'
-    ? PLANETS.filter(p => p.vedicName) // Only show planets with Vedic names
-    : PLANETS;
+  // Get line color for a direction
+  const getLineColor = (angle: number) => {
+    const lineData = DIRECTION_LINE_COLORS.find(l => l.deg === angle);
+    return lineData?.color || '#fbbf24';
+  };
 
   return (
     <section className="planetary-demo-section" ref={containerRef}>
       <div className="planetary-demo-container">
-        {/* Left side - Orbital display */}
-        <div className={`planetary-orrery ${isInView ? 'animate' : ''}`}>
-          {/* Center sun glow */}
-          <div className="orrery-center">
-            <div className="center-glow" />
-          </div>
-
-          {/* Planet orbits */}
-          {visiblePlanets.map((planet, i) => (
-            <PlanetOrbit
-              key={planet.name}
-              planet={planet}
-              system={system}
-              index={i}
-              isHovered={hoveredPlanet === i}
-              onHover={setHoveredPlanet}
-            />
-          ))}
-
-          {/* Vedic nodes (Rahu/Ketu) */}
-          {system === 'vedic' && VEDIC_NODES.map((node, i) => (
-            <VedicNode
-              key={node.name}
-              node={node}
-              index={i}
-              isHovered={hoveredPlanet === 100 + i}
-              onHover={setHoveredPlanet}
-            />
-          ))}
+        {/* Left side - 8 Direction Analysis */}
+        <div className="planetary-orrery">
+          <DirectionAnalysis
+            hoveredDirection={hoveredDirection}
+            onDirectionHover={setHoveredDirection}
+            isInView={isInView}
+          />
         </div>
 
         {/* Right side - Content */}
         <div className="planetary-demo-content">
           <h2 className="planetary-demo-title text-gradient">
-            Every Planet.<br />Every Line.
+            8 Directions.<br />Complete Analysis.
           </h2>
 
           <div className="planetary-demo-divider" />
 
-          {/* System toggle */}
-          <SystemToggle system={system} onChange={setSystem} />
-
           {/* Description */}
           <div className="planetary-description">
-            {system === 'western' ? (
-              <>
-                <p className="planetary-intro">
-                  <Sparkles className="w-4 h-4 inline mr-2 text-purple-400" />
-                  Tropical & Sidereal • 8 House Systems
-                </p>
-                <p className="planetary-text">
-                  Built for serious astrologers. Choose Placidus, Whole Sign, Koch, Equal, Campanus,
-                  Regiomontanus, Porphyry, or Morinus. All 10 celestial bodies mapped with precision.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="planetary-intro">
-                  <Sparkles className="w-4 h-4 inline mr-2 text-amber-400" />
-                  True Sidereal • Lahiri Ayanamsa
-                </p>
-                <p className="planetary-text">
-                  Full Jyotish support with Navagraha lines including Rahu and Ketu.
-                  Understand your karmic path and past-life patterns across the globe.
-                </p>
-              </>
-            )}
+            <p className="planetary-intro">
+              <Compass className="w-4 h-4 inline mr-2 text-amber-500" />
+              Vastu Shastra • Directional Energy
+            </p>
+            <p className="planetary-text">
+              Every direction carries unique energy. We analyze all 8 directions — North, South, East, West,
+              and their ordinal combinations — to reveal how your property aligns with cosmic forces.
+            </p>
           </div>
 
-          {/* Planet list */}
+          {/* Direction chips */}
           <div className="planet-chips">
-            {visiblePlanets.slice(0, 5).map((planet) => (
+            {DIRECTIONS.slice(0, 5).map((dir) => (
               <span
-                key={planet.name}
+                key={dir.name}
                 className="planet-chip"
-                style={{ '--chip-color': planet.color } as React.CSSProperties}
+                style={{ '--chip-color': getLineColor(dir.angle) } as React.CSSProperties}
               >
-                {planet.symbol} {system === 'vedic' && planet.vedicName ? planet.vedicName : planet.name}
+                {dir.symbol} {dir.vedicName}
               </span>
             ))}
-            <span className="planet-chip more">+{visiblePlanets.length - 5} more</span>
+            <span className="planet-chip more">+{DIRECTIONS.length - 5} more</span>
           </div>
 
           <div className="planetary-cta-group">
             <a href="/guest" className="demo-cta planetary-cta">
-              See All Your Lines Free
+              Analyze Your Property Free
               <span className="demo-cta-arrow">→</span>
             </a>
-            <a href="/blog/astrology-systems" className="planetary-learn-link">
+            <a href="/blog/methodology" className="planetary-learn-link">
               How it works →
             </a>
           </div>

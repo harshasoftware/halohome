@@ -1,6 +1,6 @@
 /**
  * SubscriptionModal Component
- * Modal for selecting and subscribing to AI plans
+ * Modal for selecting and subscribing to property analysis plans
  * Styled to match the landing page aesthetic
  */
 
@@ -9,7 +9,7 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import { Sparkles, Crown, Check, Loader2, X } from 'lucide-react';
+import { Search, MapPin, Crown, Check, Loader2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth-context';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ export const SubscriptionModal: React.FC = () => {
   const { status } = useAISubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSubscribe = async (planId: 'starter' | 'pro') => {
+  const handleSubscribe = async (planId: 'seeker' | 'pioneer' | 'sage') => {
     setLoadingPlan(planId);
 
     try {
@@ -63,7 +63,7 @@ export const SubscriptionModal: React.FC = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 bg-[#0a0a0f] border-zinc-800 overflow-hidden">
+      <DialogContent className="sm:max-w-3xl p-0 gap-0 bg-[#0a0a0f] border-zinc-800 overflow-hidden">
         {/* Close button */}
         <button
           onClick={() => setIsOpen(false)}
@@ -75,84 +75,131 @@ export const SubscriptionModal: React.FC = () => {
         {/* Header */}
         <div className="text-center pt-8 pb-4 px-6">
           <h2 className="text-2xl font-medium text-white" style={{ fontFamily: 'Cinzel, serif' }}>
-            Unlock the Stars
+            Start Living in Harmony.
           </h2>
-          <p className="text-zinc-400 mt-2">Choose the perfect plan for your journey.</p>
+          <p className="text-zinc-400 mt-2">Choose the perfect plan to find your harmonious home.</p>
         </div>
 
         {/* Plans Grid */}
-        <div className="grid md:grid-cols-2 gap-4 p-6 pt-2">
-          {/* Traveler Plan - Featured */}
+        <div className="grid md:grid-cols-3 gap-4 p-6 pt-2">
+          {/* Seeker Plan - Featured */}
           <div className="relative rounded-3xl p-6 flex flex-col bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/30 hover:border-amber-500/50 transition-all hover:-translate-y-1">
             {/* Badge */}
             <div className="absolute top-0 right-0 p-4">
               <span className="bg-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                {currentPlan === 'starter' ? 'Current' : 'Limited Offer'}
+                {currentPlan === 'seeker' ? 'Current' : 'Popular'}
               </span>
             </div>
 
             {/* Plan Name */}
             <h3 className="text-xl font-medium text-white flex items-center gap-2">
-              <Sparkles size={18} className="text-yellow-400" />
-              Traveler
+              <Search size={18} className="text-amber-400" />
+              Seeker
             </h3>
 
             {/* Price */}
             <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: 'Cinzel, serif' }}>
-              $10<span className="text-lg text-zinc-500">/mo</span>
+              $19<span className="text-lg text-zinc-500">/mo</span>
             </div>
-
-            {/* Promo */}
-            <p className="text-sm text-amber-400 -mt-2 mb-4">
-              Use code <span className="font-mono font-bold">NEWYEARPLAN</span> at checkout!
-            </p>
 
             {/* Features */}
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Everything in Explorer</span>
+                <span>3 locations</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Category Analysis (Career, Love...)</span>
+                <span>Harmony Score</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Detailed Line Interpretations</span>
-              </li>
-              <li className="flex items-center gap-3 text-zinc-300">
-                <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>50 AI Questions/mo</span>
+                <span>Insights & Remedies</span>
               </li>
             </ul>
 
             {/* Button */}
             <button
-              onClick={() => handleSubscribe('starter')}
-              disabled={loadingPlan !== null || currentPlan === 'starter' || currentPlan === 'pro'}
+              onClick={() => handleSubscribe('seeker')}
+              disabled={loadingPlan !== null || currentPlan === 'seeker' || ['pioneer', 'sage'].includes(currentPlan)}
               className="w-full py-4 rounded-xl font-medium transition-all bg-amber-500 hover:bg-amber-600 text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loadingPlan === 'starter' ? (
+              {loadingPlan === 'seeker' ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
-              ) : currentPlan === 'starter' ? (
+              ) : currentPlan === 'seeker' ? (
                 'Current Plan'
-              ) : currentPlan === 'pro' ? (
+              ) : ['pioneer', 'sage'].includes(currentPlan) ? (
                 'Downgrade N/A'
               ) : (
-                'Subscribe Now'
+                'Get Started'
               )}
             </button>
-
-            {currentPlan !== 'starter' && currentPlan !== 'pro' && (
-              <p className="text-xs text-zinc-500 text-center mt-3">First 100 users · Ends Jan 15</p>
-            )}
           </div>
 
-          {/* Mystic Plan */}
+          {/* Pioneer Plan */}
           <div className="relative rounded-3xl p-6 flex flex-col bg-white/[0.02] border border-zinc-800 hover:border-zinc-700 transition-all hover:-translate-y-1 backdrop-blur-xl">
             {/* Badge */}
-            {currentPlan === 'pro' && (
+            {currentPlan === 'pioneer' && (
+              <div className="absolute top-0 right-0 p-4">
+                <span className="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                  Current
+                </span>
+              </div>
+            )}
+
+            {/* Plan Name */}
+            <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2">
+              <MapPin size={18} className="text-amber-400" />
+              Pioneer
+            </h3>
+
+            {/* Price */}
+            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: 'Cinzel, serif' }}>
+              $49<span className="text-lg text-zinc-500">/mo</span>
+            </div>
+
+            {/* Features */}
+            <ul className="space-y-3 mb-6 flex-1">
+              <li className="flex items-center gap-3 text-zinc-300">
+                <Check className="w-4 h-4 text-white flex-shrink-0" />
+                <span>10 locations</span>
+              </li>
+              <li className="flex items-center gap-3 text-zinc-300">
+                <Check className="w-4 h-4 text-white flex-shrink-0" />
+                <span>Harmony Score</span>
+              </li>
+              <li className="flex items-center gap-3 text-zinc-300">
+                <Check className="w-4 h-4 text-white flex-shrink-0" />
+                <span>Insights & Remedies</span>
+              </li>
+              <li className="flex items-center gap-3 text-zinc-300">
+                <Check className="w-4 h-4 text-white flex-shrink-0" />
+                <span>Compare properties</span>
+              </li>
+            </ul>
+
+            {/* Button */}
+            <button
+              onClick={() => handleSubscribe('pioneer')}
+              disabled={loadingPlan !== null || currentPlan === 'pioneer' || currentPlan === 'sage'}
+              className="w-full py-4 rounded-xl font-medium transition-all bg-transparent border border-zinc-700 hover:bg-white hover:text-[#0a0a0f] text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loadingPlan === 'pioneer' ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : currentPlan === 'pioneer' ? (
+                'Current Plan'
+              ) : currentPlan === 'sage' ? (
+                'Downgrade N/A'
+              ) : (
+                'Get Started'
+              )}
+            </button>
+          </div>
+
+          {/* Sage Plan */}
+          <div className="relative rounded-3xl p-6 flex flex-col bg-white/[0.02] border border-zinc-800 hover:border-zinc-700 transition-all hover:-translate-y-1 backdrop-blur-xl">
+            {/* Badge */}
+            {currentPlan === 'sage' && (
               <div className="absolute top-0 right-0 p-4">
                 <span className="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                   Current
@@ -163,53 +210,56 @@ export const SubscriptionModal: React.FC = () => {
             {/* Plan Name */}
             <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2">
               <Crown size={18} className="text-amber-400" />
-              Mystic
+              Sage
             </h3>
 
             {/* Price */}
             <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: 'Cinzel, serif' }}>
-              $20<span className="text-lg text-zinc-500">/mo</span>
+              $99<span className="text-lg text-zinc-500">/mo</span>
             </div>
 
             {/* Features */}
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Everything in Traveler</span>
+                <span>Unlimited properties</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>200 AI Questions/mo</span>
+                <span>Harmony Score</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>PDF Report Exports</span>
+                <span>Insights & Remedies</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Priority Support</span>
-              </li>
-              <li className="flex items-center gap-3 text-zinc-300">
-                <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Early Access to Features</span>
+                <span>Priority processing</span>
               </li>
             </ul>
 
             {/* Button */}
             <button
-              onClick={() => handleSubscribe('pro')}
-              disabled={loadingPlan !== null || currentPlan === 'pro'}
+              onClick={() => handleSubscribe('sage')}
+              disabled={loadingPlan !== null || currentPlan === 'sage'}
               className="w-full py-4 rounded-xl font-medium transition-all bg-transparent border border-zinc-700 hover:bg-white hover:text-[#0a0a0f] text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loadingPlan === 'pro' ? (
+              {loadingPlan === 'sage' ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
-              ) : currentPlan === 'pro' ? (
+              ) : currentPlan === 'sage' ? (
                 'Current Plan'
               ) : (
-                'Go Limitless'
+                'Get Started'
               )}
             </button>
           </div>
+        </div>
+
+        {/* Add-on pricing */}
+        <div className="pb-6 text-center">
+          <p className="text-zinc-500 text-sm">
+            Need more? Add-on scans available for <span className="text-amber-400 font-medium">$8 each</span>
+          </p>
         </div>
 
       </DialogContent>

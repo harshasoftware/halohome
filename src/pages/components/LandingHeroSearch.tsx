@@ -4,8 +4,10 @@ import usePlacesAutocomplete, {
     getLatLng,
 } from '@/hooks/usePlacesAutocompleteNew';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Loader2, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Loader2, ArrowRight, Hash } from 'lucide-react';
 import '../Landing.css';
+
+type SearchMode = 'address' | 'zipcode';
 
 interface LandingHeroSearchProps {
     onFocusChange?: (isFocused: boolean) => void;
@@ -17,6 +19,8 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
     const [isFocused, setIsFocused] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [searchMode, setSearchMode] = useState<SearchMode>('address');
+    const [zipInput, setZipInput] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Track visual viewport for keyboard detection on mobile
@@ -70,7 +74,8 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
         clearSuggestions,
     } = usePlacesAutocomplete({
         requestOptions: {
-            types: ['(cities)'], // Focus on cities for astrocartography
+            // No type restriction - allows addresses and other location types
+            componentRestrictions: { country: 'us' }, // US addresses
         },
         debounce: 300,
     });
@@ -78,6 +83,12 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(e.target.value);
         setActiveIndex(-1);
+    };
+
+    const handleZipInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Only allow numbers, max 5 digits
+        const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+        setZipInput(val);
     };
 
     const selectSuggestion = useCallback((description: string) => {
@@ -97,7 +108,7 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
                 if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
                     throw new Error('Invalid coordinates');
                 }
-                navigate(`/guest?lat=${coords.lat}&lng=${coords.lng}&place=${encodeURIComponent(description)}&action=birth`);
+                navigate(`/app?lat=${coords.lat}&lng=${coords.lng}&address=${encodeURIComponent(description)}`);
             })
             .catch((error) => {
                 console.log('Error: ', error);
@@ -105,11 +116,36 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
             });
     }, [setValue, clearSuggestions, navigate]);
 
+    const handleZipSearch = useCallback(async () => {
+        if (zipInput.length !== 5) return;
+
+        setIsSelecting(true);
+
+        try {
+            const results = await getGeocode({ address: `${zipInput}, USA` });
+            const { lat, lng } = await getLatLng(results[0]);
+            navigate(`/app?lat=${lat}&lng=${lng}&address=${encodeURIComponent(zipInput)}&isZip=true`);
+        } catch (error) {
+            console.error('ZIP code geocoding error:', error);
+            setIsSelecting(false);
+        }
+    }, [zipInput, navigate]);
+
     const handleSelect = (suggestion: { description: string }) => () => {
         selectSuggestion(suggestion.description);
     };
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Handle ZIP code Enter
+        if (searchMode === 'zipcode') {
+            if (e.key === 'Enter' && zipInput.length === 5) {
+                e.preventDefault();
+                handleZipSearch();
+            }
+            return;
+        }
+
+        // Address mode keyboard navigation
         if (status !== 'OK' || data.length === 0) return;
 
         switch (e.key) {
@@ -136,7 +172,19 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
                 setActiveIndex(-1);
                 break;
         }
-    }, [status, data, activeIndex, selectSuggestion, clearSuggestions]);
+    }, [searchMode, zipInput, handleZipSearch, status, data, activeIndex, selectSuggestion, clearSuggestions]);
+
+    const toggleMode = () => {
+        setSearchMode(prev => prev === 'address' ? 'zipcode' : 'address');
+        setValue('');
+        setZipInput('');
+        clearSuggestions();
+        setActiveIndex(-1);
+    };
+
+    const isAddressMode = searchMode === 'address';
+    const placeholder = isAddressMode ? 'Enter property address...' : 'Enter 5-digit ZIP code...';
+    const currentValue = isAddressMode ? value : zipInput;
 
     // Calculate max height for suggestions based on available space above keyboard
     const suggestionsMaxHeight = keyboardHeight > 0
@@ -153,34 +201,65 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
             } : undefined}
         >
             {/* Main Input Container */}
-            <div className="relative flex items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-4 shadow-2xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30 group-focus-within:bg-white/20 group-focus-within:border-purple-400/50 group-focus-within:ring-2 group-focus-within:ring-purple-500/20">
-                <Search className="w-5 h-5 text-purple-300 mr-4 shrink-0" />
+            <div className="relative flex items-center bg-white border-2 border-zinc-300 rounded-full px-4 py-3 shadow-md transition-all duration-300 group-hover:border-zinc-400 group-hover:shadow-lg group-focus-within:border-zinc-900 group-focus-within:shadow-xl">
+                {/* Mode toggle button */}
+                <button
+                    onClick={toggleMode}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full shrink-0 transition-colors hover:bg-slate-100 ${isAddressMode ? 'text-[#d4a5a5]' : 'text-[#d4a5a5]'}`}
+                    title={isAddressMode ? 'Switch to ZIP code search' : 'Switch to address search'}
+                >
+                    {isAddressMode ? (
+                        <MapPin className="w-5 h-5" />
+                    ) : (
+                        <Hash className="w-5 h-5" />
+                    )}
+                </button>
+
                 <input
                     type="text"
-                    value={value}
-                    onChange={handleInput}
+                    value={currentValue}
+                    onChange={isAddressMode ? handleInput : handleZipInput}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    disabled={!ready || isSelecting}
-                    placeholder="Where were you born?"
-                    className="w-full bg-transparent border-none outline-none text-white placeholder-purple-200/50 text-lg font-medium"
+                    disabled={isAddressMode ? (!ready || isSelecting) : isSelecting}
+                    placeholder={placeholder}
+                    className="w-full bg-transparent border-none outline-none text-zinc-900 placeholder-zinc-400 text-lg font-medium"
                     role="combobox"
-                    aria-expanded={status === 'OK'}
+                    aria-expanded={isAddressMode && status === 'OK'}
                     aria-autocomplete="list"
                     aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
+                    inputMode={isAddressMode ? 'text' : 'numeric'}
                 />
-                {isSelecting ? (
-                    <Loader2 className="w-5 h-5 text-purple-300 animate-spin ml-2" />
-                ) : (
-                    <div className="w-5 h-5 ml-2" /> // Spacer
+
+                {/* Search button for ZIP mode */}
+                {!isAddressMode && zipInput.length === 5 && !isSelecting && (
+                    <button
+                        onClick={handleZipSearch}
+                        className="flex items-center justify-center w-10 h-10 rounded-full bg-[#d4a5a5] hover:bg-[#c49393] transition-colors ml-2"
+                    >
+                        <Search className="w-5 h-5 text-white" />
+                    </button>
                 )}
+
+                {isSelecting ? (
+                    <Loader2 className="w-5 h-5 text-zinc-500 animate-spin ml-2" />
+                ) : isAddressMode ? (
+                    <div className="w-5 h-5 ml-2" /> // Spacer
+                ) : null}
             </div>
 
-            {/* Suggestions Dropdown */}
-            {status === 'OK' && (
+            {/* Mode indicator */}
+            <div className="text-center mt-3">
+                <span className="text-xs text-slate-400">
+                    {isAddressMode ? 'Address search' : 'ZIP code search'} — tap icon to switch
+                </span>
+            </div>
+
+            {/* Suggestions Dropdown (Address mode only) */}
+            {isAddressMode && status === 'OK' && (
                 <ul
-                    className="hero-search-suggestions absolute z-50 w-full mt-2 bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+                    className="hero-search-suggestions absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
                     style={{ maxHeight: suggestionsMaxHeight }}
                     tabIndex={-1}
                     role="listbox"
@@ -199,22 +278,30 @@ const LandingHeroSearch = ({ onFocusChange }: LandingHeroSearchProps) => {
                                 role="option"
                                 aria-selected={isActive}
                                 onClick={handleSelect(suggestion)}
-                                className={`flex items-center px-6 py-4 cursor-pointer transition-colors group/item ${isActive ? 'bg-white/15' : 'hover:bg-white/10'}`}
+                                className={`flex items-center px-6 py-4 cursor-pointer transition-colors group/item border-b border-slate-100 last:border-b-0 ${isActive ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
                             >
-                                <MapPin className={`w-4 h-4 text-purple-400 mr-4 shrink-0 transition-opacity ${isActive ? 'opacity-100' : 'opacity-50 group-hover/item:opacity-100'}`} />
+                                <MapPin className={`w-4 h-4 text-[#d4a5a5] mr-4 shrink-0 transition-opacity ${isActive ? 'opacity-100' : 'opacity-50 group-hover/item:opacity-100'}`} />
                                 <div className="flex flex-col text-left">
-                                    <span className="text-white font-medium text-base">{main_text}</span>
-                                    <span className="text-zinc-400 text-sm">{secondary_text}</span>
+                                    <span className="text-slate-800 font-medium text-base">{main_text}</span>
+                                    <span className="text-slate-500 text-sm">{secondary_text}</span>
                                 </div>
-                                <ArrowRight className={`w-4 h-4 text-white/30 ml-auto transition-all duration-300 ${isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0'}`} />
+                                <ArrowRight className={`w-4 h-4 text-slate-400 ml-auto transition-all duration-300 ${isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0'}`} />
                             </li>
                         );
                     })}
                 </ul>
+            )}
+
+            {/* ZIP code helper text */}
+            {!isAddressMode && zipInput.length > 0 && zipInput.length < 5 && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 text-center">
+                    <p className="text-sm text-slate-500">
+                        Enter 5-digit ZIP code ({5 - zipInput.length} more digits)
+                    </p>
+                </div>
             )}
         </div>
     );
 };
 
 export default LandingHeroSearch;
-

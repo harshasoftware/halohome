@@ -1,6 +1,6 @@
 /**
  * Astrocartography PDF Report Generator
- * Premium branded report with cosmic aesthetic matching astrocarto.app
+ * Premium branded report with cosmic aesthetic matching halohome.app
  */
 
 import jsPDF from 'jspdf';
@@ -48,7 +48,7 @@ export interface ReportResult {
 }
 
 // ============================================
-// BRAND COLORS - Matching astrocarto.app
+// BRAND COLORS - Matching halohome.app
 // ============================================
 const BRAND = {
   // Primary dark theme
@@ -261,7 +261,7 @@ function addBrandedFooter(doc: jsPDF, pageWidth: number, pageNum: number, totalP
   doc.setFontSize(9);
   doc.setTextColor(...BRAND.purple);
   doc.setFont('helvetica', 'bold');
-  doc.text('astrocarto.app', 20, footerY);
+  doc.text('halohome.app', 20, footerY);
 
   // Page number
   doc.setTextColor(...BRAND.zinc500);
@@ -544,7 +544,7 @@ export function generateAstroReport(config: ReportConfig): ReportResult | void {
   // Brand URL
   doc.setFontSize(10);
   doc.setTextColor(...BRAND.purple);
-  doc.text('astrocarto.app', pageWidth / 2, 72, { align: 'center' });
+  doc.text('halohome.app', pageWidth / 2, 72, { align: 'center' });
 
   // Birth Information Card
   const infoCardY = 100;

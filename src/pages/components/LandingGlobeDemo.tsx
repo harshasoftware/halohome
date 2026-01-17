@@ -2,14 +2,14 @@
  * LandingGlobeDemo - Interactive 3D globe demo for landing page
  *
  * Features:
- * - Planetary lines traced ON the globe surface (like real astrocartography)
- * - Relocation arcs showing "fly here for X" journeys
- * - Auto-cycling demos for Love, Career, and Home
+ * - Scout/Compass: ZIP code lookup and parcel data analysis (Web)
+ * - Harmony zones visualization on globe
+ * - Auto-cycling demos for Scout, Compare, and Remedies
  */
 
 import React, { useState, useEffect, useRef, useMemo, memo, lazy, Suspense } from 'react';
 import type { GlobeMethods } from 'react-globe.gl';
-import { Heart, Sun, Moon, Plane } from 'lucide-react';
+import { Compass, Scale, Sparkles, MapPin } from 'lucide-react';
 
 // Lazy load Globe since it's a heavy component
 const Globe = lazy(() => import('react-globe.gl'));
@@ -139,19 +139,19 @@ const DEMO_POINTS: Record<DemoMode, PointData[]> = {
 // Demo content text - benefit-driven copy
 const DEMO_CONTENT: Record<DemoMode, { title: string; subtitle: string; description: string }> = {
   love: {
-    title: 'Find Love',
-    subtitle: 'Your Venus line leads to Bali',
-    description: 'Stop dating in the wrong places. Your Venus line reveals exactly where romance flourishes and you attract love effortlessly.',
+    title: 'Scout Any ZIP',
+    subtitle: 'Enter any ZIP code or address',
+    description: 'Just enter a ZIP code to discover the harmony potential of any area. We analyze parcel data and orientation to give you instant Vastu insights.',
   },
   career: {
-    title: 'Accelerate Career',
-    subtitle: 'Your Sun line leads to Tokyo',
-    description: 'Why struggle where you are? Your Sun line shows where your professional identity shines and success finds you naturally.',
+    title: 'Compare Properties',
+    subtitle: 'Side-by-side parcel analysis',
+    description: 'Looking at multiple properties? Compare their harmony scores using real parcel boundaries to find the one with the best energy flow.',
   },
   home: {
-    title: 'Feel at Home',
-    subtitle: 'Your Moon line leads to Sydney',
-    description: 'Finally feel like you belong. Your Moon line reveals where you feel emotionally nurtured, secure, and truly at peace.',
+    title: 'Get Remedies',
+    subtitle: 'Actionable improvements',
+    description: 'Every property lookup includes practical Vastu remedies to enhance harmony — even in spaces that weren\'t built with Vastu in mind.',
   },
 };
 
@@ -165,15 +165,15 @@ const DemoButton = memo(({
   onClick: () => void;
 }) => {
   const icons = {
-    love: <Heart className="w-4 h-4" />,
-    career: <Sun className="w-4 h-4" />,
-    home: <Moon className="w-4 h-4" />,
+    love: <Compass className="w-4 h-4" />,
+    career: <Scale className="w-4 h-4" />,
+    home: <Sparkles className="w-4 h-4" />,
   };
 
   const labels = {
-    love: 'Love',
-    career: 'Career',
-    home: 'Home',
+    love: 'Scout',
+    career: 'Compare',
+    home: 'Remedies',
   };
 
   return (
@@ -280,11 +280,11 @@ export const LandingGlobeDemo = memo(() => {
         {/* Left side - Content */}
         <div className="globe-demo-content">
           <h2 className="globe-demo-title text-gradient">
-            See Where You<br />Thrive on Earth
+            Scout Any Location<br />In Seconds
           </h2>
 
           <p className="globe-demo-intro">
-            Your birth chart creates invisible lines across the globe. Each line amplifies a different part of your life.
+            Enter any ZIP code or address to analyze property harmony. We use real parcel data to deliver instant Vastu insights.
           </p>
 
           <div className="globe-demo-divider" />
@@ -307,7 +307,7 @@ export const LandingGlobeDemo = memo(() => {
               {DEMO_CONTENT[activeDemo].title}
             </h3>
             <p className="demo-subtitle">
-              <Plane className="w-4 h-4 inline mr-2" />
+              <MapPin className="w-4 h-4 inline mr-2" />
               {DEMO_CONTENT[activeDemo].subtitle}
             </p>
             <p className="demo-description-text">
@@ -316,7 +316,7 @@ export const LandingGlobeDemo = memo(() => {
           </div>
 
           <a href="/guest" className="demo-cta">
-            Find Your Best Places Free
+            Scout Your First ZIP Free
             <span className="demo-cta-arrow">→</span>
           </a>
         </div>

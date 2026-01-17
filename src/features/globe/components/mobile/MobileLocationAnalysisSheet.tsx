@@ -26,23 +26,11 @@ const PLANET_COLORS: Record<string, string> = {
 interface MobileLocationAnalysisSheetProps {
   analysis: LocationAnalysis;
   onClose: () => void;
-  onRelocate: (lat: number, lng: number) => void;
-  onResetRelocation?: () => void;
-  isRelocated?: boolean;
-  onLocalSpace?: (lat: number, lng: number) => void;
-  onResetLocalSpace?: () => void;
-  isLocalSpace?: boolean;
 }
 
 export const MobileLocationAnalysisSheet: React.FC<MobileLocationAnalysisSheetProps> = ({
   analysis,
   onClose,
-  onRelocate,
-  onResetRelocation,
-  isRelocated = false,
-  onLocalSpace,
-  onResetLocalSpace,
-  isLocalSpace = false,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const setMobileSheetMaximized = useGlobeInteractionStore((s) => s.setMobileSheetMaximized);
@@ -157,57 +145,6 @@ export const MobileLocationAnalysisSheet: React.FC<MobileLocationAnalysisSheetPr
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          {/* Relocation Button */}
-          {isRelocated && onResetRelocation ? (
-            <button
-              onClick={onResetRelocation}
-              className="w-full h-14 rounded-xl border-2 border-purple-500 text-purple-600 text-lg font-medium flex items-center justify-center gap-2 transition-colors hover:bg-purple-50 dark:hover:bg-purple-900/20"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
-              </svg>
-              Reset Relocation
-            </button>
-          ) : (
-            <button
-              onClick={() => onRelocate(analysis.latitude, analysis.longitude)}
-              className="w-full h-14 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-lg font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="3 11 22 2 13 21 11 13 3 11" />
-              </svg>
-              Relocate Here
-            </button>
-          )}
-
-          {/* Local Space Button */}
-          {isLocalSpace && onResetLocalSpace ? (
-            <button
-              onClick={onResetLocalSpace}
-              className="w-full h-14 rounded-xl border-2 border-emerald-500 text-emerald-600 text-lg font-medium flex items-center justify-center gap-2 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
-              </svg>
-              Reset Local Space
-            </button>
-          ) : onLocalSpace ? (
-            <button
-              onClick={() => onLocalSpace(analysis.latitude, analysis.longitude)}
-              className="w-full h-14 rounded-xl border-2 border-emerald-500 text-emerald-600 text-lg font-medium flex items-center justify-center gap-2 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-              </svg>
-              Local Space Here
-            </button>
-          ) : null}
-        </div>
       </div>
     </MobileBottomSheet>
   );

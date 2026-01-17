@@ -24,23 +24,17 @@ interface CityInfo {
 interface MobileCityInfoSheetProps {
   city: CityInfo;
   onClose: () => void;
-  onViewLocalSpace: (lat: number, lng: number, name: string) => void;
   isFavorite: boolean;
   onToggleFavorite: (lat: number, lng: number, name: string, country?: string) => void;
   locationAnalysis: LocationAnalysis | null;
-  hasBirthData: boolean;
-  onRelocate: (lat: number, lng: number) => void;
 }
 
 export const MobileCityInfoSheet: React.FC<MobileCityInfoSheetProps> = ({
   city,
   onClose,
-  onViewLocalSpace,
   isFavorite,
   onToggleFavorite,
   locationAnalysis,
-  hasBirthData,
-  onRelocate,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const setMobileSheetMaximized = useGlobeInteractionStore((s) => s.setMobileSheetMaximized);
@@ -80,12 +74,9 @@ export const MobileCityInfoSheet: React.FC<MobileCityInfoSheetProps> = ({
           onClose={handleClose}
           isMobile={true}
           isBottomSheet={true}
-          onViewLocalSpace={onViewLocalSpace}
           isFavorite={isFavorite}
           onToggleFavorite={onToggleFavorite}
           locationAnalysis={locationAnalysis}
-          hasBirthData={hasBirthData}
-          onRelocate={onRelocate}
         />
       </Suspense>
     </MobileBottomSheet>

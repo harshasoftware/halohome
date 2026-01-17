@@ -54,7 +54,7 @@ function generateEmailHtml(userName: string, reportType: string): string {
           <tr>
             <td align="center">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                Astrocarto
+                HaloHome
               </h1>
               <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
                 Your Cosmic Journey Awaits
@@ -106,7 +106,7 @@ function generateEmailHtml(userName: string, reportType: string): string {
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
                 <tr>
                   <td style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 8px;">
-                    <a href="https://astrocarto.app" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600;">
+                    <a href="https://halohome.app" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600;">
                       Open App
                     </a>
                   </td>
@@ -121,7 +121,7 @@ function generateEmailHtml(userName: string, reportType: string): string {
           <tr>
             <td align="center">
               <p style="margin: 0 0 8px 0; color: #a1a1aa; font-size: 12px;">
-                Astrocarto - Astrocartography & Beyond
+                HaloHome - Astrocartography & Beyond
               </p>
               <p style="margin: 0; color: #a1a1aa; font-size: 12px;">
                 Questions? Reply to this email or visit our app.
@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
 
     // Build Resend email payload
     const emailPayload: ResendEmailPayload = {
-      from: 'Astrocarto <reports@tarotforge.xyz>',
+      from: 'HaloHome <reports@tarotforge.xyz>',
       to: [to],
       subject: emailSubject,
       html: generateEmailHtml(userName || '', reportType),

@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Bot,
-  Heart,
   Hexagon,
-  FileDown,
-  Share2,
   Telescope,
-  Trash2,
   X,
   Check,
-  Loader2,
   Compass,
   Navigation,
-  Users,
   ChevronRight,
   Settings,
   Star,
   MapPin,
   SlidersHorizontal,
   Plus,
+  Search,
+  Home,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BirthChart } from '@/hooks/useBirthCharts';
@@ -58,11 +54,19 @@ interface LeftActionBarProps {
 
   // Zone drawing
   isDrawingZone?: boolean;
+  drawingMode?: 'search' | 'property' | null;
   hasDrawnZone?: boolean;
+  hasSearchZone?: boolean;
+  hasPropertyZone?: boolean;
   zoneDrawingPointsCount?: number;
   onToggleZoneDrawing?: () => void;
+  onStartSearchZone?: () => void;
+  onStartPropertyZone?: () => void;
   onCompleteZoneDrawing?: () => void;
   onClearZone?: () => void;
+  onClearSearchZone?: () => void;
+  onClearPropertyZone?: () => void;
+  onStopDrawing?: () => void;
 
   // Export & Share
   onOpenExport?: () => void;
@@ -104,11 +108,19 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
   onToggleCompatibility,
   onOpenPartnerModal,
   isDrawingZone,
+  drawingMode,
   hasDrawnZone,
+  hasSearchZone,
+  hasPropertyZone,
   zoneDrawingPointsCount = 0,
   onToggleZoneDrawing,
+  onStartSearchZone,
+  onStartPropertyZone,
   onCompleteZoneDrawing,
   onClearZone,
+  onClearSearchZone,
+  onClearPropertyZone,
+  onStopDrawing,
   onOpenExport,
   onOpenShareChart,
   onOpenScoutPanel,
@@ -121,15 +133,55 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Don't show if no birth data
-  if (!hasBirthData && !hasPendingBirthLocation) {
-    return null;
-  }
+  // Always show the left action bar (Vastu app doesn't require birth data)
 
+  // Handle search zone button click
+  const handleSearchZoneClick = () => {
+    if (isDrawingZone && drawingMode === 'search') {
+      // Currently drawing search zone
+      if (zoneDrawingPointsCount >= 3 && onCompleteZoneDrawing) {
+        onCompleteZoneDrawing();
+      } else if (onStopDrawing) {
+        onStopDrawing();
+      }
+    } else if (hasSearchZone) {
+      // Has existing search zone - clear it
+      if (onClearSearchZone) {
+        onClearSearchZone();
+      }
+    } else if (onStartSearchZone) {
+      // Start drawing search zone
+      onStartSearchZone();
+    }
+  };
+
+  // Handle property zone button click
+  const handlePropertyZoneClick = () => {
+    if (isDrawingZone && drawingMode === 'property') {
+      // Currently drawing property zone
+      if (zoneDrawingPointsCount >= 3 && onCompleteZoneDrawing) {
+        onCompleteZoneDrawing();
+      } else if (onStopDrawing) {
+        onStopDrawing();
+      }
+    } else if (hasPropertyZone) {
+      // Has existing property zone - clear it
+      if (onClearPropertyZone) {
+        onClearPropertyZone();
+      }
+    } else if (onStartPropertyZone) {
+      // Start drawing property zone
+      onStartPropertyZone();
+    }
+  };
+
+  // Legacy handler for backwards compatibility
   const handleZoneClick = () => {
     if (isDrawingZone) {
       if (zoneDrawingPointsCount >= 3 && onCompleteZoneDrawing) {
         onCompleteZoneDrawing();
+      } else if (onStopDrawing) {
+        onStopDrawing();
       } else if (onToggleZoneDrawing) {
         onToggleZoneDrawing();
       }
@@ -186,8 +238,23 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
+      {/* History - saved locations */}
+      {onOpenChartPicker && (
+        <HistoryMenuButton
+          charts={charts}
+          currentChartId={currentChartId}
+          onSelectChart={onSelectChart}
+          onOpenChartPicker={onOpenChartPicker}
+          onAddChart={onAddChart}
+          isExpanded={isExpanded}
+        />
+      )}
+
+      {/* Divider */}
+      {onOpenChartPicker && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
+
       {/* Preferences (Legend/Filters) */}
-      {hasBirthData && onToggleFilters && (
+      {onToggleFilters && (
         <ActionButton
           icon={<SlidersHorizontal className="w-4 h-4" />}
           label="Preferences"
@@ -198,12 +265,12 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
-      {/* Astro Guide */}
-      {hasBirthData && onToggleAIChat && (
+      {/* Vastu Guide (AI) */}
+      {onToggleAIChat && (
         <ActionButton
           icon={<Bot className="w-4 h-4" />}
-          label={<>Astro Guide<span className="text-[10px] text-slate-400 dark:text-zinc-500 font-normal ml-1.5">AI</span></>}
-          tooltip="Astro Guide"
+          label={<>Vastu Guide<span className="text-[10px] text-slate-400 dark:text-zinc-500 font-normal ml-1.5">AI</span></>}
+          tooltip="Vastu Guide"
           onClick={onToggleAIChat}
           isExpanded={isExpanded}
           isActive={isAIChatOpen}
@@ -213,7 +280,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
       )}
 
       {/* Scout Locations */}
-      {hasBirthData && onOpenScoutPanel && (
+      {onOpenScoutPanel && (
         <ActionButton
           icon={<Telescope className="w-4 h-4" />}
           label="Scout Locations"
@@ -223,27 +290,72 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
-      {/* Duo Mode */}
-      {hasBirthData && (onToggleCompatibility || onOpenPartnerModal) && (
+      {/* Draw Search Zone */}
+      {onStartSearchZone && (
         <ActionButton
           icon={
-            isCompatibilityCalculating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+            isDrawingZone && drawingMode === 'search' ? (
+              zoneDrawingPointsCount >= 3 ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <X className="w-4 h-4" />
+              )
+            ) : hasSearchZone ? (
+              <X className="w-4 h-4" />
             ) : (
-              <Heart className="w-4 h-4" />
+              <Search className="w-4 h-4" />
             )
           }
-          label={isCompatibilityEnabled && partnerName ? `Duo: ${partnerName}` : 'Duo Mode'}
-          onClick={handleDuoClick}
+          label={
+            isDrawingZone && drawingMode === 'search'
+              ? zoneDrawingPointsCount >= 3
+                ? `Complete (${zoneDrawingPointsCount} pts)`
+                : `Cancel (${zoneDrawingPointsCount} pts)`
+              : hasSearchZone
+                ? 'Clear Search Area'
+                : 'Search Area'
+          }
+          onClick={handleSearchZoneClick}
           isExpanded={isExpanded}
-          isActive={isCompatibilityEnabled}
-          activeColor="pink"
-          dataTour="duo-mode"
+          isActive={isDrawingZone && drawingMode === 'search' || hasSearchZone}
+          activeColor="blue"
         />
       )}
 
-      {/* Draw Zone */}
-      {hasBirthData && onToggleZoneDrawing && (
+      {/* Draw Property Boundary */}
+      {onStartPropertyZone && (
+        <ActionButton
+          icon={
+            isDrawingZone && drawingMode === 'property' ? (
+              zoneDrawingPointsCount >= 3 ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <X className="w-4 h-4" />
+              )
+            ) : hasPropertyZone ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Home className="w-4 h-4" />
+            )
+          }
+          label={
+            isDrawingZone && drawingMode === 'property'
+              ? zoneDrawingPointsCount >= 3
+                ? `Complete (${zoneDrawingPointsCount} pts)`
+                : `Cancel (${zoneDrawingPointsCount} pts)`
+              : hasPropertyZone
+                ? 'Clear Boundary'
+                : 'Property Boundary'
+          }
+          onClick={handlePropertyZoneClick}
+          isExpanded={isExpanded}
+          isActive={isDrawingZone && drawingMode === 'property' || hasPropertyZone}
+          activeColor="cyan"
+        />
+      )}
+
+      {/* Legacy Draw Zone (for backwards compatibility) */}
+      {onToggleZoneDrawing && !onStartSearchZone && !onStartPropertyZone && (
         <ActionButton
           icon={
             isDrawingZone ? (
@@ -274,21 +386,6 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
-      {/* Divider */}
-      {onOpenChartPicker && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
-
-      {/* My Charts - manage multiple birth charts */}
-      {onOpenChartPicker && (
-        <ChartsMenuButton
-          charts={charts}
-          currentChartId={currentChartId}
-          onSelectChart={onSelectChart}
-          onOpenChartPicker={onOpenChartPicker}
-          onAddChart={onAddChart}
-          isExpanded={isExpanded}
-        />
-      )}
-
       {/* My Favorites - saved locations */}
       {onOpenFavoritesPanel && (
         <FavoritesMenuButton
@@ -298,57 +395,11 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           isExpanded={isExpanded}
         />
       )}
-
-      {/* Divider */}
-      {hasBirthData && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
-
-      {/* Export Report */}
-      {hasBirthData && onOpenExport && (
-        <ActionButton
-          icon={<FileDown className="w-4 h-4" />}
-          label="Export Report"
-          onClick={onOpenExport}
-          isExpanded={isExpanded}
-        />
-      )}
-
-      {/* Share Chart */}
-      {hasBirthData && onOpenShareChart && (
-        <ActionButton
-          icon={<Share2 className="w-4 h-4" />}
-          label="Share Chart"
-          onClick={onOpenShareChart}
-          isExpanded={isExpanded}
-        />
-      )}
-
-      {/* Divider */}
-      {(hasBirthData || hasPendingBirthLocation) && (
-        <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />
-      )}
-
-      {/* Clear Birth Data */}
-      {(hasBirthData || hasPendingBirthLocation) && (
-        <ActionButton
-          icon={<Trash2 className="w-4 h-4" />}
-          label={hasPendingBirthLocation && !hasBirthData ? 'Cancel' : 'Clear Data'}
-          onClick={() => {
-            if (hasPendingBirthLocation && onClearPendingBirth) {
-              onClearPendingBirth();
-            }
-            if (hasBirthData && onClearBirthData) {
-              onClearBirthData();
-            }
-          }}
-          isExpanded={isExpanded}
-          variant="danger"
-        />
-      )}
     </div>
   );
 };
 
-interface ChartsMenuButtonProps {
+interface HistoryMenuButtonProps {
   charts: BirthChart[];
   currentChartId?: string | null;
   onSelectChart?: (id: string) => void;
@@ -357,7 +408,7 @@ interface ChartsMenuButtonProps {
   isExpanded: boolean;
 }
 
-const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
+const HistoryMenuButton: React.FC<HistoryMenuButtonProps> = ({
   charts,
   currentChartId,
   onSelectChart,
@@ -372,7 +423,7 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
     setShowSubmenu(false);
   };
 
-  // If not expanded or no charts, show simple button
+  // If not expanded or no locations, show simple button
   if (!isExpanded || charts.length === 0) {
     return (
       <button
@@ -382,19 +433,19 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
           'text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-white/10',
           isExpanded ? 'justify-start' : 'justify-center'
         )}
-        title={!isExpanded ? 'My Charts' : undefined}
+        title={!isExpanded ? 'History' : undefined}
       >
-        <Users className="w-4 h-4" />
+        <History className="w-4 h-4" />
         {isExpanded && (
           <span className="flex-1 text-left truncate text-sm font-medium whitespace-nowrap">
-            My Charts
+            History
           </span>
         )}
       </button>
     );
   }
 
-  // Expanded with charts - show submenu on hover
+  // Expanded with locations - show submenu on hover
   return (
     <div
       className="relative"
@@ -409,9 +460,9 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
           'justify-start'
         )}
       >
-        <Users className="w-4 h-4" />
+        <History className="w-4 h-4" />
         <span className="flex-1 text-left truncate text-sm font-medium whitespace-nowrap">
-          My Charts
+          History
         </span>
         <ChevronRight className={cn(
           'w-3.5 h-3.5 transition-transform duration-200',
@@ -419,7 +470,7 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
         )} />
       </button>
 
-      {/* Submenu with chart names */}
+      {/* Submenu with location names */}
       {showSubmenu && (
         <div className="absolute left-full top-0 ml-1 min-w-[160px] max-w-[220px] bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-lg shadow-lg py-1 z-50">
           {charts.slice(0, 5).map((chart) => (
@@ -447,7 +498,7 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
             className="w-full px-3 py-2 text-left text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center gap-2"
           >
             <Plus className="w-3 h-3" />
-            Add Chart
+            Add Location
           </button>
           <button
             onClick={() => {
@@ -457,7 +508,7 @@ const ChartsMenuButton: React.FC<ChartsMenuButtonProps> = ({
             className="w-full px-3 py-2 text-left text-xs text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2"
           >
             <Settings className="w-3 h-3" />
-            {charts.length > 5 ? `View all ${charts.length} charts...` : 'Manage charts...'}
+            {charts.length > 5 ? `View all ${charts.length} locations...` : 'Manage locations...'}
           </button>
         </div>
       )}

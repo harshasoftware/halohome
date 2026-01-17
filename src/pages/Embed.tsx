@@ -6,7 +6,7 @@
  * - Uses free static earth texture (no MapTiler costs)
  * - Full interactivity (rotate, zoom)
  * - Privacy-aware birth data display
- * - Small watermark linking to astrocarto.app
+ * - Small watermark linking to halohome.app
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -60,7 +60,7 @@ const ErrorState = ({ message }: { message: string }) => (
     <AlertCircle className="w-8 h-8 text-red-400 mb-4" />
     <p className="text-sm text-red-400 text-center mb-4">{message}</p>
     <a
-      href="https://astrocarto.app"
+      href="https://halohome.app"
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300"
@@ -211,7 +211,7 @@ export default function EmbedPage() {
 
       {/* "View full chart" link */}
       <a
-        href={`https://astrocarto.app/s/${shortCode}`}
+        href={`https://halohome.app/s/${shortCode}`}
         target="_blank"
         rel="noopener noreferrer"
         className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 text-xs text-white/70 bg-black/40 rounded hover:text-white hover:bg-black/60 transition-colors"

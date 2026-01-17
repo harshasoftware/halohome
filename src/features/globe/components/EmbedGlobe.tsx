@@ -6,6 +6,8 @@
  */
 
 import React, { useRef, useEffect, useMemo, useState, lazy, Suspense, memo } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import type { GlobeMethods } from 'react-globe.gl';
 import type { PlanetaryLine, AspectLine, ZenithPoint } from '@/lib/astro-types';
 
@@ -280,14 +282,15 @@ export const EmbedGlobe = memo(({
         />
       </Suspense>
 
-      {/* Watermark - links to astrocarto.app */}
+      {/* Watermark - links to halohome.app */}
       <a
-        href="https://astrocarto.app"
+        href="https://halohome.app"
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-2 right-2 px-2 py-1 text-xs text-white/70 bg-black/40 rounded hover:text-white hover:bg-black/60 transition-colors"
+        className="absolute bottom-2 right-2 px-2 py-1 text-xs text-white/70 bg-black/40 rounded hover:text-white hover:bg-black/60 transition-colors flex items-center gap-1"
       >
-        astrocarto.app
+        <FontAwesomeIcon icon={faHouse} className="w-3 h-3" />
+        halohome.app
       </a>
     </div>
   );

@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { MapPin, Navigation, Globe2, Star, Copy, X, Compass, Sparkles } from 'lucide-react';
+import { MapPin, Star, Copy, X, Compass, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface GlobeContextMenuProps {
@@ -21,12 +21,8 @@ export interface GlobeContextMenuProps {
   isOpen: boolean;
   onClose: () => void;
   // Actions
-  hasBirthData: boolean;
   onAnalyzeLocation: (lat: number, lng: number) => void;
-  onRelocateHere: (lat: number, lng: number) => void;
-  onSetLocalOrigin: (lat: number, lng: number, name: string) => void;
   onAddToFavorites: (lat: number, lng: number, name: string) => void;
-  onEnterBirthData: (lat: number, lng: number) => void;
   onAskAI: (lat: number, lng: number, name: string) => void;
   // Optional - for checking if already favorited
   isFavorited?: boolean;
@@ -40,12 +36,8 @@ export const GlobeContextMenu: React.FC<GlobeContextMenuProps> = ({
   cityName,
   isOpen,
   onClose,
-  hasBirthData,
   onAnalyzeLocation,
-  onRelocateHere,
-  onSetLocalOrigin,
   onAddToFavorites,
-  onEnterBirthData,
   onAskAI,
   isFavorited = false,
 }) => {
@@ -118,23 +110,8 @@ export const GlobeContextMenu: React.FC<GlobeContextMenuProps> = ({
     onClose();
   };
 
-  const handleRelocate = () => {
-    onRelocateHere(lat, lng);
-    onClose();
-  };
-
-  const handleSetOrigin = () => {
-    onSetLocalOrigin(lat, lng, locationName);
-    onClose();
-  };
-
   const handleFavorite = () => {
     onAddToFavorites(lat, lng, locationName);
-    onClose();
-  };
-
-  const handleEnterBirthData = () => {
-    onEnterBirthData(lat, lng);
     onClose();
   };
 
@@ -168,71 +145,25 @@ export const GlobeContextMenu: React.FC<GlobeContextMenuProps> = ({
 
       {/* Menu items */}
       <div className="py-1">
-        {hasBirthData ? (
-          <>
-            {/* Analyze Location */}
-            <button
-              onClick={handleAnalyze}
-              className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-              role="menuitem"
-            >
-              <Compass className="w-4 h-4 text-purple-500" />
-              <span>Analyze Location</span>
-            </button>
+        {/* Analyze Location */}
+        <button
+          onClick={handleAnalyze}
+          className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+          role="menuitem"
+        >
+          <Compass className="w-4 h-4 text-purple-500" />
+          <span>Analyze Location</span>
+        </button>
 
-            {/* Relocate Here */}
-            <button
-              onClick={handleRelocate}
-              className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-              role="menuitem"
-            >
-              <Navigation className="w-4 h-4 text-blue-500" />
-              <span>Relocate Here</span>
-            </button>
-
-            {/* Set as Local Origin */}
-            <button
-              onClick={handleSetOrigin}
-              className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-              role="menuitem"
-            >
-              <Globe2 className="w-4 h-4 text-green-500" />
-              <span>Set as Local Origin</span>
-            </button>
-
-            {/* Ask AI */}
-            <button
-              onClick={handleAskAI}
-              className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-              role="menuitem"
-            >
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Ask AI about this location</span>
-            </button>
-          </>
-        ) : (
-          /* No birth data - show entry option and Ask AI */
-          <>
-            <button
-              onClick={handleEnterBirthData}
-              className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-              role="menuitem"
-            >
-              <Compass className="w-4 h-4 text-purple-500" />
-              <span>Enter Birth Data Here</span>
-            </button>
-
-            {/* Ask AI - available even without birth data */}
-            <button
-              onClick={handleAskAI}
-              className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
-              role="menuitem"
-            >
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Ask AI about this location</span>
-            </button>
-          </>
-        )}
+        {/* Ask AI */}
+        <button
+          onClick={handleAskAI}
+          className="w-full px-3 py-2 flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+          role="menuitem"
+        >
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span>Ask AI about this location</span>
+        </button>
 
         {/* Divider */}
         <div className="my-1 border-t border-slate-200 dark:border-slate-700" />

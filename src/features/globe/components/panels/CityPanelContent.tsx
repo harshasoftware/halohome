@@ -28,10 +28,8 @@ interface CityPanelContentProps {
   aspectLines: AspectLine[];
   zenithPoints: ZenithPoint[];
   onClose: () => void;
-  onViewLocalSpace: (lat: number, lng: number, name: string) => void;
   isFavorite: boolean;
   onToggleFavorite: (lat: number, lng: number, name: string, country?: string) => void;
-  onRelocate: (lat: number, lng: number) => void;
 }
 
 export const CityPanelContent: React.FC<CityPanelContentProps> = ({
@@ -41,10 +39,8 @@ export const CityPanelContent: React.FC<CityPanelContentProps> = ({
   aspectLines,
   zenithPoints,
   onClose,
-  onViewLocalSpace,
   isFavorite,
   onToggleFavorite,
-  onRelocate,
 }) => {
   // Compute analysis for this city
   const cityAnalysis = useMemo(() => {
@@ -69,12 +65,9 @@ export const CityPanelContent: React.FC<CityPanelContentProps> = ({
         onClose={onClose}
         isMobile={false}
         isBottomSheet={false}
-        onViewLocalSpace={onViewLocalSpace}
         isFavorite={isFavorite}
         onToggleFavorite={onToggleFavorite}
         locationAnalysis={cityAnalysis}
-        hasBirthData={!!birthData}
-        onRelocate={onRelocate}
       />
     </Suspense>
   );

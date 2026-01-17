@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, MapPin, Cloud, TreePine, Plane, Compass, Star, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, MapPin, Cloud, TreePine, Plane, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCityInfo } from '../../hooks/useCityInfo';
@@ -19,15 +19,11 @@ interface CityInfoPanelProps {
   onClose: () => void;
   isMobile?: boolean;
   isBottomSheet?: boolean;
-  onViewLocalSpace?: (lat: number, lng: number, name: string) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (lat: number, lng: number, name: string, country?: string) => void;
   // Astrology analysis
   locationAnalysis?: LocationAnalysis | null;
   analysisLoading?: boolean;
-  onRelocate?: (lat: number, lng: number) => void;
-  onViewRelocationChart?: () => void;
-  hasBirthData?: boolean;
 }
 
 const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
@@ -35,27 +31,13 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
   onClose,
   isMobile = false,
   isBottomSheet = false,
-  onViewLocalSpace,
   isFavorite = false,
   onToggleFavorite,
   locationAnalysis,
   analysisLoading = false,
-  onRelocate,
-  onViewRelocationChart,
-  hasBirthData = false,
 }) => {
-  // Default to astrology tab if birth data exists, otherwise overview
-  const [activeTab, setActiveTab] = useState<'astrology' | 'overview' | 'places' | 'flights'>(
-    hasBirthData ? 'astrology' : 'overview'
-  );
+  const [activeTab, setActiveTab] = useState<'astrology' | 'overview' | 'places' | 'flights'>('astrology');
   const userLocation = useUserLocation();
-
-  // Update default tab when birth data availability changes
-  useEffect(() => {
-    if (hasBirthData && activeTab === 'overview') {
-      setActiveTab('astrology');
-    }
-  }, [hasBirthData]);
 
   const { data, fetchPlaces } = useCityInfo({
     lat: city?.lat ?? null,
@@ -96,16 +78,6 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
                 <Star className={`w-5 h-5 ${isFavorite ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
               </Button>
             )}
-            {onViewLocalSpace && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onViewLocalSpace(city.lat, city.lng, city.name)}
-                title="View Local Space lines from here"
-              >
-                <Compass className="w-5 h-5 text-purple-600" />
-              </Button>
-            )}
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5" />
             </Button>
@@ -133,7 +105,7 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
             </TabsTrigger>
           </TabsList>
 
-          <div 
+          <div
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
@@ -141,8 +113,6 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
               <AstrologyTab
                 analysis={locationAnalysis}
                 loading={analysisLoading}
-                onRelocate={onRelocate}
-                onViewRelocationChart={onViewRelocationChart}
               />
             </TabsContent>
             <TabsContent value="overview" className="mt-0 p-0 data-[state=active]:block data-[state=inactive]:hidden">
@@ -198,17 +168,6 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
               <Star className={`w-5 h-5 ${isFavorite ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
             </Button>
           )}
-          {onViewLocalSpace && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onViewLocalSpace(city.lat, city.lng, city.name)}
-              title="View Local Space lines from here"
-              className="h-8 w-8"
-            >
-              <Compass className="w-5 h-5 text-purple-600" />
-            </Button>
-          )}
           <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
             <X className="w-5 h-5" />
           </Button>
@@ -216,9 +175,9 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
       </div>
 
       {/* Tabs */}
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(v) => setActiveTab(v as typeof activeTab)} 
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as typeof activeTab)}
         className="flex-1 flex flex-col min-h-0 overflow-hidden"
       >
         <TabsList className="flex-none grid w-full grid-cols-4 rounded-none border-b border-slate-200 dark:border-slate-800 bg-transparent h-11">
@@ -245,8 +204,6 @@ const CityInfoPanelComponent: React.FC<CityInfoPanelProps> = ({
             <AstrologyTab
               analysis={locationAnalysis}
               loading={analysisLoading}
-              onRelocate={onRelocate}
-              onViewRelocationChart={onViewRelocationChart}
             />
           </TabsContent>
           <TabsContent value="overview" className="absolute inset-0 overflow-y-auto mt-0 border-0 p-0 outline-none data-[state=inactive]:hidden">

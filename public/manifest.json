@@ -1,6 +1,6 @@
 {
-  "name": "Astrocarto",
-  "short_name": "Astrocarto",
+  "name": "HaloHome",
+  "short_name": "HaloHome",
   "description": "Find where to relocate based on your birth chart. Explore your planetary lines on an interactive 3D globe.",
   "start_url": "/guest",
   "display": "standalone",
@@ -54,7 +54,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Astrocarto Globe View"
+      "label": "HaloHome Globe View"
     }
   ]
 }

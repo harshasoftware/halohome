@@ -197,15 +197,22 @@ export {
 export type { ScoutComputationPhase, ScoutProgress } from './scoutStore';
 
 // ============================================
-// Birth Charts Store
+// Saved Locations Store
 // ============================================
-export { useBirthChartsStore } from './birthChartsStore';
+export { useSavedLocationsStore, useBirthChartsStore } from './savedLocationsStore';
 export {
+  loadSavedLocations,
+  saveSavedLocation,
+  updateSavedLocation,
+  deleteSavedLocation,
+  setDefaultSavedLocation,
+  selectSavedLocation,
+  // Backwards compatibility aliases
   loadBirthCharts,
   saveBirthChart,
   updateBirthChart,
   deleteBirthChart,
   setDefaultBirthChart,
   selectBirthChart,
-} from './birthChartsStore';
-export type { BirthChart, BirthChartInput } from './birthChartsStore';
+} from './savedLocationsStore';
+export type { SavedLocation, SavedLocationInput, BirthChart, BirthChartInput } from './savedLocationsStore';

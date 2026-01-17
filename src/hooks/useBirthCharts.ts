@@ -1,98 +1,129 @@
 /**
- * Birth Charts Hook
- * Manages birth chart data for authenticated users with localStorage fallback for guests
+ * Saved Locations Hook (formerly Birth Charts Hook)
+ * Manages saved location data for authenticated users with localStorage fallback for guests
  *
- * This hook now uses a Zustand store for shared state across all components,
- * ensuring that chart updates are immediately visible everywhere.
+ * This hook uses a Zustand store for shared state across all components,
+ * ensuring that location updates are immediately visible everywhere.
  */
 
 import { useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth-context';
 import {
-  useBirthChartsStore,
-  loadBirthCharts,
-  saveBirthChart,
-  updateBirthChart,
-  deleteBirthChart,
-  setDefaultBirthChart,
-  selectBirthChart,
-  type BirthChart,
-  type BirthChartInput,
-} from '@/stores/birthChartsStore';
+  useSavedLocationsStore,
+  loadSavedLocations,
+  saveSavedLocation,
+  updateSavedLocation,
+  deleteSavedLocation,
+  setDefaultSavedLocation,
+  selectSavedLocation,
+  type SavedLocation,
+  type SavedLocationInput,
+} from '@/stores/savedLocationsStore';
 
-// Re-export types for consumers
-export type { BirthChart, BirthChartInput };
+// Re-export types for consumers (with both old and new names)
+export type { SavedLocation, SavedLocationInput };
+export type BirthChart = SavedLocation;
+export type BirthChartInput = SavedLocationInput;
 
-export interface UseBirthChartsReturn {
-  // Charts
-  charts: BirthChart[];
-  currentChart: BirthChart | null;
+export interface UseSavedLocationsReturn {
+  // Locations
+  locations: SavedLocation[];
+  currentLocation: SavedLocation | null;
   loading: boolean;
 
   // Actions
-  loadCharts: () => Promise<void>;
-  saveChart: (data: BirthChartInput) => Promise<BirthChart | null>;
-  updateChart: (id: string, data: Partial<BirthChartInput>) => Promise<void>;
-  deleteChart: (id: string) => Promise<void>;
-  selectChart: (id: string) => void;
-  setDefaultChart: (id: string) => Promise<void>;
+  loadLocations: () => Promise<void>;
+  saveLocation: (data: SavedLocationInput) => Promise<SavedLocation | null>;
+  updateLocation: (id: string, data: Partial<SavedLocationInput>) => Promise<void>;
+  deleteLocation: (id: string) => Promise<void>;
+  selectLocation: (id: string) => void;
+  setDefaultLocation: (id: string) => Promise<void>;
 
   // Guest mode
   isGuest: boolean;
 }
 
-export function useBirthCharts(): UseBirthChartsReturn {
+// Backwards compatibility type alias
+export type UseBirthChartsReturn = UseSavedLocationsReturn & {
+  charts: SavedLocation[];
+  currentChart: SavedLocation | null;
+  loadCharts: () => Promise<void>;
+  saveChart: (data: SavedLocationInput) => Promise<SavedLocation | null>;
+  updateChart: (id: string, data: Partial<SavedLocationInput>) => Promise<void>;
+  deleteChart: (id: string) => Promise<void>;
+  selectChart: (id: string) => void;
+  setDefaultChart: (id: string) => Promise<void>;
+};
+
+export function useSavedLocations(): UseSavedLocationsReturn {
   const { user } = useAuth();
   const userId = user?.id || null;
   const isGuest = !user;
 
   // Get state from Zustand store
-  const charts = useBirthChartsStore((state) => state.charts);
-  const currentChart = useBirthChartsStore((state) => state.currentChart);
-  const loading = useBirthChartsStore((state) => state.loading);
-  const initialized = useBirthChartsStore((state) => state.initialized);
+  const locations = useSavedLocationsStore((state) => state.locations);
+  const currentLocation = useSavedLocationsStore((state) => state.currentLocation);
+  const loading = useSavedLocationsStore((state) => state.loading);
 
-  // Load charts on mount and when user changes
+  // Load locations on mount and when user changes
   useEffect(() => {
-    // Always reload when user changes to ensure fresh data
-    loadBirthCharts(userId);
+    loadSavedLocations(userId);
   }, [userId]);
 
   // Wrapped actions that pass userId
-  const loadCharts = useCallback(async () => {
-    await loadBirthCharts(userId);
+  const loadLocations = useCallback(async () => {
+    await loadSavedLocations(userId);
   }, [userId]);
 
-  const saveChart = useCallback(async (data: BirthChartInput): Promise<BirthChart | null> => {
-    return saveBirthChart(userId, data);
+  const saveLocation = useCallback(async (data: SavedLocationInput): Promise<SavedLocation | null> => {
+    return saveSavedLocation(userId, data);
   }, [userId]);
 
-  const updateChart = useCallback(async (id: string, data: Partial<BirthChartInput>): Promise<void> => {
-    await updateBirthChart(userId, id, data);
+  const updateLocation = useCallback(async (id: string, data: Partial<SavedLocationInput>): Promise<void> => {
+    await updateSavedLocation(userId, id, data);
   }, [userId]);
 
-  const deleteChart = useCallback(async (id: string): Promise<void> => {
-    await deleteBirthChart(userId, id);
+  const deleteLocation = useCallback(async (id: string): Promise<void> => {
+    await deleteSavedLocation(userId, id);
   }, [userId]);
 
-  const setDefaultChart = useCallback(async (id: string): Promise<void> => {
-    await setDefaultBirthChart(userId, id);
+  const setDefaultLocation = useCallback(async (id: string): Promise<void> => {
+    await setDefaultSavedLocation(userId, id);
   }, [userId]);
 
-  const selectChart = useCallback((id: string): void => {
-    selectBirthChart(id);
+  const selectLocation = useCallback((id: string): void => {
+    selectSavedLocation(id);
   }, []);
 
   return {
-    charts,
-    currentChart,
+    locations,
+    currentLocation,
     loading,
-    loadCharts,
-    saveChart,
-    updateChart,
-    deleteChart,
-    selectChart,
-    setDefaultChart,
+    loadLocations,
+    saveLocation,
+    updateLocation,
+    deleteLocation,
+    selectLocation,
+    setDefaultLocation,
     isGuest,
+  };
+}
+
+// Backwards compatibility alias
+export function useBirthCharts(): UseBirthChartsReturn {
+  const result = useSavedLocations();
+
+  return {
+    ...result,
+    // Alias properties
+    charts: result.locations,
+    currentChart: result.currentLocation,
+    // Alias methods
+    loadCharts: result.loadLocations,
+    saveChart: result.saveLocation,
+    updateChart: result.updateLocation,
+    deleteChart: result.deleteLocation,
+    selectChart: result.selectLocation,
+    setDefaultChart: result.setDefaultLocation,
   };
 }

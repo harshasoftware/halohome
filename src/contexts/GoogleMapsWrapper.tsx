@@ -14,7 +14,7 @@ const libraries: (
   | 'journeySharing'
   | 'drawing'
   | 'visualization'
-)[] = ['places'];
+)[] = ['places', 'drawing', 'geometry'];
 
 interface GoogleMapsWrapperProps {
   children: React.ReactNode;

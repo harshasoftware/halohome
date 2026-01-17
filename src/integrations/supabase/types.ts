@@ -134,7 +134,7 @@ export type Database = {
         }
         Relationships: []
       }
-      birth_charts: {
+      saved_locations: {
         Row: {
           id: string
           user_id: string
@@ -146,6 +146,7 @@ export type Database = {
           city_name: string | null
           timezone: string | null
           is_default: boolean
+          is_favorite: boolean
           created_at: string
           updated_at: string
         }
@@ -160,6 +161,7 @@ export type Database = {
           city_name?: string | null
           timezone?: string | null
           is_default?: boolean
+          is_favorite?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -174,6 +176,7 @@ export type Database = {
           city_name?: string | null
           timezone?: string | null
           is_default?: boolean
+          is_favorite?: boolean
           created_at?: string
           updated_at?: string
         }

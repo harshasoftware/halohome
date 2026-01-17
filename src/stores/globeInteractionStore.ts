@@ -23,6 +23,14 @@ export interface CityLocation {
   name: string;
 }
 
+// ZIP code bounds (rectangular bounding box from Google Geocoding)
+export interface ZipCodeBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
 // Pending birthplace for the date/time modal
 export interface PendingBirthplace {
   lat: number;
@@ -30,9 +38,13 @@ export interface PendingBirthplace {
   cityName: string;
 }
 
+// Zone drawing mode type
+export type DrawingModeType = 'search' | 'property' | null;
+
 // Zone drawing state
 export interface DrawnZone {
   points: Array<{ lat: number; lng: number }>;
+  mode: DrawingModeType;
 }
 
 // Zone analysis result
@@ -44,7 +56,7 @@ export interface ZoneAnalysis {
 }
 
 // Panel types for the right panel stack
-export type PanelType = 'line' | 'analysis' | 'city' | 'person' | 'chat' | 'compatibility' | 'relocation' | 'favorites' | 'scout' | 'charts';
+export type PanelType = 'line' | 'analysis' | 'city' | 'person' | 'chat' | 'compatibility' | 'relocation' | 'favorites' | 'scout' | 'charts' | 'vastu';
 
 export interface PanelItem {
   id: string;
@@ -77,13 +89,24 @@ interface GlobeInteractionState {
   locationAnalysis: LocationAnalysis | null;
   selectedCityForInfo: CityLocation | null;
   cityLocation: CityLocation | null;
+  zipCodeBounds: ZipCodeBounds | null;
   pendingBirthCoords: { lat: number; lng: number } | null;
 
   // === Zone Drawing ===
   isDrawingZone: boolean;
+  drawingMode: DrawingModeType;
   zoneDrawingPoints: Array<{ lat: number; lng: number }>;
   drawnZone: DrawnZone | null;
+  searchZone: DrawnZone | null;
+  propertyZone: DrawnZone | null;
   zoneAnalysis: ZoneAnalysis | null;
+
+  // === Zone Validation ===
+  currentZoneAreaSqFt: number | null;
+  zoneValidationError: string | null;
+  scoutZoneAddressCount: number | null;
+  isCountingAddresses: boolean;
+  scoutZoneValidationError: string | null;
 
   // === Panel Stack ===
   panelStack: PanelItem[];
@@ -115,20 +138,38 @@ interface GlobeInteractionState {
   setLocationAnalysis: (analysis: LocationAnalysis | null) => void;
   setSelectedCityForInfo: (city: CityLocation | null) => void;
   setCityLocation: (location: CityLocation | null) => void;
+  setZipCodeBounds: (bounds: ZipCodeBounds | null) => void;
   setPendingBirthCoords: (coords: { lat: number; lng: number } | null) => void;
   clearAllSelections: () => void;
 
   // === Zone Drawing Actions ===
   startDrawingZone: () => void;
+  startDrawingSearchZone: () => void;
+  startDrawingPropertyZone: () => void;
   stopDrawingZone: () => void;
   toggleDrawingZone: () => void;
   setIsDrawingZone: (isDrawing: boolean) => void;
+  setDrawingMode: (mode: DrawingModeType) => void;
   addZonePoint: (point: { lat: number; lng: number }) => void;
   setZoneDrawingPoints: (points: Array<{ lat: number; lng: number }>) => void;
   completeZoneDrawing: () => void;
+  completeSearchZone: () => void;
+  completePropertyZone: () => void;
   setDrawnZone: (zone: DrawnZone | null) => void;
+  setSearchZone: (zone: DrawnZone | null) => void;
+  setPropertyZone: (zone: DrawnZone | null) => void;
   setZoneAnalysis: (analysis: ZoneAnalysis | null) => void;
   clearZone: () => void;
+  clearSearchZone: () => void;
+  clearPropertyZone: () => void;
+
+  // === Zone Validation Actions ===
+  setCurrentZoneAreaSqFt: (area: number | null) => void;
+  setZoneValidationError: (error: string | null) => void;
+  setScoutZoneAddressCount: (count: number | null) => void;
+  setIsCountingAddresses: (counting: boolean) => void;
+  setScoutZoneValidationError: (error: string | null) => void;
+  clearZoneValidation: () => void;
 
   // === Panel Stack Actions ===
   pushPanel: (panel: Omit<PanelItem, 'id'>) => void;
@@ -179,13 +220,24 @@ const initialState = {
   locationAnalysis: null as LocationAnalysis | null,
   selectedCityForInfo: null as CityLocation | null,
   cityLocation: null as CityLocation | null,
+  zipCodeBounds: null as ZipCodeBounds | null,
   pendingBirthCoords: null as { lat: number; lng: number } | null,
 
   // Zone drawing
   isDrawingZone: false,
+  drawingMode: null as DrawingModeType,
   zoneDrawingPoints: [] as Array<{ lat: number; lng: number }>,
   drawnZone: null as DrawnZone | null,
+  searchZone: null as DrawnZone | null,
+  propertyZone: null as DrawnZone | null,
   zoneAnalysis: null as ZoneAnalysis | null,
+
+  // Zone validation
+  currentZoneAreaSqFt: null as number | null,
+  zoneValidationError: null as string | null,
+  scoutZoneAddressCount: null as number | null,
+  isCountingAddresses: false,
+  scoutZoneValidationError: null as string | null,
 
   // Panel stack
   panelStack: [] as PanelItem[],
@@ -241,6 +293,9 @@ export const useGlobeInteractionStore = create<GlobeInteractionState>()(
       setCityLocation: (location) => set((state) => {
         state.cityLocation = location;
       }),
+      setZipCodeBounds: (bounds) => set((state) => {
+        state.zipCodeBounds = bounds;
+      }),
       setPendingBirthCoords: (coords) => set((state) => {
         state.pendingBirthCoords = coords;
       }),
@@ -250,30 +305,60 @@ export const useGlobeInteractionStore = create<GlobeInteractionState>()(
         state.locationAnalysis = null;
         state.selectedCityForInfo = null;
         state.cityLocation = null;
+        state.zipCodeBounds = null;
       }),
 
       // === Zone Drawing Actions ===
       startDrawingZone: () => set((state) => {
         state.isDrawingZone = true;
+        state.drawingMode = 'search';
         state.zoneDrawingPoints = [];
         state.drawnZone = null;
         state.zoneAnalysis = null;
       }),
+      startDrawingSearchZone: () => set((state) => {
+        state.isDrawingZone = true;
+        state.drawingMode = 'search';
+        state.zoneDrawingPoints = [];
+        // Clear previous search zone when starting new
+        state.searchZone = null;
+        state.drawnZone = null;
+        state.zoneAnalysis = null;
+      }),
+      startDrawingPropertyZone: () => set((state) => {
+        state.isDrawingZone = true;
+        state.drawingMode = 'property';
+        state.zoneDrawingPoints = [];
+        // Clear previous property zone when starting new
+        state.propertyZone = null;
+      }),
       stopDrawingZone: () => set((state) => {
         state.isDrawingZone = false;
+        state.drawingMode = null;
+        state.zoneDrawingPoints = [];
       }),
       toggleDrawingZone: () => set((state) => {
         if (state.isDrawingZone) {
           state.isDrawingZone = false;
+          state.drawingMode = null;
+          state.zoneDrawingPoints = [];
         } else {
           state.isDrawingZone = true;
+          state.drawingMode = 'search';
           state.zoneDrawingPoints = [];
+          state.searchZone = null;
           state.drawnZone = null;
           state.zoneAnalysis = null;
         }
       }),
       setIsDrawingZone: (isDrawing) => set((state) => {
         state.isDrawingZone = isDrawing;
+        if (!isDrawing) {
+          state.drawingMode = null;
+        }
+      }),
+      setDrawingMode: (mode) => set((state) => {
+        state.drawingMode = mode;
       }),
       addZonePoint: (point) => set((state) => {
         state.zoneDrawingPoints.push(point);
@@ -283,21 +368,92 @@ export const useGlobeInteractionStore = create<GlobeInteractionState>()(
       }),
       completeZoneDrawing: () => set((state) => {
         if (state.zoneDrawingPoints.length >= 3) {
-          state.drawnZone = { points: [...state.zoneDrawingPoints] };
+          const zone = { points: [...state.zoneDrawingPoints], mode: state.drawingMode };
+          state.drawnZone = zone;
+          // Also set to the appropriate specific zone
+          if (state.drawingMode === 'search') {
+            state.searchZone = zone;
+          } else if (state.drawingMode === 'property') {
+            state.propertyZone = zone;
+          }
         }
         state.isDrawingZone = false;
+        state.drawingMode = null;
+        state.zoneDrawingPoints = [];
+      }),
+      completeSearchZone: () => set((state) => {
+        if (state.zoneDrawingPoints.length >= 3) {
+          state.searchZone = { points: [...state.zoneDrawingPoints], mode: 'search' };
+          state.drawnZone = state.searchZone;
+        }
+        state.isDrawingZone = false;
+        state.drawingMode = null;
+        state.zoneDrawingPoints = [];
+      }),
+      completePropertyZone: () => set((state) => {
+        if (state.zoneDrawingPoints.length >= 3) {
+          state.propertyZone = { points: [...state.zoneDrawingPoints], mode: 'property' };
+        }
+        state.isDrawingZone = false;
+        state.drawingMode = null;
+        state.zoneDrawingPoints = [];
       }),
       setDrawnZone: (zone) => set((state) => {
         state.drawnZone = zone;
+      }),
+      setSearchZone: (zone) => set((state) => {
+        state.searchZone = zone;
+      }),
+      setPropertyZone: (zone) => set((state) => {
+        state.propertyZone = zone;
       }),
       setZoneAnalysis: (analysis) => set((state) => {
         state.zoneAnalysis = analysis;
       }),
       clearZone: () => set((state) => {
         state.isDrawingZone = false;
+        state.drawingMode = null;
         state.zoneDrawingPoints = [];
         state.drawnZone = null;
+        state.searchZone = null;
         state.zoneAnalysis = null;
+      }),
+      clearSearchZone: () => set((state) => {
+        state.searchZone = null;
+        if (state.drawnZone?.mode === 'search') {
+          state.drawnZone = null;
+        }
+        state.zoneAnalysis = null;
+      }),
+      clearPropertyZone: () => set((state) => {
+        state.propertyZone = null;
+        if (state.drawnZone?.mode === 'property') {
+          state.drawnZone = null;
+        }
+      }),
+
+      // === Zone Validation Actions ===
+      setCurrentZoneAreaSqFt: (area) => set((state) => {
+        state.currentZoneAreaSqFt = area;
+      }),
+      setZoneValidationError: (error) => set((state) => {
+        state.zoneValidationError = error;
+      }),
+      setScoutZoneAddressCount: (count) => set((state) => {
+        state.scoutZoneAddressCount = count;
+      }),
+      setIsCountingAddresses: (counting) => set((state) => {
+        state.isCountingAddresses = counting;
+      }),
+      setScoutZoneValidationError: (error) => set((state) => {
+        state.scoutZoneValidationError = error;
+      }),
+      clearZoneValidation: () => set((state) => {
+        state.currentZoneAreaSqFt = null;
+        state.zoneValidationError = null;
+        state.scoutZoneAddressCount = null;
+        state.isCountingAddresses = false;
+        state.scoutZoneValidationError = null;
       }),
 
       // === Panel Stack Actions ===
@@ -445,20 +601,44 @@ export const useSelectedCityForInfo = () =>
   useGlobeInteractionStore((state) => state.selectedCityForInfo);
 export const useCityLocation = () =>
   useGlobeInteractionStore((state) => state.cityLocation);
+export const useZipCodeBounds = () =>
+  useGlobeInteractionStore((state) => state.zipCodeBounds);
 export const usePendingBirthCoords = () =>
   useGlobeInteractionStore((state) => state.pendingBirthCoords);
 
 // Zone drawing selectors
 export const useIsDrawingZone = () =>
   useGlobeInteractionStore((state) => state.isDrawingZone);
+export const useDrawingMode = () =>
+  useGlobeInteractionStore((state) => state.drawingMode);
 export const useZoneDrawingPoints = () =>
   useGlobeInteractionStore((state) => state.zoneDrawingPoints);
 export const useDrawnZone = () =>
   useGlobeInteractionStore((state) => state.drawnZone);
+export const useSearchZone = () =>
+  useGlobeInteractionStore((state) => state.searchZone);
+export const usePropertyZone = () =>
+  useGlobeInteractionStore((state) => state.propertyZone);
 export const useZoneAnalysis = () =>
   useGlobeInteractionStore((state) => state.zoneAnalysis);
 export const useHasDrawnZone = () =>
   useGlobeInteractionStore((state) => state.drawnZone !== null);
+export const useHasSearchZone = () =>
+  useGlobeInteractionStore((state) => state.searchZone !== null);
+export const useHasPropertyZone = () =>
+  useGlobeInteractionStore((state) => state.propertyZone !== null);
+
+// Zone validation selectors
+export const useCurrentZoneAreaSqFt = () =>
+  useGlobeInteractionStore((state) => state.currentZoneAreaSqFt);
+export const useZoneValidationError = () =>
+  useGlobeInteractionStore((state) => state.zoneValidationError);
+export const useScoutZoneAddressCount = () =>
+  useGlobeInteractionStore((state) => state.scoutZoneAddressCount);
+export const useIsCountingAddresses = () =>
+  useGlobeInteractionStore((state) => state.isCountingAddresses);
+export const useScoutZoneValidationError = () =>
+  useGlobeInteractionStore((state) => state.scoutZoneValidationError);
 
 // Panel stack selectors
 export const usePanelStack = () =>
@@ -500,11 +680,37 @@ export const useScoutProgress = () =>
 export const useZoneState = () =>
   useGlobeInteractionStore(useShallow((state) => ({
     isDrawing: state.isDrawingZone,
+    drawingMode: state.drawingMode,
     hasZone: state.drawnZone !== null,
+    hasSearchZone: state.searchZone !== null,
+    hasPropertyZone: state.propertyZone !== null,
     pointsCount: state.zoneDrawingPoints.length,
     toggleDrawing: state.toggleDrawingZone,
+    startSearchZone: state.startDrawingSearchZone,
+    startPropertyZone: state.startDrawingPropertyZone,
     completeDrawing: state.completeZoneDrawing,
+    completeSearchZone: state.completeSearchZone,
+    completePropertyZone: state.completePropertyZone,
     clearZone: state.clearZone,
+    clearSearchZone: state.clearSearchZone,
+    clearPropertyZone: state.clearPropertyZone,
+    stopDrawing: state.stopDrawingZone,
+  })));
+
+// Zone validation state combined selector
+export const useZoneValidationState = () =>
+  useGlobeInteractionStore(useShallow((state) => ({
+    currentAreaSqFt: state.currentZoneAreaSqFt,
+    validationError: state.zoneValidationError,
+    scoutAddressCount: state.scoutZoneAddressCount,
+    isCountingAddresses: state.isCountingAddresses,
+    scoutValidationError: state.scoutZoneValidationError,
+    setCurrentAreaSqFt: state.setCurrentZoneAreaSqFt,
+    setValidationError: state.setZoneValidationError,
+    setScoutAddressCount: state.setScoutZoneAddressCount,
+    setIsCountingAddresses: state.setIsCountingAddresses,
+    setScoutValidationError: state.setScoutZoneValidationError,
+    clearValidation: state.clearZoneValidation,
   })));
 
 // Panel stack return type (matches original usePanelStack hook interface)

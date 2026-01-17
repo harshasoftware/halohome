@@ -41,7 +41,7 @@ export const InstallBanner: React.FC = () => {
               <Download className="w-5 h-5 text-slate-600 dark:text-slate-300" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">Install Astrocarto</p>
+              <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">Install HaloHome</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Add to home screen for the best experience</p>
             </div>
           </div>

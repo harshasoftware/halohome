@@ -140,7 +140,7 @@ export const CategoryUpgradeModal: React.FC<CategoryUpgradeModalProps> = ({
             >
               {loadingPlan === 'starter' ? (
                 <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-[#d4a5a5]/30 border-t-[#d4a5a5] rounded-full animate-spin" />
                 </span>
               ) : (
                 'Subscribe'

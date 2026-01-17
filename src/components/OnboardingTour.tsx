@@ -14,8 +14,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
 import { useTheme } from 'next-themes';
 
-const TOUR_STORAGE_KEY_PHASE1 = 'astrocarto_tour_phase1';
-const TOUR_STORAGE_KEY_PHASE2 = 'astrocarto_tour_phase2';
+const TOUR_STORAGE_KEY_PHASE1 = 'halohome_tour_phase1';
+const TOUR_STORAGE_KEY_PHASE2 = 'halohome_tour_phase2';
 const TOUR_VERSION = '2'; // Increment to show tour again after major updates
 
 export type TourPhase = 'phase1' | 'phase2' | 'all';
@@ -303,13 +303,13 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
 
   const activeSteps = getStepsForPhase(currentPhase);
 
-  // Custom styles matching app theme
+  // Custom styles matching app theme - dusty rose accent
   const joyrideStyles = {
     options: {
       arrowColor: isDark ? '#1e1e2e' : '#ffffff',
       backgroundColor: isDark ? '#1e1e2e' : '#ffffff',
       overlayColor: 'rgba(0, 0, 0, 0.5)',
-      primaryColor: '#f59e0b', // amber-500
+      primaryColor: '#d4a5a5', // dusty rose
       textColor: isDark ? '#e2e8f0' : '#334155',
       zIndex: 10000,
     },
@@ -332,8 +332,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       lineHeight: 1.6,
     },
     buttonNext: {
-      backgroundColor: '#f59e0b',
-      color: '#000000',
+      backgroundColor: '#d4a5a5', // dusty rose
+      color: '#ffffff',
       borderRadius: 8,
       padding: '8px 16px',
       fontSize: 14,

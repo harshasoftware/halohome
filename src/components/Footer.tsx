@@ -5,6 +5,8 @@
 
 import React, { useState } from 'react';
 import { Instagram, Twitter, Mail, ExternalLink, Download } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import CookiePolicy from '@/components/legal/CookiePolicy';
 import PrivacyPolicy from '@/components/legal/PrivacyPolicy';
 import TermsOfService from '@/components/legal/TermsOfService';
@@ -22,20 +24,23 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
     const [showLegalDropdown, setShowLegalDropdown] = useState(false);
 
     return (
-        <footer className="footer">
+        <footer className="footer footer-light">
             <div className="footer-content">
                 {/* Brand Column */}
                 <div className="footer-brand">
-                    <h4 className="text-white font-semibold tracking-wide">ASTROCARTO</h4>
-                    <p className="text-zinc-400 text-sm leading-relaxed max-w-xs">
-                        Discover where you belong in the universe. AI-powered astrocartography for your cosmic journey.
+                    <h4 className="text-zinc-900 flex items-center">
+                        <FontAwesomeIcon icon={faHouse} className="mr-2" />
+                        Halo Home
+                    </h4>
+                    <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">
+                        Start living in harmony. Apply the ancient science of Vastu to find your perfect home.
                     </p>
                     <div className="flex gap-3 pt-4">
                         <a
                             href="https://instagram.com/astrocartography.world"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-10 h-10 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-white hover:text-black hover:border-white flex items-center justify-center transition-colors duration-300"
+                            className="w-10 h-10 rounded-full border border-zinc-300 bg-white/50 text-zinc-600 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 flex items-center justify-center transition-colors duration-300"
                             aria-label="Instagram"
                         >
                             <Instagram size={18} />
@@ -44,14 +49,14 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                             href="https://x.com/astrocartography_world"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-10 h-10 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-white hover:text-black hover:border-white flex items-center justify-center transition-colors duration-300"
+                            className="w-10 h-10 rounded-full border border-zinc-300 bg-white/50 text-zinc-600 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 flex items-center justify-center transition-colors duration-300"
                             aria-label="Twitter"
                         >
                             <Twitter size={18} />
                         </a>
                         <a
-                            href="mailto:contact@astrocartography.world"
-                            className="w-10 h-10 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 hover:bg-white hover:text-black hover:border-white flex items-center justify-center transition-colors duration-300"
+                            href="mailto:contact@halohome.app"
+                            className="w-10 h-10 rounded-full border border-zinc-300 bg-white/50 text-zinc-600 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 flex items-center justify-center transition-colors duration-300"
                             aria-label="Email"
                         >
                             <Mail size={18} />
@@ -60,7 +65,7 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                     {showInstallButton && onInstall && (
                         <button
                             onClick={onInstall}
-                            className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/50 text-purple-400 hover:bg-purple-500 hover:text-white text-sm font-medium transition-colors duration-300"
+                            className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white text-sm font-medium transition-colors duration-300"
                         >
                             <Download size={16} />
                             Install App
@@ -80,10 +85,10 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                 {/* Features Column */}
                 <div className="footer-col footer-links">
                     <h5>Features</h5>
-                    <a href="/guest">3D Globe</a>
-                    <a href="/guest">AI Astrologer</a>
-                    <a href="/guest">Natal Charts</a>
-                    <a href="/guest">Duo Compatibility</a>
+                    <a href="/guest">Harmony Score</a>
+                    <a href="/guest">ZIP Code Scout</a>
+                    <a href="/guest">AI Insights</a>
+                    <a href="/guest">Remedies Panel</a>
                 </div>
 
                 {/* Company Column */}
@@ -91,7 +96,7 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                     <h5>Company</h5>
                     <a href="/">About Us</a>
                     <a href="/blog">Blog</a>
-                    <a href="mailto:contact@astrocartography.world">Contact</a>
+                    <a href="mailto:contact@halohome.app">Contact</a>
                 </div>
 
                 {/* Legal Column */}
@@ -101,7 +106,7 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                     <a href="#terms-of-service">Terms of Service</a>
                     <a href="#cookie-policy">Cookie Policy</a>
                     <button
-                        className="text-purple-400 hover:text-purple-300 focus:outline-none underline text-xs mt-2 transition-colors duration-300 text-left"
+                        className="text-zinc-900 hover:text-zinc-600 focus:outline-none underline text-xs mt-2 transition-colors duration-300 text-left"
                         onClick={() => setShowLegalDropdown(!showLegalDropdown)}
                         aria-expanded={showLegalDropdown}
                     >
@@ -113,22 +118,22 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
                         className={`transition-all duration-300 overflow-hidden ${showLegalDropdown ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'}`}
                     >
                         <div className="space-y-2 text-sm">
-                            <a href="#disclaimer" className="block hover:text-white transition-colors">Legal Disclaimer</a>
-                            <a href="#acceptable-use" className="block hover:text-white transition-colors">Acceptable Use Policy</a>
-                            <a href="#impressum" className="block hover:text-white transition-colors">Impressum</a>
+                            <a href="#disclaimer" className="block hover:text-zinc-900 transition-colors">Legal Disclaimer</a>
+                            <a href="#acceptable-use" className="block hover:text-zinc-900 transition-colors">Acceptable Use Policy</a>
+                            <a href="#impressum" className="block hover:text-zinc-900 transition-colors">Impressum</a>
                         </div>
 
                         <div className="mt-4">
-                            <h6 className="text-xs font-bold text-zinc-300 mb-2">Data Protection</h6>
+                            <h6 className="text-xs font-bold text-zinc-700 mb-2">Data Protection</h6>
                             <div className="space-y-2 text-sm">
-                                <a href="#dsar" className="block hover:text-white transition-colors">
+                                <a href="#dsar" className="block hover:text-zinc-900 transition-colors">
                                     Data Subject Access Request
                                 </a>
                                 <a
                                     href="https://app.termly.io/notify/d433763f-5949-4542-8251-5f41735b5209"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center hover:text-white transition-colors"
+                                    className="flex items-center hover:text-zinc-900 transition-colors"
                                 >
                                     Do Not Sell My Information
                                     <ExternalLink className="ml-1 h-3 w-3" />
@@ -140,13 +145,13 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
             </div>
 
             {/* Copyright */}
-            <div className="border-t border-zinc-800 mt-12 pt-8 max-w-7xl mx-auto px-6">
+            <div className="border-t border-zinc-200 mt-12 pt-8 max-w-7xl mx-auto px-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-zinc-500">
-                        © 2025 Astrocarto. All rights reserved.
+                        © 2026 Halo Home. All rights reserved.
                     </p>
                     <p className="text-xs text-zinc-500">
-                        Made with cosmic love
+                        Start living in harmony
                     </p>
                 </div>
             </div>
