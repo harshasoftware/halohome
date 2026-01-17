@@ -39,8 +39,8 @@ class DemoErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
 }
 
 // Lazy load heavy demo components (desktop only) with error handling
-const LandingGlobeDemo = lazy(() =>
-    import('./components/LandingGlobeDemo').catch(() => ({ default: () => null }))
+const LandingZipDemo = lazy(() =>
+    import('./components/LandingZipDemo').catch(() => ({ default: () => null }))
 );
 const LandingPlanetaryDemo = lazy(() =>
     import('./components/LandingPlanetaryDemo').catch(() => ({ default: () => null }))
@@ -108,12 +108,12 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="absolute top-16 left-0 w-full bg-black/95 border-b border-white/10 p-6 flex flex-col gap-6 md:hidden">
-                    <a href="#features" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Features</a>
-                    <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Pricing</a>
-                    <a href="/sample-report" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Sample Report</a>
-                    <a href="/blog/methodology" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg">Methodology</a>
-                    <a href="/guest" onClick={() => setMobileMenuOpen(false)} className="px-6 py-3 text-center font-medium text-white bg-zinc-900 hover:bg-[#F0A6B3] rounded-full transition-colors">
+                <div className="absolute top-16 left-0 w-full bg-white/95 backdrop-blur-md border-b border-black/10 p-6 flex flex-col gap-6 md:hidden shadow-lg">
+                    <a href="#features" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg text-black hover:bg-black/5">Features</a>
+                    <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg text-black hover:bg-black/5">Pricing</a>
+                    <a href="/sample-report" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg text-black hover:bg-black/5">Sample Report</a>
+                    <a href="/blog/methodology" onClick={() => setMobileMenuOpen(false)} className="nav-link text-lg text-black hover:bg-black/5">Methodology</a>
+                    <a href="/guest" onClick={() => setMobileMenuOpen(false)} className="px-6 py-3 text-center font-medium text-white bg-black hover:bg-[#F0A6B3] rounded-full transition-colors">
                         Launch App
                     </a>
                 </div>
@@ -1100,7 +1100,7 @@ export default function Landing() {
                 <div className="bg-section-pink section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
-                            <LandingGlobeDemo />
+                            <LandingZipDemo />
                         </Suspense>
                     </DemoErrorBoundary>
                 </div>
