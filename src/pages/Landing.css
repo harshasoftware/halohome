@@ -167,7 +167,17 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    overflow: hidden;
+}
+
+/* Waitlist section - reduced top padding and margin */
+.section-block.waitlist-section {
+    padding-top: 40px;
+    padding-bottom: 100px;
+    margin-top: 0;
+}
+
+.section-block.waitlist-section .section-wrapper {
+    margin-top: 0;
 }
 
 /* Mobile responsive padding for section blocks */
@@ -5792,3 +5802,447 @@ body {
 }
 
 /* Note: Scout demo section is hidden on mobile (max-width: 1024px) via display: none */
+
+/* =============================================================================
+   SCAN DEMO SECTION (iPhone LiDAR Scanning)
+   ============================================================================= */
+
+.scan-demo-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 24px 120px;
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 1024px) {
+    .scan-demo-section {
+        padding: 40px 16px 60px;
+    }
+
+    .scan-demo-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .scan-demo-content {
+        max-width: 100%;
+        text-align: center;
+    }
+}
+
+.scan-demo-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+}
+
+/* Left: Content */
+.scan-demo-content {
+    flex: 1;
+    max-width: 460px;
+}
+
+.scan-demo-title {
+    font-size: 3rem;
+    line-height: 1.1;
+    margin-bottom: 24px;
+}
+
+.scan-demo-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #D97706, #B45309);
+    border-radius: 2px;
+    margin: 8px 0;
+}
+
+.scan-demo-intro {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    margin: 16px 0 8px;
+}
+
+.scan-demo-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+/* Stage buttons */
+.scan-stage-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.scan-stage-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.scan-stage-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.scan-stage-btn.active {
+    background: rgba(217, 119, 6, 0.15);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #D97706;
+}
+
+.scan-stage-btn svg {
+    color: inherit;
+}
+
+/* Stage description */
+.scan-stage-description {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    min-height: 80px;
+    margin-bottom: 24px;
+}
+
+.scan-stage-description p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* CTA group */
+.scan-cta-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+/* Right: Visualization */
+.scan-demo-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.scan-demo-visual.animate .scan-viz-container {
+    animation: fadeSlideUp 0.6s ease-out forwards;
+}
+
+/* Main visualization container */
+.scan-viz-container {
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 32px;
+    min-height: 500px;
+    min-width: 300px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* iPhone mockup */
+.scan-phone-mockup {
+    width: 280px;
+    height: 560px;
+    background: #1a1a1a;
+    border-radius: 40px;
+    padding: 8px;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.scan-phone-mockup::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 25px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+}
+
+.scan-phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Scan viewport */
+.scan-viewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+/* Scanning stage */
+.scan-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(217, 119, 6, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217, 119, 6, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.3;
+}
+
+.scan-points {
+    position: absolute;
+    inset: 0;
+}
+
+.scan-point {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #D97706;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(217, 119, 6, 0.8);
+    transform: translate(-50%, -50%);
+    animation: pointPulse 2s ease-in-out infinite;
+}
+
+@keyframes pointPulse {
+    0%, 100% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+.scan-progress-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+.scan-progress-bar {
+    height: 4px;
+    background: linear-gradient(90deg, #D97706, #B45309);
+    border-radius: 2px;
+    margin-bottom: 8px;
+    transition: width 0.1s linear;
+}
+
+.scan-progress-text {
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.scan-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #D97706;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Processing stage */
+.scan-viewport.processing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.processing-animation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: #D97706;
+}
+
+.processing-text {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.processing-progress {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.processing-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #D97706, #B45309);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
+/* Layout stage */
+.scan-viewport.layout {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.room-layout {
+    flex: 1;
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    min-height: 300px;
+}
+
+.room-outline {
+    position: absolute;
+    inset: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+}
+
+.furniture-item {
+    position: absolute;
+    border: 2px solid rgba(217, 119, 6, 0.6);
+    border-radius: 4px;
+    background: rgba(217, 119, 6, 0.2);
+    transform-origin: center;
+}
+
+.furniture-bed {
+    background: rgba(217, 119, 6, 0.3);
+}
+
+.furniture-desk {
+    background: rgba(180, 83, 9, 0.3);
+}
+
+.furniture-chair {
+    background: rgba(217, 119, 6, 0.25);
+    border-radius: 50%;
+}
+
+/* Vastu zones overlay */
+.vastu-zones-overlay {
+    position: absolute;
+    inset: 10px;
+}
+
+.vastu-zone {
+    position: absolute;
+    padding: 4px 8px;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(217, 119, 6, 0.5);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #D97706;
+}
+
+.zone-ne {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.zone-sw {
+    bottom: 0;
+    right: 0;
+}
+
+.zone-e {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+/* Remedies list */
+.remedies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.remedy-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(217, 119, 6, 0.1);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: #fff;
+}
+
+.remedy-item svg {
+    color: #D97706;
+    flex-shrink: 0;
+}
+
+/* Beige and white section overrides for scan demo */
+.bg-section-beige .scan-demo-intro svg,
+.bg-section-white .scan-demo-intro svg {
+    color: #D97706 !important;
+}
+
+.bg-section-beige .scan-stage-btn.active,
+.bg-section-white .scan-stage-btn.active {
+    background: rgba(217, 119, 6, 0.15);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #B45309;
+}
+
+@media (max-width: 768px) {
+    .scan-phone-mockup {
+        width: 240px;
+        height: 480px;
+    }
+
+    .scan-viz-container {
+        min-height: 400px;
+        padding: 16px;
+    }
+}

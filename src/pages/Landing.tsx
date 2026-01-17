@@ -54,6 +54,9 @@ const LandingDuoDemo = lazy(() =>
 const LandingScoutDemo = lazy(() =>
     import('./components/LandingScoutDemo').catch(() => ({ default: () => null }))
 );
+const LandingScanDemo = lazy(() =>
+    import('./components/LandingScanDemo').catch(() => ({ default: () => null }))
+);
 import { supabase } from '@/integrations/supabase/client';
 import { monitoredEdgeFunction } from '@/lib/monitoring';
 import Footer from '@/components/Footer';
@@ -1141,6 +1144,20 @@ export default function Landing() {
                     </DemoErrorBoundary>
                 </div>
 
+                {/* Scan Demo - iPhone LiDAR scanning and 3D layout */}
+                <div className="bg-section-white section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingScanDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
+
+                {/* Mobile App Waitlist - Right after scan demo */}
+                <div className="bg-section-white section-block waitlist-section">
+                    <MobileAppWaitlist />
+                </div>
+
                 {/* 6. Features Summary - Quick overview for skimmers */}
                 <div className="bg-section-white section-block">
                     <Features />
@@ -1157,10 +1174,6 @@ export default function Landing() {
 
                 <div className="bg-section-white section-block">
                     <FAQ />
-                </div>
-
-                <div className="bg-section-white section-block">
-                    <MobileAppWaitlist />
                 </div>
             </main>
 
