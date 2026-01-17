@@ -1,5 +1,5 @@
 /**
- * Firebase Configuration for Astrocartography World
+ * Firebase Configuration for HaloHome
  */
 
 import type { FirebaseApp } from 'firebase/app';
@@ -7,13 +7,13 @@ import type { Analytics } from 'firebase/analytics';
 import type { FirebasePerformance } from 'firebase/performance';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC1LnklavP-xgdYzeZEicjnr5VkBT5IaGU",
-  authDomain: "astrocartographyworld.firebaseapp.com",
-  projectId: "astrocartographyworld",
-  storageBucket: "astrocartographyworld.firebasestorage.app",
-  messagingSenderId: "413426421414",
-  appId: "1:413426421414:web:e28bed68056a7c4efeae67",
-  measurementId: "G-R55D3CZ2BD",
+  apiKey: "AIzaSyBv-gdoGz5icflm-sNOVCsk7BaTZmKIkuI",
+  authDomain: "halohome-484505.firebaseapp.com",
+  projectId: "halohome-484505",
+  storageBucket: "halohome-484505.firebasestorage.app",
+  messagingSenderId: "842417808948",
+  appId: "1:842417808948:web:31e0fc74aca0344921cc61",
+  measurementId: "G-63CDB0B439",
 };
 
 // Firebase instances (lazy loaded)
