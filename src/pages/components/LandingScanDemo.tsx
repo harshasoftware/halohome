@@ -168,34 +168,16 @@ const ScanVisualization = memo(({ stage }: { stage: ScanStage }) => {
 
           {(stage === 'layout' || stage === 'remedies') && (
             <div className="scan-viewport layout">
-              {/* 3D room layout */}
-              <div className="room-layout">
-                {/* Room outline */}
-                <div className="room-outline" />
-                
-                {/* Furniture */}
-                {MOCK_FURNITURE.map((furniture) => (
-                  <div
-                    key={furniture.id}
-                    className={`furniture-item furniture-${furniture.type}`}
-                    style={{
-                      left: `${furniture.x}%`,
-                      top: `${furniture.y}%`,
-                      width: `${furniture.width}%`,
-                      height: `${furniture.height}%`,
-                      transform: `rotate(${furniture.rotation}deg)`,
-                    }}
+              {/* 3D layout demo - AR scan image */}
+              <div className="scan-layout-image-wrapper">
+                <picture>
+                  <source srcSet="/images/scan-layout-demo.webp" type="image/webp" />
+                  <img 
+                    src="/images/scan-layout-demo-cropped.jpg" 
+                    alt="3D room layout generated from AR scan"
+                    className="scan-layout-image"
                   />
-                ))}
-
-                {/* Vastu zones overlay */}
-                {showRemedies && (
-                  <div className="vastu-zones-overlay">
-                    <div className="vastu-zone zone-ne">NE</div>
-                    <div className="vastu-zone zone-sw">SW</div>
-                    <div className="vastu-zone zone-e">E</div>
-                  </div>
-                )}
+                </picture>
               </div>
 
               {/* Remedies list */}
