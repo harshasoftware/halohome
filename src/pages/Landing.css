@@ -474,13 +474,17 @@ body {
 /* --- Hero Section --- */
 .hero-wrapper {
     position: relative;
-    min-height: 90vh; /* Slightly shorter to show next block hint */
+    height: 90vh; /* Fixed height regardless of content */
+    min-height: 90vh; /* Fallback for older browsers */
+    max-height: 90vh; /* Prevent overflow */
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 140px 24px 60px;
+    padding: 120px 24px 40px; /* Reduced padding to fit content better */
     z-index: 1;
     background-color: #FFFFFF; /* Clean White */
+    overflow: visible; /* Allow content to be visible */
+    box-sizing: border-box;
 }
 
 .hero-split-container {
@@ -500,6 +504,8 @@ body {
     justify-content: center;
     padding-right: 4rem;
     min-width: 0; /* Prevent flex item overflow */
+    overflow: visible; /* Allow content to be visible */
+    box-sizing: border-box;
 }
 
 .hero-right {
@@ -538,12 +544,13 @@ body {
     flex-direction: column;
     align-items: flex-end; /* Right-align content to match hero-left alignment */
     text-align: right; /* Right-align text on desktop/laptop */
-    gap: 2rem;
+    gap: 1.5rem; /* Reduced gap to fit content better */
     width: 100%;
     max-width: 700px;
     position: relative;
     z-index: 10;
     pointer-events: none; /* Allow hover to pass through to orbiting planets */
+    flex-shrink: 0;
 }
 
 .hero-text-content {
@@ -555,8 +562,9 @@ body {
     transform-origin: right top; /* Change transform origin to right */
     transition: opacity 0.4s ease-out, transform 0.4s ease-out;
     pointer-events: none; /* Allow hover to pass through to orbiting planets */
-    /* Fixed min-height for 3 lines to prevent search bar from jumping during text animation */
-    min-height: 280px;
+    /* Allow content to be fully visible, but maintain minimum space */
+    min-height: 200px;
+    flex-shrink: 0;
 }
 
 /* Laptop screens - ensure proper alignment */
@@ -668,6 +676,8 @@ body {
     max-width: 32rem;
     pointer-events: auto; /* Re-enable for search input interaction */
     margin-left: auto; /* Align to right on desktop/laptop */
+    flex-shrink: 0; /* Prevent search from shrinking */
+    overflow: visible; /* Allow search to be fully visible */
 }
 
 /* Desktop: animate search bar up when focused */
@@ -679,21 +689,28 @@ body {
 
 @media (max-width: 768px) {
     .hero-wrapper {
-        padding: 100px 16px 40px;
+        height: 90vh;
+        min-height: 90vh;
+        max-height: 90vh;
+        padding: 80px 16px 30px; /* Reduced padding for mobile */
+        overflow: visible;
+        box-sizing: border-box;
     }
 
     .hero-content-stack {
-        gap: 1.5rem;
+        gap: 1.25rem; /* Reduced gap for mobile */
         align-items: center !important;
         text-align: center !important;
         margin-left: 0 !important;
     }
 
     .hero-text-content {
-        gap: 1rem;
+        gap: 0.75rem; /* Reduced gap for mobile */
         align-items: center !important;
         text-align: center !important;
         transform-origin: center top !important;
+        min-height: auto; /* Allow natural height on mobile */
+        overflow: visible;
     }
 
     .hero-title {
@@ -745,19 +762,28 @@ body {
 /* Extra small mobile devices */
 @media (max-width: 480px) {
     .hero-wrapper {
-        padding: 80px 12px 32px;
+        height: 90vh;
+        min-height: 90vh;
+        max-height: 90vh;
+        padding: 70px 12px 25px; /* Further reduced padding for small screens */
+        overflow: visible;
+        box-sizing: border-box;
     }
 
     .hero-content-stack {
+        gap: 1rem; /* Reduced gap for small screens */
         align-items: center !important;
         text-align: center !important;
         margin-left: 0 !important;
     }
 
     .hero-text-content {
+        gap: 0.5rem; /* Reduced gap for small screens */
         align-items: center !important;
         text-align: center !important;
         transform-origin: center top !important;
+        min-height: auto;
+        overflow: visible;
     }
 
     .hero-title {
@@ -789,7 +815,8 @@ body {
     line-height: 1.1;
     margin-bottom: 0;
     text-transform: uppercase;
-    /* Fixed height for 3 lines to prevent layout shift during animation */
+    /* Allow title to be fully visible */
+    overflow: visible;
     min-height: calc(clamp(2.5rem, 6vw, 4.5rem) * 3.3);
     display: flex;
     align-items: center;
@@ -802,9 +829,10 @@ body {
 .hero-subtitle {
     font-size: clamp(1rem, 3vw, 1.25rem);
     color: var(--text-secondary);
-    /* Fixed height for 1 line to prevent layout shift */
-    min-height: clamp(1.5rem, 4vw, 2rem);
+    /* Allow subtitle to wrap naturally */
     max-width: 600px;
+    line-height: 1.5;
+    overflow: visible;
     margin: 0;
     margin-left: auto; /* Push to right on desktop */
     line-height: 1.6;

@@ -1105,16 +1105,7 @@ export default function Landing() {
                     </DemoErrorBoundary>
                 </div>
 
-                {/* 2. AI Demo - Personal value proposition */}
-                <div className="bg-section-beige section-block">
-                    <DemoErrorBoundary>
-                        <Suspense fallback={null}>
-                            <LandingAIDemo />
-                        </Suspense>
-                    </DemoErrorBoundary>
-                </div>
-
-                {/* 3. Duo Demo - Emotional hook */}
+                {/* 2. Duo Demo - Emotional hook */}
                 <div className="bg-section-green section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
@@ -1123,7 +1114,7 @@ export default function Landing() {
                     </DemoErrorBoundary>
                 </div>
 
-                {/* 4. Planetary Demo - Depth & credibility */}
+                {/* 3. Planetary Demo - Depth & credibility */}
                 <div className="bg-section-pink section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
@@ -1132,11 +1123,20 @@ export default function Landing() {
                     </DemoErrorBoundary>
                 </div>
 
-                {/* 5. Scout Algorithm Demo - Precision & accuracy showcase */}
+                {/* 4. Scout Algorithm Demo - Precision & accuracy showcase */}
                 <div className="bg-section-green section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
                             <LandingScoutDemo />
+                        </Suspense>
+                    </DemoErrorBoundary>
+                </div>
+
+                {/* 5. AI Demo - Personal value proposition */}
+                <div className="bg-section-beige section-block">
+                    <DemoErrorBoundary>
+                        <Suspense fallback={null}>
+                            <LandingAIDemo />
                         </Suspense>
                     </DemoErrorBoundary>
                 </div>
