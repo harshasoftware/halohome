@@ -1,11 +1,11 @@
 /**
  * OnboardingTour - Two-phase desktop joyride tutorial
  *
- * Phase 1 (Getting Started): For new users without birth data
- *   - Welcome, search bar, globe, account menu
+ * Phase 1 (Getting Started): For new users
+ *   - Welcome, property search, map, account menu
  *
- * Phase 2 (Explore Features): Auto-triggers after birth data is entered
- *   - Left toolbar, scout, AI chat, duo mode, filters
+ * Phase 2 (Explore Features): Auto-triggers after property search
+ *   - Left toolbar, scout, AI chat, filters, Vastu analysis
  *
  * Stores completion state per phase in localStorage.
  */
@@ -16,13 +16,13 @@ import { useTheme } from 'next-themes';
 
 const TOUR_STORAGE_KEY_PHASE1 = 'halohome_tour_phase1';
 const TOUR_STORAGE_KEY_PHASE2 = 'halohome_tour_phase2';
-const TOUR_VERSION = '2'; // Increment to show tour again after major updates
+const TOUR_VERSION = '3'; // Increment to show tour again after major updates
 
 export type TourPhase = 'phase1' | 'phase2' | 'all';
 
 interface OnboardingTourProps {
-  /** Whether the user has birth data set */
-  hasBirthData: boolean;
+  /** Whether the user has searched for a property */
+  hasPropertySearch?: boolean;
   /** Force show a specific phase (for tutorial button) */
   forceShow?: boolean;
   /** Which phase to force show */
@@ -32,7 +32,7 @@ interface OnboardingTourProps {
 }
 
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({
-  hasBirthData,
+  hasPropertySearch = false,
   forceShow = false,
   forcePhase = 'all',
   onComplete,
@@ -42,18 +42,19 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   const [currentPhase, setCurrentPhase] = useState<TourPhase>('phase1');
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const prevHasBirthData = useRef(hasBirthData);
+  const prevHasPropertySearch = useRef(hasPropertySearch);
 
-  // Phase 1 steps - Getting Started (visible without birth data)
+  // Phase 1 steps - Getting Started (visible for new users)
   // Note: isFixed: true is required for elements in fixed-position containers (header, sidebars)
   const phase1Steps: Step[] = [
     {
       target: '[data-tour="welcome"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Welcome to Astrocartography</h3>
+          <h3 className="text-lg font-semibold">Welcome to Halo Home</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Discover how planetary energies influence different locations around the world.
+            Discover property harmony using ancient Vastu Shastra principles.
+            Analyze any property or ZIP code to find your perfect home.
             Let's take a quick tour of the basics.
           </p>
         </div>
@@ -62,13 +63,14 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       disableBeacon: true,
     },
     {
-      target: '[data-tour="search-bar"]',
+      target: '[data-tour="property-search"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Enter Your Birth Data</h3>
+          <h3 className="text-lg font-semibold">Search Properties</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Start by searching for your birthplace. Click here and type your birth city,
-            then enter your birth date and time to generate your personal astrocartography map.
+            Enter a property address or ZIP code to begin analysis. Search for a specific
+            address to analyze a single property, or enter a ZIP code to scout all properties
+            in that area.
           </p>
         </div>
       ),
@@ -80,10 +82,10 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       target: '[data-tour="globe"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Interactive Globe</h3>
+          <h3 className="text-lg font-semibold">Interactive Map</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            This is your personal astrocartography map. Drag to rotate, scroll to zoom,
-            and click on any location to explore its planetary influences.
+            This is your property analysis map. Drag to pan, scroll to zoom,
+            and click on any property to view its Vastu harmony score and detailed analysis.
           </p>
         </div>
       ),
@@ -96,7 +98,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Your Account</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Sign in to save multiple birth charts, sync your favorites across devices,
+            Sign in to save your property analyses, sync your favorites across devices,
             and unlock premium features.
           </p>
         </div>
@@ -111,8 +113,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Ready to Begin!</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Enter your birthplace in the search bar to see your planetary lines.
-            Once your chart is generated, we'll show you all the powerful features available!
+            Search for a property address or ZIP code to see Vastu analysis.
+            Once you've searched, we'll show you all the powerful features available!
           </p>
         </div>
       ),
@@ -121,17 +123,17 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
     },
   ];
 
-  // Phase 2 steps - Explore Features (visible after birth data is entered)
+  // Phase 2 steps - Explore Features (visible after property search)
   // Note: isFixed: true is required for elements inside fixed-position containers
   const phase2Steps: Step[] = [
     {
       target: '[data-tour="welcome"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Your Chart is Ready!</h3>
+          <h3 className="text-lg font-semibold">Analysis Complete!</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Now that you have your astrocartography map, let's explore the powerful
-            features available to help you find your best locations.
+            Now that you have your property analysis, let's explore the powerful
+            features available to help you find your perfect home.
           </p>
         </div>
       ),
@@ -144,8 +146,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Quick Actions</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Access key features from this toolbar: AI insights, compatibility analysis,
-            zone drawing, export options, and more.
+            Access key features from this toolbar: Vastu analysis, AI insights,
+            export options, drawing tools, and more.
           </p>
         </div>
       ),
@@ -157,10 +159,11 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       target: '[data-tour="scout-button"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Scout Best Locations</h3>
+          <h3 className="text-lg font-semibold">Scout Properties</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Our AI-powered Scout analyzes thousands of cities to find the best locations
-            for your goals - whether it's career, love, creativity, or personal growth.
+            When searching by ZIP code, use Scout to analyze all properties in the area.
+            Our AI analyzes each property's Vastu harmony score, orientation, and zone alignment
+            to help you find the best homes.
           </p>
         </div>
       ),
@@ -174,23 +177,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">AI Assistant</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Ask questions about your chart, get personalized insights about locations,
-            or learn more about how planetary lines affect different areas of life.
-          </p>
-        </div>
-      ),
-      placement: 'right',
-      disableBeacon: true,
-      isFixed: true,
-    },
-    {
-      target: '[data-tour="duo-mode"]',
-      content: (
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Duo Mode</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Compare your chart with a partner's to find locations where your energies
-            harmonize. Great for couples, business partners, or friends planning to travel together.
+            Ask questions about Vastu principles, get personalized insights about properties,
+            or learn more about how different zones and orientations affect harmony scores.
           </p>
         </div>
       ),
@@ -202,10 +190,10 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       target: '[data-tour="filters"]',
       content: (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Customize Your View</h3>
+          <h3 className="text-lg font-semibold">Filter Properties</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Toggle which planetary lines and aspects are visible. Focus on specific
-            planets or line types to declutter your map.
+            Filter properties by harmony score, zone alignment, or other Vastu criteria.
+            Focus on properties that meet your specific requirements.
           </p>
         </div>
       ),
@@ -219,8 +207,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">You're All Set!</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Click on any planetary line to learn its meaning, or use Scout to discover
-            your optimal locations. Enjoy exploring your cosmic map!
+            Click on any property to view its detailed Vastu analysis, or use Scout to discover
+            the best properties in any ZIP code. Enjoy finding your perfect home!
           </p>
         </div>
       ),
@@ -246,7 +234,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
     // Force show from button
     if (forceShow) {
       const phase = forcePhase === 'all'
-        ? (hasBirthData ? 'phase2' : 'phase1')
+        ? (hasPropertySearch ? 'phase2' : 'phase1')
         : forcePhase;
       setCurrentPhase(phase);
       setStepIndex(0);
@@ -255,7 +243,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
     }
 
     // Auto-show phase 1 for new users
-    if (!hasCompletedPhase1() && !hasBirthData) {
+    if (!hasCompletedPhase1() && !hasPropertySearch) {
       const timer = setTimeout(() => {
         setCurrentPhase('phase1');
         setStepIndex(0);
@@ -263,12 +251,12 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [forceShow, forcePhase, hasBirthData]);
+  }, [forceShow, forcePhase, hasPropertySearch]);
 
-  // Auto-trigger phase 2 when birth data is first added
+  // Auto-trigger phase 2 when property search is first performed
   useEffect(() => {
-    if (!prevHasBirthData.current && hasBirthData && !hasCompletedPhase2()) {
-      // Birth data was just added, trigger phase 2
+    if (!prevHasPropertySearch.current && hasPropertySearch && !hasCompletedPhase2()) {
+      // Property search was just performed, trigger phase 2
       const timer = setTimeout(() => {
         setCurrentPhase('phase2');
         setStepIndex(0);
@@ -276,8 +264,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       }, 1000);
       return () => clearTimeout(timer);
     }
-    prevHasBirthData.current = hasBirthData;
-  }, [hasBirthData]);
+    prevHasPropertySearch.current = hasPropertySearch;
+  }, [hasPropertySearch]);
 
   const handleJoyrideCallback = useCallback((data: CallBackProps) => {
     const { status, action, index, type } = data;
@@ -303,13 +291,13 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
 
   const activeSteps = getStepsForPhase(currentPhase);
 
-  // Custom styles matching app theme - dusty rose accent
+  // Custom styles matching app theme - orange accent (matching landing page)
   const joyrideStyles = {
     options: {
       arrowColor: isDark ? '#1e1e2e' : '#ffffff',
       backgroundColor: isDark ? '#1e1e2e' : '#ffffff',
       overlayColor: 'rgba(0, 0, 0, 0.5)',
-      primaryColor: '#d4a5a5', // dusty rose
+      primaryColor: '#D97706', // Orange accent matching landing page
       textColor: isDark ? '#e2e8f0' : '#334155',
       zIndex: 10000,
     },
@@ -332,7 +320,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       lineHeight: 1.6,
     },
     buttonNext: {
-      backgroundColor: '#d4a5a5', // dusty rose
+      backgroundColor: '#D97706', // Orange accent
       color: '#ffffff',
       borderRadius: 8,
       padding: '8px 16px',

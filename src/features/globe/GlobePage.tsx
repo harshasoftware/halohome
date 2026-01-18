@@ -2337,7 +2337,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
       {/* Onboarding Tour - Desktop only */}
       {!isMobile && (
         <OnboardingTour
-          hasBirthData={!!birthData}
+          hasPropertySearch={!!cityLocation || !!zipCodeBounds}
           forceShow={showTutorial}
           forcePhase={tutorialPhase}
           onComplete={() => setShowTutorial(false)}
