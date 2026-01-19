@@ -1,14 +1,13 @@
 /**
  * Building Footprints Service
  *
- * Extracts property/building boundaries using Meta's SAM v2 (Segment Anything Model)
- * for in-browser image segmentation. This provides accurate boundary detection from
- * Google Maps imagery without requiring paid parcel data providers like Regrid.
+ * Fetches property boundaries from Regrid API.
+ * Focuses on Single Family Home (SFH) parcels (landuse_code=1100).
  *
- * Primary Method: SAM v2 via transformers.js
- * - Captures Google Maps tiles at high zoom levels
- * - Uses SAM v2 to segment plots and buildings
- * - Converts pixel polygons to lat/lng coordinates
+ * Primary Method: Regrid API
+ * - Fetches SFH parcels from Regrid API
+ * - Overlays parcels on Google Maps
+ * - Provides parcel details (address, owner, etc.)
  */
 
 import {
@@ -19,30 +18,20 @@ import {
   createPolygon,
   haversineDistance,
 } from '@/lib/building-footprints/coordinate-utils';
-import {
-  fetchTileImage,
-  getImageBounds,
-  BOUNDARY_DETECTION_CONFIG,
-  SATELLITE_CONFIG,
-  type TileCaptureConfig,
-} from '@/lib/building-footprints/tile-capture-service';
-import {
-  loadSAMModel,
-  isSAMReady,
-  segmentAutomatic,
-  segmentWithPoints,
-  pixelPolygonsToLatLng,
-  getSAMLoadingState,
-  type SegmentationPoint,
-} from '@/lib/sam-segmentation';
+import { searchSFHParcels, regridParcelToFootprint, type RegridParcel } from '@/lib/regrid/regrid-service';
+import { getGeocode, getLatLng } from 'use-places-autocomplete';
 
 export interface BuildingFootprint extends Polygon {
   id: string;
-  source: 'sam-v2-extraction' | 'manual';
+  source: 'regrid' | 'manual';
   shape: 'square' | 'rectangle' | 'irregular' | 'L-shaped' | 'triangular';
   confidence: number;
   address?: string;
-  /** Type of extraction: plot boundary or building structure */
+  /** Regrid parcel ID */
+  regridId?: string;
+  /** Property owner from Regrid */
+  owner?: string;
+  /** Type: always 'plot' for Regrid parcels */
   type: 'plot' | 'building';
 }
 
@@ -60,7 +49,9 @@ export interface FootprintSearchResult {
   /** Plot boundaries with their associated buildings */
   plotsWithBuildings: PlotWithBuilding[];
   bounds: BoundingBox;
-  source: 'sam-v2' | 'database' | 'mixed';
+  /** ZIP boundary polygon (if search was by ZIP code) */
+  zipBoundary?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
+  source: 'regrid' | 'database' | 'mixed';
   totalCount: number;
   /** Count of plots found */
   plotCount: number;
@@ -70,22 +61,24 @@ export interface FootprintSearchResult {
 }
 
 export interface SearchOptions {
-  /** Extract plot boundaries from roadmap tiles */
+  /** Extract plot boundaries from Regrid (always true for Regrid) */
   extractPlots?: boolean;
-  /** Extract building footprints from satellite tiles */
+  /** Extract building footprints (not supported with Regrid, always false) */
   extractBuildings?: boolean;
-  /** Maximum number of footprints to return */
+  /** Maximum number of parcels to fetch from Regrid (default: 10 for trial account) */
   maxResults?: number;
-  /** Minimum confidence threshold */
+  /** Minimum confidence threshold (not used with Regrid, kept for compatibility) */
   minConfidence?: number;
   /** Progress callback */
   onProgress?: (phase: string, percent: number) => void;
+  /** GeoJSON polygon for accurate ZIP boundary queries (preferred over bounds) */
+  geojson?: GeoJSON.Polygon | GeoJSON.MultiPolygon;
 }
 
 const DEFAULT_OPTIONS: Required<Omit<SearchOptions, 'onProgress'>> & { onProgress?: SearchOptions['onProgress'] } = {
   extractPlots: true,
-  extractBuildings: true,
-  maxResults: 50,
+  extractBuildings: false, // Not supported with Regrid
+  maxResults: 10, // Trial account limit
   minConfidence: 0.4,
   onProgress: undefined,
 };
@@ -98,40 +91,137 @@ function getCacheKey(bounds: BoundingBox): string {
   return `${bounds.north.toFixed(4)}-${bounds.south.toFixed(4)}-${bounds.east.toFixed(4)}-${bounds.west.toFixed(4)}`;
 }
 
+// Tile progress tracking (persisted to localStorage)
+const TILE_PROGRESS_STORAGE_KEY = 'building_footprints_tile_progress';
+const TILE_PROGRESS_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+interface TileProgress {
+  boundsKey: string;
+  type: 'plot' | 'building';
+  totalTiles: number;
+  processedTiles: number;
+  lastProcessedTileIndex: number;
+  timestamp: number;
+}
+
 /**
- * Initialize SAM v2 model for segmentation.
- * Call this early to preload the model before user searches.
+ * Get tile progress from localStorage
+ */
+function getTileProgress(bounds: BoundingBox, type: 'plot' | 'building'): TileProgress | null {
+  try {
+    const stored = localStorage.getItem(TILE_PROGRESS_STORAGE_KEY);
+    if (!stored) return null;
+
+    const allProgress: TileProgress[] = JSON.parse(stored);
+    const boundsKey = getCacheKey(bounds);
+    
+    // Find matching progress (same bounds and type)
+    const progress = allProgress.find(
+      p => p.boundsKey === boundsKey && p.type === type && Date.now() - p.timestamp < TILE_PROGRESS_EXPIRY
+    );
+
+    return progress || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save tile progress to localStorage
+ */
+function saveTileProgress(bounds: BoundingBox, type: 'plot' | 'building', processedIndex: number, totalTiles: number): void {
+  try {
+    const stored = localStorage.getItem(TILE_PROGRESS_STORAGE_KEY);
+    const allProgress: TileProgress[] = stored ? JSON.parse(stored) : [];
+    const boundsKey = getCacheKey(bounds);
+
+    // Remove old progress for this bounds/type
+    const filtered = allProgress.filter(
+      p => !(p.boundsKey === boundsKey && p.type === type)
+    );
+
+    // Add new progress
+    filtered.push({
+      boundsKey,
+      type,
+      totalTiles,
+      processedTiles: processedIndex + 1,
+      lastProcessedTileIndex: processedIndex,
+      timestamp: Date.now(),
+    });
+
+    // Keep only recent progress (last 50 entries)
+    const recent = filtered
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 50);
+
+    localStorage.setItem(TILE_PROGRESS_STORAGE_KEY, JSON.stringify(recent));
+  } catch (error) {
+    console.warn('[BuildingFootprints] Failed to save tile progress:', error);
+  }
+}
+
+/**
+ * Clear tile progress for a specific bounds/type
+ */
+export function clearTileProgress(bounds: BoundingBox, type: 'plot' | 'building'): void {
+  try {
+    const stored = localStorage.getItem(TILE_PROGRESS_STORAGE_KEY);
+    if (!stored) return;
+
+    const allProgress: TileProgress[] = JSON.parse(stored);
+    const boundsKey = getCacheKey(bounds);
+
+    const filtered = allProgress.filter(
+      p => !(p.boundsKey === boundsKey && p.type === type)
+    );
+
+    localStorage.setItem(TILE_PROGRESS_STORAGE_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.warn('[BuildingFootprints] Failed to clear tile progress:', error);
+  }
+}
+
+/**
+ * Get the last processed tile index for resuming
+ */
+export function getLastProcessedTileIndex(bounds: BoundingBox, type: 'plot' | 'building'): number {
+  const progress = getTileProgress(bounds, type);
+  return progress ? progress.lastProcessedTileIndex : -1;
+}
+
+/**
+ * Initialize Regrid API (no-op, kept for compatibility).
+ * Regrid doesn't require initialization.
  */
 export async function initializeSAM(
   onProgress?: (progress: { status: string; progress: number }) => void
 ): Promise<void> {
-  if (isSAMReady()) return;
-
-  await loadSAMModel(
-    {
-      model: 'sam-vit-base', // Use base model for balance of speed and accuracy
-      quantized: true, // Smaller model size
-    },
-    onProgress
-  );
+  onProgress?.({ status: 'Regrid API ready', progress: 100 });
+  // No initialization needed for Regrid
 }
 
 /**
- * Check if SAM is ready for segmentation.
+ * Check if Regrid is ready (always true, kept for compatibility).
  */
 export function isSAMInitialized(): boolean {
-  return isSAMReady();
+  return true; // Regrid is always ready
 }
 
 /**
- * Get SAM loading status.
+ * Get Regrid status (kept for compatibility).
  */
 export function getSAMStatus(): { isLoading: boolean; isReady: boolean; error: Error | null } {
-  return getSAMLoadingState();
+  return {
+    isLoading: false,
+    isReady: true,
+    error: null,
+  };
 }
 
 /**
  * Search for building footprints in an area by ZIP code.
+ * Uses TIGER/Line ZCTA5 boundaries from Supabase PostGIS for accurate queries.
  */
 export async function searchByZipCode(
   zipCode: string,
@@ -140,25 +230,66 @@ export async function searchByZipCode(
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const startTime = Date.now();
 
-  opts.onProgress?.('Geocoding ZIP code', 5);
+  opts.onProgress?.('Fetching ZIP boundary', 5);
 
-  // Get center coordinates for ZIP code
-  const center = await geocodeZipCode(zipCode);
-  if (!center) {
-    throw new Error(`Could not geocode ZIP code: ${zipCode}`);
+  // Try to get actual ZIP boundary from Supabase PostGIS
+  let zipBoundaryGeoJSON: GeoJSON.Polygon | GeoJSON.MultiPolygon | null = null;
+  let bounds: BoundingBox | null = null;
+
+  try {
+    const { getZipBoundaryGeoJSON, getZipBoundaryBounds } = await import('@/lib/zip-boundaries/zip-boundary-service');
+    
+    // Fetch actual ZIP boundary polygon
+    zipBoundaryGeoJSON = await getZipBoundaryGeoJSON(zipCode);
+    
+    if (zipBoundaryGeoJSON) {
+      // Get bounds for map fitting
+      bounds = await getZipBoundaryBounds(zipCode);
+      opts.onProgress?.('Using accurate ZIP boundary', 10);
+    } else {
+      // Fallback to geocoding if ZIP boundary not found in database
+      opts.onProgress?.('ZIP boundary not found, using geocoded center', 10);
+      const center = await geocodeZipCode(zipCode);
+      if (!center) {
+        throw new Error(`Could not geocode ZIP code: ${zipCode}`);
+      }
+      // Create bounds around the ZIP code (approximately 3km radius)
+      bounds = getZipCodeBounds(center.lat, center.lng, 3);
+    }
+  } catch (error) {
+    // Fallback to geocoding if ZIP boundary service fails
+    console.warn('[BuildingFootprints] ZIP boundary service failed, using geocoded center:', error);
+    opts.onProgress?.('Falling back to geocoded center', 10);
+    const center = await geocodeZipCode(zipCode);
+    if (!center) {
+      throw new Error(`Could not geocode ZIP code: ${zipCode}`);
+    }
+    bounds = getZipCodeBounds(center.lat, center.lng, 3);
   }
 
-  // Create bounds around the ZIP code (approximately 3km radius)
-  const bounds = getZipCodeBounds(center.lat, center.lng, 3);
+  if (!bounds) {
+    throw new Error(`Could not determine bounds for ZIP code: ${zipCode}`);
+  }
 
-  return searchByBounds(bounds, { ...opts, onProgress: (phase, percent) => {
-    opts.onProgress?.(phase, 5 + percent * 0.95);
-  }});
+  // Use searchByBounds with geojson if available
+  const result = await searchByBounds(bounds, { 
+    ...opts, 
+    geojson: zipBoundaryGeoJSON || undefined,
+    onProgress: (phase, percent) => {
+      opts.onProgress?.(phase, 10 + percent * 0.90);
+    }
+  });
+  
+  // Include ZIP boundary in result for display
+  return {
+    ...result,
+    zipBoundary: zipBoundaryGeoJSON,
+  };
 }
 
 /**
  * Search for building footprints in a bounding box.
- * Uses SAM v2 for both plot and building extraction.
+ * Uses Regrid API to fetch SFH parcels.
  */
 export async function searchByBounds(
   bounds: BoundingBox,
@@ -185,51 +316,60 @@ export async function searchByBounds(
     };
   }
 
-  // Ensure SAM is loaded
-  if (!isSAMReady()) {
-    opts.onProgress?.('Loading SAM v2 model', 10);
-    await initializeSAM((progress) => {
-      opts.onProgress?.(`SAM v2: ${progress.status}`, 10 + progress.progress * 0.2);
-    });
-  }
-
   let plots: BuildingFootprint[] = [];
   let buildings: BuildingFootprint[] = [];
 
-  // Extract plots from roadmap tiles using SAM v2
+  // Fetch SFH parcels from Regrid
   if (opts.extractPlots) {
-    opts.onProgress?.('Extracting plot boundaries with SAM v2', 35);
-    const extractedPlots = await extractWithSAM(bounds, 'plot', {
-      onProgress: (percent) => opts.onProgress?.('Segmenting plot boundaries', 35 + percent * 0.25),
-    });
-    plots = extractedPlots;
+    opts.onProgress?.('Fetching SFH parcels from Regrid', 20);
+    
+    try {
+      const regridParcels = await searchSFHParcels({
+        bounds,
+        geojson: opts.geojson, // Use actual ZIP boundary polygon if available
+        limit: opts.maxResults || 10,
+        onProgress: (phase, percent) => {
+          opts.onProgress?.(phase, 20 + percent * 0.7);
+        },
+      });
+
+      // Convert Regrid parcels to BuildingFootprint format
+      plots = regridParcels.map((parcel) => {
+        const footprint = regridParcelToFootprint(parcel);
+        
+        // Determine shape from coordinates
+        const shape = determineShape(footprint.coordinates);
+        
+        return {
+          ...footprint,
+          source: 'regrid' as const,
+          shape,
+          confidence: 1.0, // Regrid data is authoritative
+          address: footprint.address,
+          regridId: footprint.regridId,
+          owner: footprint.owner,
+          type: 'plot' as const,
+        };
+      });
+
+      opts.onProgress?.('Processing parcel data', 90);
+    } catch (error) {
+      console.error('[BuildingFootprints] Failed to fetch Regrid parcels:', error);
+      opts.onProgress?.('Error fetching parcels', 100);
+      throw error;
+    }
   }
 
-  // Extract buildings from satellite tiles using SAM v2
-  if (opts.extractBuildings) {
-    opts.onProgress?.('Extracting building footprints with SAM v2', 65);
-    const extractedBuildings = await extractWithSAM(bounds, 'building', {
-      onProgress: (percent) => opts.onProgress?.('Segmenting building shapes', 65 + percent * 0.25),
-    });
-    buildings = extractedBuildings;
-  }
-
-  // Filter by confidence
-  plots = plots.filter((f) => f.confidence >= opts.minConfidence);
-  buildings = buildings.filter((f) => f.confidence >= opts.minConfidence);
+  // Regrid doesn't provide building footprints, only parcel boundaries
+  // Buildings array remains empty
 
   // Sort by area (largest first)
   plots.sort((a, b) => b.area - a.area);
-  buildings.sort((a, b) => b.area - a.area);
 
-  // Limit results
-  plots = plots.slice(0, opts.maxResults);
-  buildings = buildings.slice(0, opts.maxResults * 2); // Allow more buildings than plots
-
-  // Combine all footprints
+  // Limit results (already limited by Regrid API)
   const allFootprints = [...plots, ...buildings];
 
-  // Associate buildings with their containing plots
+  // Associate buildings with their containing plots (empty for Regrid)
   const plotsWithBuildings = associateBuildingsWithPlots(plots, buildings);
 
   opts.onProgress?.('Complete', 100);
@@ -241,12 +381,59 @@ export async function searchByBounds(
     footprints: allFootprints,
     plotsWithBuildings,
     bounds,
-    source: 'sam-v2',
+    source: 'regrid',
     totalCount: allFootprints.length,
     plotCount: plots.length,
     buildingCount: buildings.length,
     processingTimeMs: Date.now() - startTime,
   };
+}
+
+/**
+ * Determine shape from polygon coordinates
+ */
+function determineShape(coordinates: LatLng[]): BuildingFootprint['shape'] {
+  if (coordinates.length < 3) return 'irregular';
+  
+  // Simple heuristic: check if it's roughly square/rectangular
+  const bounds = calculateBounds(coordinates);
+  const width = haversineDistance(
+    { lat: bounds.south, lng: bounds.west },
+    { lat: bounds.south, lng: bounds.east }
+  );
+  const height = haversineDistance(
+    { lat: bounds.south, lng: bounds.west },
+    { lat: bounds.north, lng: bounds.west }
+  );
+  
+  const aspectRatio = Math.max(width, height) / Math.min(width, height);
+  
+  if (aspectRatio < 1.2) {
+    return 'square';
+  } else if (aspectRatio < 2.0) {
+    return 'rectangle';
+  } else {
+    return 'irregular';
+  }
+}
+
+/**
+ * Calculate bounds from coordinates
+ */
+function calculateBounds(coordinates: LatLng[]): BoundingBox {
+  let north = -90;
+  let south = 90;
+  let east = -180;
+  let west = 180;
+  
+  for (const coord of coordinates) {
+    north = Math.max(north, coord.lat);
+    south = Math.min(south, coord.lat);
+    east = Math.max(east, coord.lng);
+    west = Math.min(west, coord.lng);
+  }
+  
+  return { north, south, east, west };
 }
 
 /**
@@ -283,252 +470,81 @@ export async function searchAtLocation(
 /**
  * Interactive segmentation: user clicks on map to segment a specific property.
  */
+/**
+ * Interactive search: user clicks on map to find the closest parcel.
+ * Uses Regrid API to find the nearest SFH parcel.
+ */
 export async function segmentAtPoint(
   lat: number,
   lng: number,
-  type: 'plot' | 'building' = 'building'
+  type: 'plot' | 'building' = 'plot',
+  options: { useWorker?: boolean } = {}
 ): Promise<BuildingFootprint | null> {
   const center: LatLng = { lat, lng };
-  const config = type === 'plot' ? PLOT_CONFIG : BUILDING_CONFIG;
-
-  if (!isSAMReady()) {
-    await initializeSAM();
-  }
 
   try {
-    // Capture tile image centered on the click point
-    const imageData = await fetchTileImage(center, config.tile);
-    const imageBounds = getImageBounds(center, config.tile);
+    // Create small bounds around the click point (200m radius)
+    const bounds = getZipCodeBounds(lat, lng, 0.2);
+    
+    // Fetch parcels from Regrid
+    const regridParcels = await searchSFHParcels({
+      bounds,
+      limit: 10, // Get up to 10 parcels, then find closest
+      onProgress: () => {}, // Silent for point clicks
+    });
 
-    const actualSize = (config.tile.size || 640) * (config.tile.scale || 2);
-
-    // Convert lat/lng to pixel coordinates
-    const clickX = Math.round(
-      ((lng - imageBounds.west) / (imageBounds.east - imageBounds.west)) * actualSize
-    );
-    const clickY = Math.round(
-      ((imageBounds.north - lat) / (imageBounds.north - imageBounds.south)) * actualSize
-    );
-
-    // Use SAM v2 with point prompt
-    const points: SegmentationPoint[] = [{ x: clickX, y: clickY, label: 1 }];
-    const results = await segmentWithPoints(imageData, points);
-
-    if (results.length === 0 || results[0].polygons.length === 0) {
+    if (regridParcels.length === 0) {
       return null;
     }
 
-    // Get the best result
-    const bestResult = results.reduce((best, current) =>
-      current.score > best.score ? current : best
-    );
+    // Find the parcel closest to the click point
+    const clickPoint: LatLng = { lat, lng };
+    let closest: RegridParcel | null = null;
+    let closestDistance = Infinity;
 
-    // Convert pixel polygon to lat/lng
-    const latLngPolygons = pixelPolygonsToLatLng(
-      bestResult.polygons,
-      imageBounds,
-      actualSize,
-      actualSize
-    );
+    for (const parcel of regridParcels) {
+      const footprint = regridParcelToFootprint(parcel);
+      const distance = haversineDistance(clickPoint, footprint.centroid);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closest = parcel;
+      }
+    }
 
-    if (latLngPolygons.length === 0 || latLngPolygons[0].length < 4) {
+    if (!closest) {
       return null;
     }
 
-    const polygon = createPolygon(latLngPolygons[0]);
-    const shape = classifyShape(polygon.coordinates);
-
+    // Convert to BuildingFootprint
+    const footprint = regridParcelToFootprint(closest);
+    const shape = determineShape(footprint.coordinates);
+    
     return {
-      id: `sam-point-${Date.now()}`,
-      source: 'sam-v2-extraction',
+      ...footprint,
+      source: 'regrid' as const,
       shape,
-      confidence: bestResult.score,
-      type,
-      ...polygon,
+      confidence: 1.0,
+      address: footprint.address,
+      regridId: footprint.regridId,
+      owner: footprint.owner,
+      type: 'plot' as const,
     };
   } catch (error) {
-    console.error('SAM point segmentation failed:', error);
+    console.error('[BuildingFootprints] Failed to fetch Regrid parcel:', error);
     return null;
   }
 }
 
 /**
- * Configuration for plot boundary extraction (from roadmap tiles).
+ * Removed: extractWithSAM - replaced with Regrid API
+ * This function previously used SAM v2 for tile-based segmentation.
+ * Now using Regrid API for parcel data.
+ * 
+ * All SAM-related tile processing code has been removed.
+ * 
+ * Note: classifyShape and calculateAngle functions were removed as they were
+ * duplicates and unused (determineShape is used instead).
  */
-const PLOT_CONFIG = {
-  tile: BOUNDARY_DETECTION_CONFIG,
-  sam: {
-    threshold: 0.5,
-    minArea: 1000,
-    maxArea: 100000,
-  },
-  quality: {
-    minConfidence: 0.3,
-    minAreaSqMeters: 100,  // ~1000 sq ft minimum for plots
-    maxAreaSqMeters: 50000, // ~500k sq ft maximum
-  },
-};
-
-/**
- * Configuration for building extraction (from satellite tiles).
- */
-const BUILDING_CONFIG = {
-  tile: SATELLITE_CONFIG,
-  sam: {
-    threshold: 0.6,
-    minArea: 200,
-    maxArea: 50000,
-  },
-  quality: {
-    minConfidence: 0.25,
-    minAreaSqMeters: 20,   // ~200 sq ft minimum for buildings
-    maxAreaSqMeters: 10000, // ~100k sq ft maximum
-  },
-};
-
-/**
- * Extract footprints from Google Maps tiles using SAM v2.
- * @param type - 'plot' for property boundaries, 'building' for structure footprints
- */
-async function extractWithSAM(
-  bounds: BoundingBox,
-  type: 'plot' | 'building',
-  callbacks: { onProgress?: (percent: number) => void } = {}
-): Promise<BuildingFootprint[]> {
-  const center: LatLng = {
-    lat: (bounds.north + bounds.south) / 2,
-    lng: (bounds.east + bounds.west) / 2,
-  };
-
-  const config = type === 'plot' ? PLOT_CONFIG : BUILDING_CONFIG;
-
-  try {
-    callbacks.onProgress?.(10);
-
-    // Capture map tile at high zoom
-    const imageData = await fetchTileImage(center, config.tile);
-    const imageBounds = getImageBounds(center, config.tile);
-
-    callbacks.onProgress?.(30);
-
-    // Use SAM v2 automatic segmentation
-    const segmentationResults = await segmentAutomatic(imageData, config.sam.threshold);
-
-    callbacks.onProgress?.(70);
-
-    const footprints: BuildingFootprint[] = [];
-    const actualSize = (config.tile.size || 640) * (config.tile.scale || 2);
-
-    for (const result of segmentationResults) {
-      // Skip low-confidence results
-      if (result.score < config.quality.minConfidence) continue;
-
-      // Convert pixel polygons to lat/lng
-      const latLngPolygons = pixelPolygonsToLatLng(
-        result.polygons,
-        imageBounds,
-        actualSize,
-        actualSize
-      );
-
-      for (const coords of latLngPolygons) {
-        if (coords.length < 4) continue;
-
-        const polygon = createPolygon(coords);
-
-        // Filter by area
-        if (polygon.area < config.quality.minAreaSqMeters ||
-            polygon.area > config.quality.maxAreaSqMeters) {
-          continue;
-        }
-
-        const shape = classifyShape(coords);
-
-        footprints.push({
-          id: `sam-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          source: 'sam-v2-extraction',
-          shape,
-          confidence: result.score,
-          type,
-          ...polygon,
-        });
-      }
-    }
-
-    callbacks.onProgress?.(100);
-
-    return footprints;
-  } catch (error) {
-    console.error(`Failed to extract ${type} footprints with SAM v2:`, error);
-    return [];
-  }
-}
-
-/**
- * Classify the shape of a polygon based on its vertices and angles.
- */
-function classifyShape(coords: LatLng[]): BuildingFootprint['shape'] {
-  const n = coords.length;
-
-  if (n < 4) return 'irregular';
-
-  // Calculate angles at each vertex
-  const angles: number[] = [];
-  for (let i = 0; i < n; i++) {
-    const prev = coords[(i - 1 + n) % n];
-    const curr = coords[i];
-    const next = coords[(i + 1) % n];
-
-    const angle = calculateAngle(prev, curr, next);
-    angles.push(angle);
-  }
-
-  // Count approximately right angles (80-100 degrees)
-  const rightAngles = angles.filter((a) => a >= 80 && a <= 100).length;
-
-  // Check for L-shape (has one interior angle around 270 degrees)
-  const interiorAngles = angles.filter((a) => a >= 250 && a <= 290).length;
-  if (interiorAngles >= 1 && n === 6) {
-    return 'L-shaped';
-  }
-
-  // Triangle
-  if (n === 3) {
-    return 'triangular';
-  }
-
-  // Square or rectangle (4 sides, ~4 right angles)
-  if (n === 4 && rightAngles >= 3) {
-    // Calculate side lengths
-    const sides = [];
-    for (let i = 0; i < 4; i++) {
-      const d = haversineDistance(coords[i], coords[(i + 1) % 4]);
-      sides.push(d);
-    }
-
-    // Check if approximately square (all sides within 20% of each other)
-    const avgSide = sides.reduce((a, b) => a + b, 0) / 4;
-    const isSquare = sides.every((s) => Math.abs(s - avgSide) / avgSide < 0.2);
-
-    return isSquare ? 'square' : 'rectangle';
-  }
-
-  return 'irregular';
-}
-
-/**
- * Calculate angle at vertex B given three points A, B, C.
- */
-function calculateAngle(a: LatLng, b: LatLng, c: LatLng): number {
-  const ab = { x: a.lng - b.lng, y: a.lat - b.lat };
-  const cb = { x: c.lng - b.lng, y: c.lat - b.lat };
-
-  const dot = ab.x * cb.x + ab.y * cb.y;
-  const cross = ab.x * cb.y - ab.y * cb.x;
-
-  const angle = Math.atan2(cross, dot) * (180 / Math.PI);
-  return Math.abs(angle);
-}
 
 /**
  * Associate buildings with their containing plots using point-in-polygon test.
@@ -603,30 +619,26 @@ function isPointInPolygon(point: LatLng, polygon: LatLng[]): boolean {
 
 /**
  * Geocode a ZIP code to lat/lng.
- * Uses Google Geocoding API via existing infrastructure.
+ * Uses getGeocode from use-places-autocomplete (same as other components).
+ * Appends ", USA" to improve geocoding accuracy for US ZIP codes.
  */
 async function geocodeZipCode(zipCode: string): Promise<LatLng | null> {
-  const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
   try {
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(zipCode)}&key=${API_KEY}`
-    );
+    // Use the same geocoding method as other components (CitySearchBar, PropertySearchBar)
+    // Format: "78702, USA" - same as other components use
+    const address = `${zipCode}, USA`;
+    const results = await getGeocode({ address });
 
-    if (!response.ok) {
-      throw new Error('Geocoding request failed');
+    if (!results || results.length === 0) {
+      console.warn(`No results found for ZIP code: ${zipCode}`);
+      return null;
     }
 
-    const data = await response.json();
-
-    if (data.status === 'OK' && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return { lat: location.lat, lng: location.lng };
-    }
-
-    return null;
+    // Get lat/lng from first result (same as other components)
+    const { lat, lng } = await getLatLng(results[0]);
+    return { lat, lng };
   } catch (error) {
-    console.error('ZIP code geocoding failed:', error);
+    console.error(`ZIP code geocoding failed for ${zipCode}:`, error);
     return null;
   }
 }
@@ -642,6 +654,8 @@ export const buildingFootprintsService = {
   initializeSAM,
   isSAMInitialized,
   getSAMStatus,
+  clearTileProgress, // Kept for compatibility, but no-op with Regrid
+  getLastProcessedTileIndex, // Kept for compatibility, but no-op with Regrid
 };
 
 export default buildingFootprintsService;

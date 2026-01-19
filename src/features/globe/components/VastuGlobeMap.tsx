@@ -10,7 +10,11 @@
 
 import React, { useCallback, useRef, useState, forwardRef, useImperativeHandle, useEffect, useMemo } from 'react';
 import { GoogleMap, Marker, DrawingManager, Polygon, InfoWindow } from '@react-google-maps/api';
+import { RegridParcelOverlay } from './RegridParcelOverlay';
+import { ZipBoundaryOverlay } from './ZipBoundaryOverlay';
+import type { BuildingFootprint } from '../services/buildingFootprintsService';
 import { MiniVastuCompass } from '@/components/VastuCompassOverlay';
+import { AdvancedMarker } from '@/components/maps/AdvancedMarker';
 import { useVastuStore } from '@/stores/vastuStore';
 import type { PersonLocation, Migration } from '../types/migration.d';
 import {
@@ -20,6 +24,7 @@ import {
   PROPERTY_SIZE_LIMIT_SQFT,
 } from '@/lib/geo-utils';
 import { ZoneConstraintAlert } from './ZoneConstraintAlert';
+import type { ZipSearchStatus } from '@/stores/globeInteractionStore';
 
 // Map container style
 const containerStyle = {
@@ -33,6 +38,8 @@ const defaultCenter = {
   lng: -98.5795,
 };
 
+const MAP_ID = String(import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? '').trim() || undefined;
+
 // Map options - minimal UI
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -43,6 +50,8 @@ const mapOptions: google.maps.MapOptions = {
   rotateControl: false,
   fullscreenControl: false,
   mapTypeId: 'roadmap',
+  // Required for AdvancedMarkerElement. If not provided, we gracefully fall back to legacy markers.
+  ...(MAP_ID ? { mapId: MAP_ID } : {}),
   styles: [
     {
       featureType: 'poi',
@@ -84,6 +93,9 @@ interface VastuGlobeMapProps {
   analysisLocation?: { lat: number; lng: number } | null;
   cityLocation?: { lat: number; lng: number; name: string } | null;
   zipCodeBounds?: { north: number; south: number; east: number; west: number } | null;
+  zipCodeBoundary?: Array<{ lat: number; lng: number }> | null; // Actual ZIP boundary polygon (preferred over bounds)
+  currentZipCode?: string | null;
+  zipSearchStatus?: ZipSearchStatus;
   relocationLocation?: { lat: number; lng: number; name?: string } | null;
   partnerLocation?: { lat: number; lng: number; name: string; avatarUrl?: string } | null;
 
@@ -132,6 +144,15 @@ interface VastuGlobeMapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   className?: string;
+  /** Parcels/footprints to display as polygons on the map */
+  parcels?: Array<{
+    id: string;
+    coordinates: Array<{ lat: number; lng: number }>;
+    vastuScore?: number;
+    type?: 'plot' | 'building';
+  }>;
+  /** Selected parcel ID to highlight */
+  selectedParcelId?: string | null;
 }
 
 const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapProps>(({
@@ -145,6 +166,9 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
   analysisLocation,
   cityLocation,
   zipCodeBounds,
+  zipCodeBoundary, // Actual ZIP boundary polygon (preferred over bounds)
+  currentZipCode,
+  zipSearchStatus = 'idle',
   relocationLocation,
   partnerLocation,
   hasBirthData = false,
@@ -168,11 +192,26 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
   center,
   zoom = 5,
   className = '',
+  parcels = [],
+  selectedParcelId = null,
 }, ref) => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapRotation, setMapRotation] = useState(0);
   const [infoWindow, setInfoWindow] = useState<{ lat: number; lng: number; content: string } | null>(null);
   const { setPropertyBoundary, setPropertyCoordinates: setVastuCenter, propertyBoundary: storeBoundary } = useVastuStore();
+
+  const selectedParcel = useMemo(() => {
+    if (!selectedParcelId) return null;
+    return parcels.find((p) => p.id === selectedParcelId) ?? null;
+  }, [parcels, selectedParcelId]);
+
+  const selectedParcelCenter = useMemo(() => {
+    if (!selectedParcel?.coordinates || selectedParcel.coordinates.length === 0) return null;
+    const pts = selectedParcel.coordinates;
+    const avgLat = pts.reduce((sum, p) => sum + p.lat, 0) / pts.length;
+    const avgLng = pts.reduce((sum, p) => sum + p.lng, 0) / pts.length;
+    return { lat: avgLat, lng: avgLng };
+  }, [selectedParcel]);
 
   // Convert altitude to zoom (rough mapping)
   const altitudeToZoom = (altitude: number): number => {
@@ -260,6 +299,17 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
           { lat: bounds.north, lng: bounds.east }
         );
         mapRef.current.fitBounds(googleBounds, padding);
+        
+        // For property scouting, ensure zoom is at least 19 (optimal for property line visibility)
+        // fitBounds might zoom out too far, so we set a minimum zoom after fitting
+        setTimeout(() => {
+          if (mapRef.current) {
+            const currentZoom = mapRef.current.getZoom() || 5;
+            if (currentZoom < 19) {
+              mapRef.current.setZoom(19);
+            }
+          }
+        }, 100);
       }
     },
   }));
@@ -403,6 +453,35 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
     };
   };
 
+  // ZIP marker icon: same pin, but with "#" instead of house glyph
+  const createZipMarker = (fillColor: string, strokeColor: string): google.maps.Icon => {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
+        <defs>
+          <filter id="shadow" x="-20%" y="-10%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
+          </filter>
+          <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:${fillColor};stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:${strokeColor};stop-opacity:1"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 0C7.163 0 0 7.163 0 16c0 8.837 16 28 16 28s16-19.163 16-28C32 7.163 24.837 0 16 0z"
+              fill="url(#pinGrad)" stroke="${strokeColor}" stroke-width="1.5" filter="url(#shadow)"/>
+        <circle cx="16" cy="14" r="10" fill="white" fill-opacity="0.95"/>
+        <text x="16" y="17" text-anchor="middle" font-size="14" font-weight="700" fill="${fillColor}" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">
+          #
+        </text>
+      </svg>
+    `;
+    const encoded = encodeURIComponent(svg).replace(/'/g, '%27').replace(/"/g, '%22');
+    return {
+      url: `data:image/svg+xml,${encoded}`,
+      scaledSize: new google.maps.Size(32, 44),
+      anchor: new google.maps.Point(16, 44),
+    };
+  };
+
   // Halo Home color palette for markers
   const markerColors = {
     default: { fill: '#d4a5a5', stroke: '#b8888a' },      // Dusty rose (primary)
@@ -431,6 +510,7 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
   // Get specific marker icons for different location types
   const getAnalysisMarker = () => createCustomMarker(markerColors.analysis.fill, markerColors.analysis.stroke);
   const getCityMarker = () => createCustomMarker(markerColors.city.fill, markerColors.city.stroke);
+  const getZipCodeMarker = () => createZipMarker(markerColors.city.fill, markerColors.city.stroke);
   const getRelocationMarker = () => createCustomMarker(markerColors.moderate.fill, markerColors.moderate.stroke);
   const getPartnerMarker = () => createCustomMarker(markerColors.partner.fill, markerColors.partner.stroke);
   const getPersonMarker = () => createCustomMarker(markerColors.city.fill, markerColors.city.stroke);
@@ -451,6 +531,20 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
   }, [isDrawingZone, drawingMode, zoneDrawingPoints]);
 
   const isOverPropertyLimit = liveAreaSqFt !== null && !isAreaWithinLimit(liveAreaSqFt, PROPERTY_SIZE_LIMIT_SQFT);
+
+  const zipStatusUi = useMemo(() => {
+    if (!currentZipCode) return null;
+    if (zipSearchStatus === 'searching') {
+      return { label: 'Searching…', cls: 'bg-blue-50 text-blue-700 border-blue-200' };
+    }
+    if (zipSearchStatus === 'ready') {
+      return { label: 'Ready', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    }
+    if (zipSearchStatus === 'error') {
+      return { label: 'Error', cls: 'bg-red-50 text-red-700 border-red-200' };
+    }
+    return { label: 'Idle', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+  }, [currentZipCode, zipSearchStatus]);
 
   return (
     <div className={`relative w-full h-full ${className}`}>
@@ -525,25 +619,65 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
           />
         )}
 
-        {/* ZIP code boundary rectangle - shows perimeter of searched ZIP code */}
-        {zipCodeBounds && (
-          <Polygon
-            paths={[
-              { lat: zipCodeBounds.north, lng: zipCodeBounds.west },
-              { lat: zipCodeBounds.north, lng: zipCodeBounds.east },
-              { lat: zipCodeBounds.south, lng: zipCodeBounds.east },
-              { lat: zipCodeBounds.south, lng: zipCodeBounds.west },
-            ]}
-            options={{
-              fillColor: '#6366F1',
-              fillOpacity: 0.1,
-              strokeColor: '#6366F1',
-              strokeWeight: 2,
-              strokeOpacity: 0.8,
-              clickable: false,
-            }}
+        {/* ZIP Code boundary - displayed as Data layer for better performance */}
+        <ZipBoundaryOverlay
+          zipCodeBoundary={zipCodeBoundary}
+          zipCodeBounds={zipCodeBounds}
+          currentZipCode={currentZipCode}
+        />
+
+        {/* Regrid Parcel Overlay - Display parcels as Data layer with hover effects */}
+        {parcels.length > 0 && (
+          <RegridParcelOverlay
+            parcels={parcels.map((p) => {
+              const footprint: BuildingFootprint = {
+                id: p.id,
+                coordinates: p.coordinates,
+                centroid: {
+                  lat: p.coordinates.reduce((sum, c) => sum + c.lat, 0) / p.coordinates.length,
+                  lng: p.coordinates.reduce((sum, c) => sum + c.lng, 0) / p.coordinates.length,
+                },
+                area: 0,
+                bounds: {
+                  north: Math.max(...p.coordinates.map(c => c.lat)),
+                  south: Math.min(...p.coordinates.map(c => c.lat)),
+                  east: Math.max(...p.coordinates.map(c => c.lng)),
+                  west: Math.min(...p.coordinates.map(c => c.lng)),
+                },
+                source: 'regrid',
+                shape: 'irregular',
+                confidence: 1.0,
+                type: p.type || 'plot',
+                address: (p as any).address,
+                regridId: (p as any).regridId,
+                owner: (p as any).owner,
+              };
+              
+              // Store vastuScore for the overlay
+              (footprint as any).vastuScore = p.vastuScore ?? 50;
+              
+              return footprint;
+            })}
+            selectedParcelId={selectedParcelId}
           />
         )}
+
+        {/* Selected parcel marker (centroid) */}
+        {selectedParcelCenter &&
+          (MAP_ID ? (
+            <AdvancedMarker
+              position={selectedParcelCenter}
+              title="Selected home"
+              zIndex={999}
+              icon={getMarkerIcon(undefined, selectedParcel?.vastuScore)}
+            />
+          ) : (
+            <Marker
+              position={selectedParcelCenter}
+              title="Selected home"
+              icon={getMarkerIcon(undefined, selectedParcel?.vastuScore)}
+            />
+          ))}
 
         {/* Analysis location marker */}
         {analysisLocation && (
@@ -556,12 +690,36 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
 
         {/* City location marker */}
         {cityLocation && (
-          <Marker
-            position={{ lat: cityLocation.lat, lng: cityLocation.lng }}
-            icon={getCityMarker()}
-            title={cityLocation.name}
-            onClick={() => setInfoWindow({ lat: cityLocation.lat, lng: cityLocation.lng, content: cityLocation.name })}
-          />
+          (() => {
+            const isZipCodeMarker =
+              !!currentZipCode &&
+              (cityLocation.name?.trim() === currentZipCode ||
+                cityLocation.name?.replace(/\s+/g, '').includes(currentZipCode));
+
+            const icon = isZipCodeMarker ? getZipCodeMarker() : getCityMarker();
+
+            // Prefer AdvancedMarker when mapId is present; use Marker as fallback.
+            if (MAP_ID) {
+              return (
+                <AdvancedMarker
+                  position={{ lat: cityLocation.lat, lng: cityLocation.lng }}
+                  title={cityLocation.name}
+                  zIndex={500}
+                  icon={icon}
+                  onClick={() => setInfoWindow({ lat: cityLocation.lat, lng: cityLocation.lng, content: cityLocation.name })}
+                />
+              );
+            }
+
+            return (
+              <Marker
+                position={{ lat: cityLocation.lat, lng: cityLocation.lng }}
+                icon={icon}
+                title={cityLocation.name}
+                onClick={() => setInfoWindow({ lat: cityLocation.lat, lng: cityLocation.lng, content: cityLocation.name })}
+              />
+            );
+          })()
         )}
 
         {/* Relocation marker */}
@@ -638,6 +796,18 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
           </InfoWindow>
         )}
       </GoogleMap>
+
+      {/* ZIP search status */}
+      {currentZipCode && zipStatusUi && (
+        <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10">
+          <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm shadow border border-slate-200 text-xs text-slate-700">
+            <span className="font-medium">{currentZipCode}</span>
+            <span className={`px-2 py-0.5 rounded-full border ${zipStatusUi.cls}`}>
+              {zipStatusUi.label}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Compass overlay */}
       {showCompass && (

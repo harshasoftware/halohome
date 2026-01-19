@@ -106,13 +106,56 @@ export function useFavoriteCities(): UseFavoriteCitiesReturn {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('favorite_cities')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false });
+      let data: FavoriteCity[] | null = null;
+      let lastError: any = null;
+      
+      // Retry up to 3 times with exponential backoff for network errors
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const result = await supabase
+            .from('favorite_cities')
+            .select('*')
+            .eq('user_id', user!.id)
+            .order('created_at', { ascending: false });
 
-      if (error) throw error;
+          if (result.error) {
+            // Don't retry on auth/permission errors (4xx), only on network errors (5xx or connection errors)
+            const isNetworkError = result.error.message.includes('Failed to fetch') || 
+                                  result.error.message.includes('ERR_CONNECTION') ||
+                                  result.error.message.includes('network');
+            
+            if (!isNetworkError || attempt === 2) {
+              throw result.error;
+            }
+            
+            lastError = result.error;
+            // Wait before retry: 1s, 2s, 4s
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+            continue;
+          }
+
+          data = result.data;
+          break; // Success, exit retry loop
+        } catch (error: any) {
+          lastError = error;
+          
+          // Check if it's a network error that should be retried
+          const isNetworkError = error.message?.includes('Failed to fetch') || 
+                                error.message?.includes('ERR_CONNECTION') ||
+                                error.message?.includes('network');
+          
+          if (!isNetworkError || attempt === 2) {
+            throw error;
+          }
+          
+          // Wait before retry: 1s, 2s, 4s
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+        }
+      }
+
+      if (data === null && lastError) {
+        throw lastError;
+      }
 
       setFavorites(data || []);
     } catch (error) {

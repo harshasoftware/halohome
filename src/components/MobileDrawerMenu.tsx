@@ -438,7 +438,7 @@ export const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({
                 className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400"
               >
                 <img src="/logo.png" alt="Logo" className="w-5 h-5" />
-                <span style={{ fontFamily: 'Cinzel, serif' }}>halohome.app</span>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>halohome.app</span>
               </a>
             </div>
           </motion.div>

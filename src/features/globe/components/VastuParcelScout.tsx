@@ -39,6 +39,8 @@ interface Parcel {
   id: string;
   address?: string;
   coordinates: { lat: number; lng: number };
+  /** Full parcel boundary polygon (lat/lngs) for drawing/highlighting on map */
+  boundary?: Array<{ lat: number; lng: number }>;
   vastuScore: number;
   orientation?: number;
   entranceDirection: VastuDirection;
@@ -54,10 +56,17 @@ function convertToDisplayParcel(parcel: ParcelWithVastu): Parcel {
   // Convert area from sq meters to sq ft for display
   const sizeInSqFt = Math.round(parcel.area * 10.764);
 
+  // Ensure coordinates is an array (polygon boundary)
+  // In BuildingFootprint, coordinates is the polygon array, not a point
+  const boundary = Array.isArray(parcel.coordinates) && parcel.coordinates.length > 2
+    ? parcel.coordinates
+    : undefined;
+
   return {
     id: parcel.id,
     address: undefined, // Will be reverse geocoded if needed
-    coordinates: parcel.centroid,
+    coordinates: parcel.centroid, // Centroid is a single point {lat, lng}
+    boundary, // Boundary is the polygon array [{lat, lng}, ...]
     vastuScore: parcel.vastuScore,
     orientation: undefined,
     entranceDirection: parcel.entranceDirection,
@@ -185,25 +194,60 @@ ParcelCard.displayName = 'ParcelCard';
 interface VastuParcelScoutProps {
   onParcelSelect?: (parcel: Parcel) => void;
   onCenterMap?: (lat: number, lng: number) => void;
+  /** Prefill the ZIP input (does not auto-run scout). */
+  prefillZipCode?: string | null;
   /** Auto-search this ZIP code when set */
   autoSearchZipCode?: string | null;
   /** Callback when search starts */
   onSearchStart?: () => void;
   /** Callback when search completes */
   onSearchComplete?: (success: boolean, count: number) => void;
+  /** Callback when loading state changes (for zoom locking) */
+  onLoadingChange?: (isLoading: boolean) => void;
+  /** Callback when parcels are updated (for map visualization) */
+  onParcelsChange?: (parcels: Array<{
+    id: string;
+    coordinates: Array<{ lat: number; lng: number }>;
+    vastuScore?: number;
+    type?: 'plot' | 'building';
+  }>) => void;
+  /** Callback when a parcel is selected (for map highlighting) */
+  onParcelSelected?: (parcelId: string | null) => void;
+  /** Callback when a ZIP code search is performed (for boundary display) */
+  onZipCodeSearch?: (zipCode: string, zipBoundary?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null) => void;
 }
 
 const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   onParcelSelect,
   onCenterMap,
+  prefillZipCode,
   autoSearchZipCode,
   onSearchStart,
   onSearchComplete,
+  onLoadingChange,
+  onParcelsChange,
+  onParcelSelected,
+  onZipCodeSearch,
 }) => {
+  // Store callback in ref to avoid dependency issues
+  useEffect(() => {
+    onZipCodeSearchRef.current = onZipCodeSearch;
+    console.log(`[VastuParcelScout] Component mounted/updated, onZipCodeSearch provided:`, !!onZipCodeSearch);
+  }, [onZipCodeSearch]);
   const [zipCode, setZipCode] = useState('');
   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'good' | 'excellent'>('all');
   const lastAutoSearchRef = useRef<string | null>(null);
+  const lastBoundaryNotificationRef = useRef<string | null>(null); // Track last ZIP code we notified about
+  const onZipCodeSearchRef = useRef(onZipCodeSearch); // Store callback in ref to avoid dependency issues
+
+  // Prefill ZIP input without triggering a scout.
+  useEffect(() => {
+    if (!prefillZipCode || prefillZipCode.length < 5) return;
+    if (zipCode === prefillZipCode) return;
+    setZipCode(prefillZipCode);
+    setSelectedParcelId(null);
+  }, [prefillZipCode, zipCode]);
 
   // Use the building footprints hook
   const {
@@ -212,6 +256,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
     error,
     progressPhase,
     progressPercent,
+    zipBoundary,
     searchByZipCode,
     stats,
     clear,
@@ -225,17 +270,64 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   // Convert to display format
   const parcels: Parcel[] = rawParcels.map(convertToDisplayParcel);
 
+  // Notify parent when parcels change (for map visualization)
+  useEffect(() => {
+    if (onParcelsChange) {
+      const mapParcels = rawParcels.map((p) => ({
+        id: p.id,
+        coordinates: p.coordinates,
+        vastuScore: p.vastuScore,
+        type: p.type,
+        // Preserve Regrid data if available
+        address: (p as any).address,
+        regridId: (p as any).regridId,
+        owner: (p as any).owner,
+      }));
+      onParcelsChange(mapParcels);
+    }
+  }, [rawParcels, onParcelsChange]);
+
   const handleSearch = useCallback(async () => {
     if (!zipCode || zipCode.length < 5) return;
     setSelectedParcelId(null);
-    await searchByZipCode(zipCode);
-  }, [zipCode, searchByZipCode]);
+    // Notify parent that a ZIP code search is starting (for boundary display)
+    console.log(`[VastuParcelScout] Manual search starting for ZIP: ${zipCode}`);
+    if (onZipCodeSearch) {
+      console.log(`[VastuParcelScout] Calling onZipCodeSearch callback immediately`);
+      onZipCodeSearch(zipCode, undefined); // Will be updated when zipBoundary is available
+    }
+    try {
+      await searchByZipCode(zipCode);
+    } catch (err) {
+      console.error(`[VastuParcelScout] Search failed:`, err);
+    }
+  }, [zipCode, searchByZipCode, onZipCodeSearch]);
 
   const handleParcelSelect = useCallback((parcel: Parcel) => {
     setSelectedParcelId(parcel.id);
     onParcelSelect?.(parcel);
-    onCenterMap?.(parcel.coordinates.lat, parcel.coordinates.lng);
-  }, [onParcelSelect, onCenterMap]);
+    
+    // Calculate centroid from boundary if available (more accurate than pre-calculated)
+    let lat: number;
+    let lng: number;
+    if (Array.isArray(parcel.boundary) && parcel.boundary.length > 2) {
+      // Calculate centroid from boundary polygon for accuracy
+      const sumLat = parcel.boundary.reduce((sum, c) => sum + c.lat, 0);
+      const sumLng = parcel.boundary.reduce((sum, c) => sum + c.lng, 0);
+      lat = sumLat / parcel.boundary.length;
+      lng = sumLng / parcel.boundary.length;
+    } else {
+      // Fallback to pre-calculated coordinates if boundary not available
+      lat = parcel.coordinates.lat;
+      lng = parcel.coordinates.lng;
+    }
+    
+    // Center map on parcel centroid
+    if (onCenterMap) {
+      onCenterMap(lat, lng);
+    }
+    onParcelSelected?.(parcel.id);
+  }, [onParcelSelect, onCenterMap, onParcelSelected]);
 
   // Auto-search when autoSearchZipCode changes (triggered by Scout button on map)
   useEffect(() => {
@@ -248,6 +340,12 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
 
     const performAutoSearch = async () => {
       onSearchStart?.();
+      // Notify parent that a ZIP code search is starting (for boundary display)
+      console.log(`[VastuParcelScout] Auto-search starting for ZIP: ${autoSearchZipCode}`);
+      if (onZipCodeSearch) {
+        console.log(`[VastuParcelScout] Calling onZipCodeSearch callback immediately`);
+        onZipCodeSearch(autoSearchZipCode, undefined); // Will be updated when zipBoundary is available
+      }
       try {
         await searchByZipCode(autoSearchZipCode);
         // Check parcels count after search completes
@@ -257,9 +355,102 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
     };
 
     performAutoSearch();
-  }, [autoSearchZipCode, searchByZipCode, onSearchStart, onSearchComplete]);
+  }, [autoSearchZipCode, searchByZipCode, onSearchStart, onSearchComplete, onZipCodeSearch]);
 
-  // Notify when search completes
+  // Notify parent when ZIP boundary becomes available (only once per ZIP code)
+  useEffect(() => {
+    // zipCode state is set before/when a ZIP search runs (manual or auto)
+    const currentZip = zipCode;
+    
+    // Reset notification ref when ZIP code changes (before checking boundary)
+    if (currentZip && currentZip !== lastBoundaryNotificationRef.current && lastBoundaryNotificationRef.current !== null) {
+      console.log(`[VastuParcelScout] ZIP code changed from ${lastBoundaryNotificationRef.current} to ${currentZip}, resetting notification ref`);
+      lastBoundaryNotificationRef.current = null;
+    }
+    
+    if (zipBoundary && currentZip && currentZip.length === 5) {
+      // Only notify if we haven't already notified for this ZIP code
+      if (lastBoundaryNotificationRef.current === currentZip) {
+        console.log(`[VastuParcelScout] Already notified parent for ZIP: ${currentZip}, skipping`);
+        return;
+      }
+      
+      console.log(`[VastuParcelScout] ZIP boundary available, notifying parent for ZIP: ${currentZip}`, {
+        boundaryType: zipBoundary.type,
+        hasCoordinates: !!zipBoundary.coordinates,
+        coordinatesLength: zipBoundary.type === 'Polygon' ? zipBoundary.coordinates[0]?.length : zipBoundary.coordinates[0]?.[0]?.length,
+      });
+      
+      const callback = onZipCodeSearchRef.current;
+      if (callback) {
+        console.log(`[VastuParcelScout] Calling onZipCodeSearch callback with boundary`);
+        try {
+          // Mark that we've notified BEFORE calling (to prevent duplicate calls during async operations)
+          lastBoundaryNotificationRef.current = currentZip;
+          callback(currentZip, zipBoundary);
+        } catch (error) {
+          console.error(`[VastuParcelScout] Error calling onZipCodeSearch:`, error);
+          // Reset the ref on error so we can retry
+          lastBoundaryNotificationRef.current = null;
+        }
+      } else {
+        console.warn(`[VastuParcelScout] onZipCodeSearch callback not provided!`);
+      }
+    } else {
+      console.log(`[VastuParcelScout] Conditions not met for boundary notification:`, {
+        hasZipBoundary: !!zipBoundary,
+        currentZip,
+        zipLength: currentZip?.length,
+        lastNotified: lastBoundaryNotificationRef.current,
+      });
+    }
+  }, [zipBoundary, zipCode]); // Removed onZipCodeSearch from deps, using ref instead
+
+  // Notify parent of loading state changes for zoom locking
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
+
+  // Pan map to first parcel when results are loaded (disabled - let user click to center)
+  // This was causing zoom to ZIP code center instead of parcel centroid
+  // useEffect(() => {
+  //   if (parcels.length > 0 && !isLoading && onCenterMap) {
+  //     const firstParcel = parcels[0];
+  //     // Calculate centroid from boundary if available
+  //     let lat: number | undefined;
+  //     let lng: number | undefined;
+  //     if (Array.isArray(firstParcel.boundary) && firstParcel.boundary.length > 2) {
+  //       const sumLat = firstParcel.boundary.reduce((sum, c) => sum + c.lat, 0);
+  //       const sumLng = firstParcel.boundary.reduce((sum, c) => sum + c.lng, 0);
+  //       lat = sumLat / firstParcel.boundary.length;
+  //       lng = sumLng / firstParcel.boundary.length;
+  //     } else if (firstParcel.coordinates) {
+  //       lat = firstParcel.coordinates.lat;
+  //       lng = firstParcel.coordinates.lng;
+  //     }
+  //     if (lat !== undefined && lng !== undefined) {
+  //       onCenterMap(lat, lng);
+  //     }
+  //   }
+  // }, [parcels, isLoading, onCenterMap]);
+
+  // Notify when search completes and log results
+  useEffect(() => {
+    if (parcels.length > 0) {
+      console.log(`[VastuParcelScout] Found ${parcels.length} parcels:`, parcels.map(p => ({
+        id: p.id,
+        score: p.vastuScore,
+        shape: p.shape,
+        coords: p.coordinates,
+      })));
+      onSearchComplete?.(true, parcels.length);
+    } else if (!isLoading && parcels.length === 0 && zipCode) {
+      console.warn(`[VastuParcelScout] No parcels found for ZIP code: ${zipCode}`);
+      onSearchComplete?.(false, 0);
+    }
+  }, [parcels, isLoading, zipCode, onSearchComplete]);
+
+  // Notify when search completes (old effect - keeping for compatibility)
   useEffect(() => {
     if (!isLoading && lastAutoSearchRef.current) {
       onSearchComplete?.(parcels.length > 0, parcels.length);
@@ -274,7 +465,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Search Header */}
       <div className="p-4 border-b border-slate-200 dark:border-white/10">
         <div className="flex gap-2">
@@ -300,7 +491,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
         </div>
 
         {isLoading && (
-          <div className="mt-3">
+          <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
               <span className="flex items-center gap-1">
                 <Sparkles className="h-3 w-3" />
@@ -361,7 +552,12 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
           </div>
 
           {/* Parcel List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-3 space-y-2"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            onWheelCapture={(e) => e.stopPropagation()}
+            onTouchMoveCapture={(e) => e.stopPropagation()}
+          >
             {filteredParcels.map((parcel) => (
               <ParcelCard
                 key={parcel.id}

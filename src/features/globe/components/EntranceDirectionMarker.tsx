@@ -214,6 +214,10 @@ export const EntranceDirectionMarker: React.FC<EntranceDirectionMarkerProps> = (
     <OverlayView
       position={position}
       mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+      getPixelPositionOffset={(width, height) => ({
+        x: -(width / 2),
+        y: -(height / 2),
+      })}
     >
       <div
         ref={markerRef}
@@ -221,8 +225,6 @@ export const EntranceDirectionMarker: React.FC<EntranceDirectionMarkerProps> = (
         style={{
           width: size,
           height: size,
-          marginLeft: -size / 2,
-          marginTop: -size / 2,
         }}
       >
         {/* Outer ring with direction labels */}

@@ -192,15 +192,15 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
                 <ul className="space-y-1.5 text-xs text-slate-500 dark:text-zinc-400">
                   <li className="flex items-center gap-2">
                     <Save className="h-3 w-3 text-blue-500 dark:text-blue-400 flex-shrink-0" />
-                    <span>Save unlimited birth charts</span>
+                    <span>Save your property analyses</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <MapPin className="h-3 w-3 text-rose-500 dark:text-rose-400 flex-shrink-0" />
-                    <span>Bookmark favorite locations</span>
+                    <span>Bookmark favorite ZIPs and properties</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Sparkles className="h-3 w-3 text-[#d4a5a5] dark:text-[#d4a5a5] flex-shrink-0" />
-                    <span>Access AI astrology insights</span>
+                    <span>Get AI Vastu insights</span>
                   </li>
                 </ul>
               </div>

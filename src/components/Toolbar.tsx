@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from '@/components/ui/separator';
-import { Plus, LogIn, LogOut, Crown, Edit3, FolderPlus, Trash2, Share2, Download, Upload, Users, Sparkles, Settings, Moon, Sun, SlidersHorizontal, FileDown, MapPin, User, Hexagon, X, Check, CircleUserRound, MessageSquare, Compass, Heart, Loader2, CircleDot, LayoutGrid, Navigation, Telescope, Menu } from 'lucide-react';
+import { Plus, LogIn, LogOut, Crown, Edit3, FolderPlus, Trash2, Share2, Download, Upload, Users, Sparkles, Settings, Moon, Sun, SlidersHorizontal, FileDown, MapPin, User, Hexagon, X, Check, CircleUserRound, MessageSquare, Compass, Heart, Loader2, CircleDot, LayoutGrid, Navigation, Telescope, Menu, Smartphone } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import { MobileDrawerMenu } from './MobileDrawerMenu';
@@ -49,6 +49,7 @@ import { useToolbarState, useUIStore, useSubscriptionModal } from '@/stores/uiSt
 import { SubscriptionModal } from './SubscriptionModal';
 import { useZoneState, usePendingBirthCoords, useGlobeInteractionStore, usePanelStackActions, useScoutProgress } from '@/stores/globeInteractionStore';
 import { useShallow } from 'zustand/react/shallow';
+import { ScanWaitlistModal } from './ScanWaitlistModal';
 
 // Mobile drawer state selector - use useShallow to prevent infinite loops
 const useMobileDrawerState = () => useGlobeInteractionStore(useShallow((state) => ({
@@ -113,6 +114,7 @@ interface ToolbarProps {
 }
 
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
+  const [scanWaitlistOpen, setScanWaitlistOpen] = useState(false);
   // === Destructure remaining props ===
   const {
     treeName,
@@ -829,6 +831,20 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           )}
 
           <TutorialButton />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setScanWaitlistOpen(true)}
+                className="relative flex items-center justify-center h-9 w-9 rounded-full border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#F0A6B3] dark:hover:text-[#F0A6B3] transition-colors"
+                aria-label="Join Scan app waitlist"
+              >
+                <Smartphone className="h-[1.1rem] w-[1.1rem]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Scan waitlist</p>
+            </TooltipContent>
+          </Tooltip>
           <ThemeToggle />
 
           {/* Account Menu */}
@@ -838,6 +854,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
       {/* Subscription Modal */}
       <SubscriptionModal />
+      <ScanWaitlistModal open={scanWaitlistOpen} onOpenChange={setScanWaitlistOpen} />
 
       {/* Astro Chart Share Modal */}
       <ShareModal

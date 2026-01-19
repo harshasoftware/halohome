@@ -9,7 +9,11 @@
  */
 
 import React, { useCallback, useRef, useState, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { GoogleMap, Marker, DrawingManager, Polygon, Rectangle, OverlayView } from '@react-google-maps/api';
+import { GoogleMap, Marker, DrawingManager, Polygon, OverlayView } from '@react-google-maps/api';
+import { RegridParcelOverlay } from './RegridParcelOverlay';
+import { ZipBoundaryOverlay } from './ZipBoundaryOverlay';
+import type { ZipSearchStatus } from '@/stores/globeInteractionStore';
+import type { BuildingFootprint } from '../services/buildingFootprintsService';
 import { MiniVastuCompass } from '@/components/VastuCompassOverlay';
 import { useVastuStore, type VastuDirection } from '@/stores/vastuStore';
 import { EntranceDirectionMarker, type CardinalDirection, directionToRotation } from './EntranceDirectionMarker';
@@ -31,6 +35,8 @@ const defaultCenter = {
   lng: -98.5795,
 };
 
+const MAP_ID = String(import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? '').trim() || undefined;
+
 // Map options - minimal UI
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -41,6 +47,7 @@ const mapOptions: google.maps.MapOptions = {
   rotateControl: false,
   fullscreenControl: false,
   mapTypeId: 'roadmap',
+  ...(MAP_ID ? { mapId: MAP_ID } : {}),
   styles: [
     {
       featureType: 'poi',
@@ -79,14 +86,31 @@ interface VastuMapProps {
   autoSegmentLocation?: { lat: number; lng: number } | null;
   /** Callback when auto-segmentation completes */
   onAutoSegmentComplete?: (success: boolean, error?: string) => void;
-  /** ZIP code bounding box to display */
+  /** ZIP code bounding box to display (fallback if zipCodeBoundary not available) */
   zipCodeBounds?: { north: number; south: number; east: number; west: number } | null;
+  /** Actual ZIP boundary polygon from TIGER/Line ZCTA5 (preferred over zipCodeBounds) */
+  zipCodeBoundary?: Array<{ lat: number; lng: number }> | null;
   /** Current ZIP code being searched */
   currentZipCode?: string | null;
+  /** ZIP search status (for UI feedback) */
+  zipSearchStatus?: ZipSearchStatus;
   /** Callback when scout button is clicked */
   onScoutClick?: (bounds: { north: number; south: number; east: number; west: number }) => void;
   /** Whether scout analysis is in progress */
   isScoutLoading?: boolean;
+  /** Selected scout parcel boundary (visual-only; does not trigger analysis). */
+  scoutSelectedBoundary?: Array<{ lat: number; lng: number }> | null;
+  /** Selected scout parcel marker (visual-only; does not trigger analysis). */
+  scoutSelectedMarker?: { lat: number; lng: number; name: string; score?: number } | null;
+  /** Parcels to display on the map */
+  parcels?: Array<{
+    id: string;
+    coordinates: Array<{ lat: number; lng: number }>;
+    vastuScore?: number;
+    type?: 'plot' | 'building';
+  }>;
+  /** Selected parcel ID to highlight */
+  selectedParcelId?: string | null;
 }
 
 const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
@@ -107,9 +131,15 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
   autoSegmentLocation,
   onAutoSegmentComplete,
   zipCodeBounds,
+  zipCodeBoundary, // Actual ZIP boundary polygon (preferred over bounds)
   currentZipCode,
+  zipSearchStatus = 'idle',
   onScoutClick,
   isScoutLoading = false,
+  scoutSelectedBoundary = null,
+  scoutSelectedMarker = null,
+  parcels = [],
+  selectedParcelId = null,
 }, ref) => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapRotation, setMapRotation] = useState(0);
@@ -122,6 +152,35 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
   const [isSegmenting, setIsSegmenting] = useState(false);
   const [segmentationProgress, setSegmentationProgress] = useState('');
   const lastSegmentLocationRef = useRef<string | null>(null);
+  
+  // Store target zoom level when processing starts to lock it
+  const targetZoomRef = useRef<number | null>(null);
+
+  // Block zoom during scouting or segmentation to prevent lines from disappearing
+  const isProcessing = isScoutLoading || isSegmenting;
+  
+  // Store target zoom when processing starts
+  useEffect(() => {
+    if (isProcessing && mapRef.current && targetZoomRef.current === null) {
+      targetZoomRef.current = mapRef.current.getZoom() || zoom;
+    } else if (!isProcessing) {
+      targetZoomRef.current = null;
+    }
+  }, [isProcessing, zoom]);
+  
+  const mapOptionsWithZoomControl = useMemo(() => ({
+    ...mapOptions,
+    // Disable zoom gestures when processing
+    gestureHandling: isProcessing ? 'none' : 'auto',
+    // Disable zoom controls
+    zoomControl: false,
+    // Prevent zoom via keyboard
+    keyboardShortcuts: !isProcessing,
+    // Disable scroll wheel zoom during processing
+    scrollwheel: !isProcessing,
+    // Disable double click zoom during processing
+    disableDoubleClickZoom: isProcessing,
+  }), [isProcessing]);
 
   const {
     setPropertyBoundary,
@@ -390,6 +449,49 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
     });
   }, []);
 
+  // Aggressively prevent zoom changes during processing
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+    let zoomListener: google.maps.MapsEventListener | null = null;
+
+    if (isProcessing && targetZoomRef.current !== null) {
+      const targetZoom = targetZoomRef.current;
+      
+      // Update map options directly to disable zoom
+      map.setOptions({
+        gestureHandling: 'none',
+        scrollwheel: false,
+        disableDoubleClickZoom: true,
+        keyboardShortcuts: false,
+      });
+      
+      // Listen for zoom changes and immediately revert
+      zoomListener = map.addListener('zoom_changed', () => {
+        const currentZoom = map.getZoom();
+        if (currentZoom !== null && Math.abs(currentZoom - targetZoom) > 0.1) {
+          // Immediately revert to target zoom
+          map.setZoom(targetZoom);
+        }
+      });
+    } else {
+      // Restore normal zoom behavior when not processing
+      map.setOptions({
+        gestureHandling: 'auto',
+        scrollwheel: true,
+        disableDoubleClickZoom: false,
+        keyboardShortcuts: true,
+      });
+    }
+
+    return () => {
+      if (zoomListener) {
+        google.maps.event.removeListener(zoomListener);
+      }
+    };
+  }, [isProcessing]);
+
   // Map unload callback
   const onUnmount = useCallback(() => {
     mapRef.current = null;
@@ -520,7 +622,18 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
         onUnmount={onUnmount}
         onClick={handleMapClick}
         onRightClick={handleMapRightClick}
-        options={mapOptions}
+        options={mapOptionsWithZoomControl}
+        onZoomChanged={() => {
+          // Prevent zoom changes during processing - aggressively revert any zoom changes
+          if (isProcessing && mapRef.current && targetZoomRef.current !== null) {
+            const currentZoom = mapRef.current.getZoom();
+            const targetZoom = targetZoomRef.current;
+            if (currentZoom !== null && Math.abs(currentZoom - targetZoom) > 0.1) {
+              // Revert to target zoom if it has changed significantly
+              mapRef.current.setZoom(targetZoom);
+            }
+          }
+        }}
       >
         {/* Drawing Manager for property boundaries */}
         {isDrawingMode && (
@@ -544,26 +657,28 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
           />
         )}
 
-        {/* ZIP Code bounding box */}
-        {zipCodeBounds && (
-          <Rectangle
-            bounds={{
-              north: zipCodeBounds.north,
-              south: zipCodeBounds.south,
-              east: zipCodeBounds.east,
-              west: zipCodeBounds.west,
-            }}
+        {/* Selected scout parcel (visual highlight only) */}
+        {scoutSelectedBoundary && scoutSelectedBoundary.length > 2 && (
+          <Polygon
+            paths={scoutSelectedBoundary}
             options={{
               fillColor: '#d4a5a5',
-              fillOpacity: 0.08,
-              strokeColor: '#d4a5a5',
-              strokeWeight: 3,
-              strokeOpacity: 0.8,
+              fillOpacity: 0.12,
+              strokeColor: '#ffffff',
+              strokeWeight: 4,
+              strokeOpacity: 1,
               clickable: false,
-              zIndex: 1,
+              zIndex: 50,
             }}
           />
         )}
+
+        {/* ZIP Code boundary - displayed as Data layer for better performance */}
+        <ZipBoundaryOverlay
+          zipCodeBoundary={zipCodeBoundary}
+          zipCodeBounds={zipCodeBounds}
+          currentZipCode={currentZipCode}
+        />
 
         {/* Scout button overlay on ZIP code bounds */}
         {zipCodeBounds && onScoutClick && (
@@ -594,12 +709,65 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
                 )}
               </Button>
               {currentZipCode && (
-                <div className="mt-2 px-3 py-1 bg-white/95 backdrop-blur-sm rounded-full text-xs text-slate-600 shadow border border-slate-200">
-                  {currentZipCode}
+                <div className="mt-2 flex items-center gap-2 px-3 py-1 bg-white/95 backdrop-blur-sm rounded-full text-xs text-slate-600 shadow border border-slate-200">
+                  <span className="font-medium">{currentZipCode}</span>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded-full border text-[10px]',
+                      zipSearchStatus === 'searching' && 'bg-blue-50 text-blue-700 border-blue-200',
+                      zipSearchStatus === 'ready' && 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                      zipSearchStatus === 'error' && 'bg-red-50 text-red-700 border-red-200',
+                      zipSearchStatus === 'idle' && 'bg-slate-50 text-slate-600 border-slate-200'
+                    )}
+                  >
+                    {zipSearchStatus === 'searching'
+                      ? 'Searching…'
+                      : zipSearchStatus === 'ready'
+                        ? 'Ready'
+                        : zipSearchStatus === 'error'
+                          ? 'Error'
+                          : 'Idle'}
+                  </span>
                 </div>
               )}
             </div>
           </OverlayView>
+        )}
+
+        {/* Regrid Parcel Overlay - Display parcels as Data layer with hover effects */}
+        {parcels.length > 0 && (
+          <RegridParcelOverlay
+            parcels={parcels.map((p) => {
+              const footprint: BuildingFootprint = {
+                id: p.id,
+                coordinates: p.coordinates,
+                centroid: {
+                  lat: p.coordinates.reduce((sum, c) => sum + c.lat, 0) / p.coordinates.length,
+                  lng: p.coordinates.reduce((sum, c) => sum + c.lng, 0) / p.coordinates.length,
+                },
+                area: 0,
+                bounds: {
+                  north: Math.max(...p.coordinates.map(c => c.lat)),
+                  south: Math.min(...p.coordinates.map(c => c.lat)),
+                  east: Math.max(...p.coordinates.map(c => c.lng)),
+                  west: Math.min(...p.coordinates.map(c => c.lng)),
+                },
+                source: 'regrid',
+                shape: 'irregular',
+                confidence: 1.0,
+                type: p.type || 'plot',
+                address: (p as any).address,
+                regridId: (p as any).regridId,
+                owner: (p as any).owner,
+              };
+              
+              // Store vastuScore for the overlay to access
+              (footprint as any).vastuScore = p.vastuScore ?? 50;
+              
+              return footprint;
+            })}
+            selectedParcelId={selectedParcelId}
+          />
         )}
 
         {/* Loading indicator while detecting entrance */}
@@ -631,6 +799,14 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
         )}
 
         {/* Markers */}
+        {scoutSelectedMarker && (
+          <Marker
+            key="selected-scout-marker"
+            position={{ lat: scoutSelectedMarker.lat, lng: scoutSelectedMarker.lng }}
+            icon={getMarkerIcon(scoutSelectedMarker.score)}
+            title={scoutSelectedMarker.name}
+          />
+        )}
         {markers.map((marker, index) => (
           <Marker
             key={`marker-${index}`}

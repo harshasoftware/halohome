@@ -86,7 +86,7 @@ export default function AISubscription() {
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
             <Home className="w-8 h-8 text-amber-500" />
           </div>
-          <h2 className="text-2xl text-white mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="text-2xl text-white mb-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
             Sign in Required
           </h2>
           <p className="text-zinc-400 mb-6">
@@ -115,7 +115,7 @@ export default function AISubscription() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-xl text-white" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h1 className="text-xl text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
               Subscription
             </h1>
             <p className="text-sm text-zinc-500">Manage your property analysis access</p>
@@ -140,7 +140,7 @@ export default function AISubscription() {
 
         {/* Current Plan */}
         <section>
-          <h2 className="text-lg text-white mb-6" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="text-lg text-white mb-6" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
             Current Plan
           </h2>
           <div className="glass-card rounded-3xl p-8">
@@ -168,7 +168,7 @@ export default function AISubscription() {
                     </div>
                     <div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl text-white" style={{ fontFamily: 'Cinzel, serif' }}>
+                        <span className="text-xl text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
                           {status.planType === 'free' ? 'Free' :
                            status.planType === 'seeker' ? 'Seeker' :
                            status.planType === 'pioneer' ? 'Pioneer' : 'Sage'}
@@ -225,7 +225,7 @@ export default function AISubscription() {
         {/* Subscription Plans */}
         <section>
           <div className="text-center mb-8">
-            <h2 className="text-2xl text-white mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h2 className="text-2xl text-white mb-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
               Start Living in Harmony.
             </h2>
             <p className="text-zinc-400">Choose the perfect plan to find your harmonious home.</p>
@@ -367,7 +367,7 @@ export default function AISubscription() {
         {/* Usage History */}
         {usageHistory.length > 0 && (
           <section>
-            <h2 className="text-lg text-white mb-6 flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h2 className="text-lg text-white mb-6 flex items-center gap-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
               <History className="w-5 h-5 text-zinc-400" />
               Recent Scans
             </h2>

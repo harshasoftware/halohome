@@ -41,8 +41,10 @@ export interface UseBuildingFootprintsResult {
   progressPhase: string;
   /** Progress percentage (0-100) */
   progressPercent: number;
+  /** ZIP boundary polygon (if search was by ZIP code) */
+  zipBoundary?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null;
   /** Search by ZIP code */
-  searchByZipCode: (zipCode: string) => Promise<void>;
+  searchByZipCode: (zipCode: string, options?: {}) => Promise<void>;
   /** Search by coordinates */
   searchByCoordinates: (lat: number, lng: number) => Promise<void>;
   /** Search at specific location (single parcel) */
@@ -65,6 +67,7 @@ const DEFAULT_OPTIONS: SearchOptions = {
   extractBuildings: true,
   maxResults: 30,
   minConfidence: 0.4,
+  maxTiles: 20, // Limit to 20 tiles for now
 };
 
 /**
@@ -78,10 +81,14 @@ export function useBuildingFootprints(
   const [error, setError] = useState<string | null>(null);
   const [progressPhase, setProgressPhase] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
+  const [tileInfo, setTileInfo] = useState<{ current: number; total: number } | null>(null);
   const [processingTimeMs, setProcessingTimeMs] = useState(0);
+  const [currentBounds, setCurrentBounds] = useState<{ north: number; south: number; east: number; west: number } | null>(null);
+  const [zipBoundary, setZipBoundary] = useState<GeoJSON.Polygon | GeoJSON.MultiPolygon | null>(null);
 
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const abortControllerRef = useRef<AbortController | null>(null);
+  const searchSeqRef = useRef(0); // Monotonic search id to ignore stale async results
 
   const handleProgress = useCallback((phase: string, percent: number) => {
     setProgressPhase(phase);
@@ -177,34 +184,59 @@ export function useBuildingFootprints(
   );
 
   const searchByZipCode = useCallback(
-    async (zipCode: string) => {
+    async (zipCode: string, searchOptions?: {}) => {
       // Cancel any pending request
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
+      const seq = ++searchSeqRef.current;
 
       setIsLoading(true);
       setError(null);
       setParcels([]);
+      // CRITICAL: clear ZIP boundary at the start of every search to prevent
+      // stale boundary emissions for the next ZIP code (race/state-machine issue).
+      setZipBoundary(null);
       setProgressPhase('Starting search');
       setProgressPercent(0);
+      setTileInfo(null);
 
       try {
+        // Get bounds for this ZIP code to track progress
+        // We'll get bounds from the result, but need to geocode first
         const result = await buildingFootprintsService.searchByZipCode(zipCode, {
           ...opts,
           onProgress: handleProgress,
         });
+        if (seq !== searchSeqRef.current) return;
+        
+        // Store bounds from result for tile progress tracking
+        if (result.bounds) {
+          setCurrentBounds(result.bounds);
+        }
+        
+        // Store ZIP boundary if available
+        if (result.zipBoundary) {
+          console.log(`[useBuildingFootprints] Storing ZIP boundary from search result`);
+          setZipBoundary(result.zipBoundary);
+        } else {
+          setZipBoundary(null);
+        }
 
         const parcelsWithVastu = await processFootprints(result.footprints);
+        if (seq !== searchSeqRef.current) return;
 
         setParcels(parcelsWithVastu);
         setProcessingTimeMs(result.processingTimeMs);
         handleProgress('Complete', 100);
       } catch (err) {
+        if (seq !== searchSeqRef.current) return;
         if (err instanceof Error && err.name !== 'AbortError') {
           setError(err.message || 'Search failed');
         }
       } finally {
-        setIsLoading(false);
+        if (seq === searchSeqRef.current) {
+          setIsLoading(false);
+        }
       }
     },
     [opts, handleProgress, processFootprints]
@@ -268,11 +300,17 @@ export function useBuildingFootprints(
 
   const clear = useCallback(() => {
     abortControllerRef.current?.abort();
+    // Invalidate any in-flight async handlers
+    searchSeqRef.current += 1;
     setParcels([]);
     setError(null);
     setProgressPhase('');
     setProgressPercent(0);
+    setTileInfo(null);
+    setCurrentBounds(null);
+    setZipBoundary(null);
   }, []);
+
 
   // Calculate stats
   const stats = {
@@ -293,6 +331,7 @@ export function useBuildingFootprints(
     error,
     progressPhase,
     progressPercent,
+    zipBoundary,
     searchByZipCode,
     searchByCoordinates,
     searchAtLocation,

@@ -242,9 +242,10 @@ export function getImageBounds(
 
 /**
  * Configuration specifically optimized for property boundary detection.
+ * Uses zoom 20 to match Google Maps zoom level needed for property line visibility.
  */
 export const BOUNDARY_DETECTION_CONFIG: TileCaptureConfig = {
-  zoom: 19,
+  zoom: 20, // Increased from 19 to match optimal property extraction zoom
   mapType: 'roadmap',
   size: 640,
   scale: 2,

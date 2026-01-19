@@ -71,7 +71,7 @@ export function GlobeFallbackState({
             </svg>
           </div>
 
-          <h3 className="text-lg font-medium text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+          <h3 className="text-lg font-medium text-white mb-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
             3D Globe Not Available
           </h3>
           <p className="text-sm text-zinc-400 mb-6 leading-relaxed">

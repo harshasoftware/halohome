@@ -13,6 +13,7 @@ import { faHouse } from '@fortawesome/free-solid-svg-icons';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { LandingConstellations } from './components/Constellations';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Error boundary for lazy-loaded demo components
 class DemoErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -934,6 +935,7 @@ const Testimonials = memo(() => (
 
 // iOS Scan App Waitlist Section
 const MobileAppWaitlist = () => {
+    const isMobile = useIsMobile(768);
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
@@ -999,6 +1001,13 @@ const MobileAppWaitlist = () => {
                     <p className="text-zinc-400 mb-6">
                         Join the waitlist for Scan — our iOS app that uses Apple's LiDAR to create 3D interior models and analyze room harmony.
                     </p>
+
+                    {isMobile && (
+                        <div className="mb-6 p-3 rounded-xl bg-black/5 border border-black/10 text-sm text-zinc-700">
+                            <span className="font-medium">Scouting is desktop-only for now.</span>{' '}
+                            To scout ZIP codes and analyze properties, please open Halo Home on a desktop browser.
+                        </div>
+                    )}
 
                     {/* Email form */}
                     {status === 'success' ? (

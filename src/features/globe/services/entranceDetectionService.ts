@@ -8,7 +8,7 @@
  * Fallback: Centroid estimation with direction hints
  */
 
-import { monitoredFetch } from '@/lib/monitoring';
+import { supabase } from '@/integrations/supabase/client';
 import { roadAccessService, type RoadAccessPoint } from './roadAccessService';
 
 // ============================================================================
@@ -105,7 +105,6 @@ interface GeocodingResponse {
 // ============================================================================
 
 const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const DEFAULT_OPTIONS: Required<Omit<EntranceDetectionOptions, 'onProgress' | 'boundary'>> = {
   includeOutline: true,
@@ -113,6 +112,109 @@ const DEFAULT_OPTIONS: Required<Omit<EntranceDetectionOptions, 'onProgress' | 'b
   skipCache: false,
   useRoadAccessFallback: true,
 };
+
+const DEBUG_ENTRANCE_DETECTION =
+  String(import.meta.env.VITE_DEBUG_ENTRANCE_DETECTION ?? '').toLowerCase() === 'true';
+
+async function geocodeViaEdge(
+  payload:
+    | { action: 'reverse'; lat: number; lng: number }
+    | { action: 'address'; address: string }
+    | { action: 'placeId'; placeId: string }
+): Promise<GeocodingResponse> {
+  // Ensure we have a session before calling (anonymous auth provides JWT)
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    // Wait a bit for anonymous sign-in to complete, then retry once
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const { data: { session: retrySession } } = await supabase.auth.getSession();
+    if (!retrySession) {
+      throw new Error('No authentication session available');
+    }
+  }
+
+  const { data, error } = await supabase.functions.invoke('entrance-detection', {
+    body: payload,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as GeocodingResponse;
+}
+
+type BatchEdgeItem =
+  | { id: string; kind: 'reverse'; lat: number; lng: number }
+  | { id: string; kind: 'address'; address: string }
+  | { id: string; kind: 'placeId'; placeId: string };
+
+async function geocodeBatchViaEdge(
+  items: BatchEdgeItem[],
+  maxConcurrent: number
+): Promise<Map<string, GeocodingResponse | null>> {
+  // Ensure we have a session before calling (anonymous auth provides JWT)
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    // Wait a bit for anonymous sign-in to complete, then retry once
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const { data: { session: retrySession } } = await supabase.auth.getSession();
+    if (!retrySession) {
+      throw new Error('No authentication session available');
+    }
+  }
+
+  const { data, error } = await supabase.functions.invoke('entrance-detection', {
+    body: {
+      action: 'batch',
+      requests: items,
+      maxConcurrent,
+      delayMs: 150,
+    },
+  });
+
+  if (error) throw error;
+
+  const map = new Map<string, GeocodingResponse | null>();
+  const results = (data?.results ?? []) as Array<{ id: string; data: GeocodingResponse | null }>;
+  for (const r of results) {
+    if (!r?.id) continue;
+    map.set(r.id, (r.data ?? null) as GeocodingResponse | null);
+  }
+  return map;
+}
+
+function isGoogleMapsGeocoderAvailable(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof google !== 'undefined' &&
+    !!google.maps?.Geocoder
+  );
+}
+
+function toLatLngLiteral(location: google.maps.LatLng | google.maps.LatLngLiteral): google.maps.LatLngLiteral {
+  // google.maps.LatLng implements lat()/lng()
+  if (typeof (location as google.maps.LatLng).lat === 'function') {
+    const ll = location as google.maps.LatLng;
+    return { lat: ll.lat(), lng: ll.lng() };
+  }
+  return location as google.maps.LatLngLiteral;
+}
+
+async function geocodeViaJs(
+  request: google.maps.GeocoderRequest
+): Promise<{ results: google.maps.GeocoderResult[]; status: google.maps.GeocoderStatus }> {
+  if (!isGoogleMapsGeocoderAvailable()) {
+    return { results: [], status: 'ERROR' as google.maps.GeocoderStatus };
+  }
+
+  const geocoder = new google.maps.Geocoder();
+  return await new Promise((resolve) => {
+    geocoder.geocode(request, (results, status) => {
+      resolve({ results: results ?? [], status });
+    });
+  });
+}
 
 // ============================================================================
 // Cache Management
@@ -185,28 +287,27 @@ async function detectByAddress(
   opts.onProgress?.('Geocoding address', 10);
 
   try {
-    const result = await monitoredFetch('entrance-detection-geocode', async () => {
-      const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
-      url.searchParams.set('address', address);
-      url.searchParams.set('key', API_KEY);
-      // Request extra fields for building data (when supported)
-      url.searchParams.set('extra_computations', 'BUILDING_AND_ENTRANCES');
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error(`Geocoding request failed: ${response.status}`);
-      }
-      return response.json() as Promise<GeocodingResponse>;
-    });
-
     opts.onProgress?.('Processing results', 50);
 
-    if (result.status !== 'OK' || result.results.length === 0) {
-      throw new Error(`Geocoding failed: ${result.status}`);
+    // Prefer edge function because only the REST Geocoding API can return buildings[]/entrances[].
+    try {
+      const api = await geocodeViaEdge({ action: 'address', address });
+      if (api.status === 'OK' && api.results.length > 0) {
+        const detectionResult = processGeocodingResult(api.results[0], opts);
+        opts.onProgress?.('Complete', 100);
+        setCache(cacheKey, detectionResult);
+        return detectionResult;
+      }
+      // Fall through to JS geocoder as backup (no buildings[]/entrances[]).
+    } catch (e) {
+      // Fall through to JS geocoder backup.
     }
 
-    const geocodeResult = result.results[0];
-    const detectionResult = processGeocodingResult(geocodeResult, opts);
+    const { results, status } = await geocodeViaJs({ address });
+    if (status !== 'OK' || results.length === 0) {
+      throw new Error(`Geocoding failed: ${status}`);
+    }
+    const detectionResult = processGeocoderResult(results[0], opts);
 
     opts.onProgress?.('Complete', 100);
 
@@ -243,22 +344,25 @@ async function detectByCoordinates(
   opts.onProgress?.('Reverse geocoding', 10);
 
   try {
-    const result = await monitoredFetch('entrance-detection-reverse', async () => {
-      const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
-      url.searchParams.set('latlng', `${lat},${lng}`);
-      url.searchParams.set('key', API_KEY);
-      url.searchParams.set('extra_computations', 'BUILDING_AND_ENTRANCES');
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error(`Reverse geocoding failed: ${response.status}`);
-      }
-      return response.json() as Promise<GeocodingResponse>;
-    });
-
     opts.onProgress?.('Processing results', 50);
 
-    if (result.status !== 'OK' || result.results.length === 0) {
+    // Prefer edge function because only the REST Geocoding API can return buildings[]/entrances[].
+    try {
+      const api = await geocodeViaEdge({ action: 'reverse', lat, lng });
+      if (api.status === 'OK' && api.results.length > 0) {
+        const detectionResult = processGeocodingResult(api.results[0], opts);
+        // Cache the result
+        setCache(cacheKey, detectionResult);
+        opts.onProgress?.('Complete', 100);
+        return detectionResult;
+      }
+      // Fall through to JS geocoder as backup (no buildings[]/entrances[]).
+    } catch (e) {
+      // Fall through to JS geocoder backup.
+    }
+
+    const { results, status } = await geocodeViaJs({ location: { lat, lng } });
+    if (status !== 'OK' || results.length === 0) {
       // Try road access fallback first
       if (opts.useRoadAccessFallback) {
         opts.onProgress?.('Trying road access fallback', 60);
@@ -274,8 +378,7 @@ async function detectByCoordinates(
       return createCentroidEstimate(lat, lng);
     }
 
-    const geocodeResult = result.results[0];
-    const detectionResult = processGeocodingResult(geocodeResult, opts);
+    const detectionResult = processGeocoderResult(results[0], opts);
 
     // If detection result has low confidence, try road access
     const primaryEntrance = detectionResult.entrances[0];
@@ -344,27 +447,27 @@ async function detectByPlaceId(
   opts.onProgress?.('Fetching place details', 10);
 
   try {
-    const result = await monitoredFetch('entrance-detection-place', async () => {
-      const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
-      url.searchParams.set('place_id', placeId);
-      url.searchParams.set('key', API_KEY);
-      url.searchParams.set('extra_computations', 'BUILDING_AND_ENTRANCES');
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error(`Place geocoding failed: ${response.status}`);
-      }
-      return response.json() as Promise<GeocodingResponse>;
-    });
-
     opts.onProgress?.('Processing results', 50);
 
-    if (result.status !== 'OK' || result.results.length === 0) {
-      throw new Error(`Place lookup failed: ${result.status}`);
+    // Prefer edge function because only the REST Geocoding API can return buildings[]/entrances[].
+    try {
+      const api = await geocodeViaEdge({ action: 'placeId', placeId });
+      if (api.status === 'OK' && api.results.length > 0) {
+        const detectionResult = processGeocodingResult(api.results[0], opts);
+        opts.onProgress?.('Complete', 100);
+        setCache(cacheKey, detectionResult);
+        return detectionResult;
+      }
+      // Fall through to JS geocoder as backup.
+    } catch (e) {
+      // Fall through to JS geocoder backup.
     }
 
-    const geocodeResult = result.results[0];
-    const detectionResult = processGeocodingResult(geocodeResult, opts);
+    const { results, status } = await geocodeViaJs({ placeId });
+    if (status !== 'OK' || results.length === 0) {
+      throw new Error(`Place lookup failed: ${status}`);
+    }
+    const detectionResult = processGeocoderResult(results[0], opts);
 
     opts.onProgress?.('Complete', 100);
 
@@ -449,6 +552,47 @@ function processGeocodingResult(
     placeId: result.place_id,
     detectionMethod:
       entrances[0]?.source === 'google_api' ? 'geocoding_api' : 'estimated',
+    timestamp: Date.now(),
+  };
+}
+
+function processGeocoderResult(
+  result: google.maps.GeocoderResult,
+  options: Required<Omit<EntranceDetectionOptions, 'onProgress'>>
+): EntranceDetectionResult {
+  const entrances: EntrancePoint[] = [];
+  let buildingOutline: BuildingOutline | undefined;
+
+  // The Maps JS Geocoder does NOT expose buildings[]/entrances[]; treat as estimate.
+  const center = toLatLngLiteral(result.geometry.location);
+
+  // If no entrances from API, estimate from road-facing side
+  const estimated = estimateEntranceFromStreet(
+    center,
+    (result.address_components ?? []) as Array<{ types: string[]; long_name: string }>
+  );
+  entrances.push(estimated);
+
+  // (Optional) no building outline available from JS geocoder; keep undefined.
+  if (!options.includeOutline) {
+    buildingOutline = undefined;
+  }
+
+  // Filter by confidence threshold
+  const filteredEntrances = entrances.filter((e) => e.confidence >= options.minConfidence);
+
+  // Sort: preferred first, then by confidence
+  filteredEntrances.sort((a, b) => {
+    if (a.isPreferred !== b.isPreferred) return a.isPreferred ? -1 : 1;
+    return b.confidence - a.confidence;
+  });
+
+  return {
+    entrances: filteredEntrances,
+    buildingOutline,
+    formattedAddress: result.formatted_address ?? `${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`,
+    placeId: result.place_id,
+    detectionMethod: 'estimated',
     timestamp: Date.now(),
   };
 }
@@ -622,6 +766,121 @@ async function detectBatch(
   const results = new Map<string, EntranceDetectionResult>();
   const total = locations.length;
   let completed = 0;
+
+  // Prefer batching through edge function (keeps buildings[]/entrances[] available and reduces overhead).
+  // We'll still fill in any failures via JS geocoder / road access fallback so the UI always has something.
+  try {
+    const edgeItems: BatchEdgeItem[] = locations.map((loc) => {
+      if (loc.placeId) return { id: loc.placeId, kind: 'placeId', placeId: loc.placeId };
+      if (loc.address) return { id: loc.address, kind: 'address', address: loc.address };
+      if (loc.lat !== undefined && loc.lng !== undefined) {
+        return { id: `${loc.lat},${loc.lng}`, kind: 'reverse', lat: loc.lat, lng: loc.lng };
+      }
+      return { id: 'invalid', kind: 'address', address: '' };
+    }).filter((x) => x.id !== 'invalid' && (x.kind !== 'address' || x.address));
+
+    if (edgeItems.length > 0) {
+      const edgeMap = await geocodeBatchViaEdge(edgeItems, maxConcurrent);
+
+      let okWithBuildings = 0;
+      let okButNoBuildings = 0;
+      let edgeNonOk = 0;
+      let edgeMissing = 0;
+      let jsFallback = 0;
+      let roadFallback = 0;
+      let centroidFallback = 0;
+
+      for (const loc of locations) {
+        let key: string;
+        let detectionResult: EntranceDetectionResult | null = null;
+
+        if (loc.placeId) {
+          key = loc.placeId;
+          const api = edgeMap.get(key);
+          if (!api) edgeMissing++;
+          if (api?.status === 'OK' && api.results.length > 0) {
+            const r0 = api.results[0];
+            if (r0.buildings?.length && r0.buildings[0]?.entrances?.length) okWithBuildings++;
+            else okButNoBuildings++;
+            detectionResult = processGeocodingResult(api.results[0], { ...DEFAULT_OPTIONS, ...detectionOptions });
+          } else if (api) {
+            edgeNonOk++;
+          }
+        } else if (loc.address) {
+          key = loc.address;
+          const api = edgeMap.get(key);
+          if (!api) edgeMissing++;
+          if (api?.status === 'OK' && api.results.length > 0) {
+            const r0 = api.results[0];
+            if (r0.buildings?.length && r0.buildings[0]?.entrances?.length) okWithBuildings++;
+            else okButNoBuildings++;
+            detectionResult = processGeocodingResult(api.results[0], { ...DEFAULT_OPTIONS, ...detectionOptions });
+          } else if (api) {
+            edgeNonOk++;
+          }
+        } else if (loc.lat !== undefined && loc.lng !== undefined) {
+          key = `${loc.lat},${loc.lng}`;
+          const api = edgeMap.get(key);
+          if (!api) edgeMissing++;
+          if (api?.status === 'OK' && api.results.length > 0) {
+            const r0 = api.results[0];
+            if (r0.buildings?.length && r0.buildings[0]?.entrances?.length) okWithBuildings++;
+            else okButNoBuildings++;
+            detectionResult = processGeocodingResult(api.results[0], { ...DEFAULT_OPTIONS, ...detectionOptions });
+          } else {
+            if (api) edgeNonOk++;
+            // JS fallback path (no buildings[]/entrances[]); will still provide an entrance estimate.
+            const js = await geocodeViaJs({ location: { lat: loc.lat, lng: loc.lng } });
+            if (js.status === 'OK' && js.results.length > 0) {
+              jsFallback++;
+              detectionResult = processGeocoderResult(js.results[0], { ...DEFAULT_OPTIONS, ...detectionOptions });
+            } else if ((detectionOptions as EntranceDetectionOptions).useRoadAccessFallback !== false) {
+              detectionResult = await tryRoadAccessFallback(
+                loc.lat,
+                loc.lng,
+                (detectionOptions as EntranceDetectionOptions).boundary
+              );
+              if (detectionResult) roadFallback++;
+            }
+            if (!detectionResult) {
+              centroidFallback++;
+              detectionResult = createCentroidEstimate(loc.lat, loc.lng);
+            }
+          }
+        } else {
+          throw new Error('Location must have address, coordinates, or placeId');
+        }
+
+        if (detectionResult) {
+          results.set(key, detectionResult);
+        }
+
+        completed++;
+        options.onProgress?.('Processing locations', Math.round((completed / total) * 100));
+      }
+
+      if (DEBUG_ENTRANCE_DETECTION) {
+        console.log('[EntranceDetection][Batch]', {
+          total: locations.length,
+          edge: {
+            okWithBuildings,
+            okButNoBuildings,
+            nonOk: edgeNonOk,
+            missing: edgeMissing,
+          },
+          fallback: {
+            jsGeocoder: jsFallback,
+            roadAccess: roadFallback,
+            centroid: centroidFallback,
+          },
+        });
+      }
+
+      return results;
+    }
+  } catch (e) {
+    // If batch fails for any reason, fall back to the existing per-item code path below.
+  }
 
   // Process in batches to respect rate limits
   for (let i = 0; i < locations.length; i += maxConcurrent) {

@@ -60,11 +60,67 @@ export type CardinalDirection = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW
 // ============================================================================
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const ENABLE_ROADS_API =
+  String(import.meta.env.VITE_ENABLE_ROADS_API ?? '').toLowerCase() === 'true';
 
 const DEFAULT_OPTIONS: Required<Omit<RoadAccessOptions, 'onProgress' | 'boundary'>> = {
   searchRadius: 100,
   allowEstimation: true,
 };
+
+function isGoogleMapsDirectionsAvailable(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof google !== 'undefined' &&
+    !!google.maps?.DirectionsService
+  );
+}
+
+function isGoogleMapsGeocoderAvailable(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof google !== 'undefined' &&
+    !!google.maps?.Geocoder
+  );
+}
+
+function toLatLngLiteral(location: google.maps.LatLng | google.maps.LatLngLiteral): google.maps.LatLngLiteral {
+  if (typeof (location as google.maps.LatLng).lat === 'function') {
+    const ll = location as google.maps.LatLng;
+    return { lat: ll.lat(), lng: ll.lng() };
+  }
+  return location as google.maps.LatLngLiteral;
+}
+
+async function routeViaJs(
+  request: google.maps.DirectionsRequest
+): Promise<{ result: google.maps.DirectionsResult | null; status: google.maps.DirectionsStatus }> {
+  if (!isGoogleMapsDirectionsAvailable()) {
+    return { result: null, status: 'NOT_FOUND' as google.maps.DirectionsStatus };
+  }
+
+  const service = new google.maps.DirectionsService();
+  return await new Promise((resolve) => {
+    service.route(request, (result, status) => {
+      resolve({ result: result ?? null, status });
+    });
+  });
+}
+
+async function geocodeViaJs(
+  request: google.maps.GeocoderRequest
+): Promise<{ results: google.maps.GeocoderResult[]; status: google.maps.GeocoderStatus }> {
+  if (!isGoogleMapsGeocoderAvailable()) {
+    return { results: [], status: 'ERROR' as google.maps.GeocoderStatus };
+  }
+
+  const geocoder = new google.maps.Geocoder();
+  return await new Promise((resolve) => {
+    geocoder.geocode(request, (results, status) => {
+      resolve({ results: results ?? [], status });
+    });
+  });
+}
 
 // Cache for road access results
 const roadAccessCache = new Map<string, { data: RoadAccessPoint; timestamp: number }>();
@@ -217,6 +273,10 @@ async function findNearestRoadViaRoadsAPI(
   centroid: LatLng,
   searchRadius: number
 ): Promise<RoadAccessPoint | null> {
+  // Roads API is a separate Google Web Service; many browser keys will be restricted.
+  if (!ENABLE_ROADS_API) return null;
+  if (!API_KEY) return null;
+
   // Generate sample points around centroid to find roads
   const samplePoints = generateSamplePoints(centroid, searchRadius, 8);
   const pointsParam = samplePoints.map((p) => `${p.lat},${p.lng}`).join('|');
@@ -281,32 +341,33 @@ async function findRoadViaDirections(
   centroid: LatLng,
   searchRadius: number
 ): Promise<RoadAccessPoint | null> {
-  // Create a destination point slightly away from centroid
+  // Directions REST endpoint is blocked by CORS in browsers.
+  // Use Maps JavaScript API DirectionsService instead.
   const destination = {
     lat: centroid.lat + 0.001, // ~100m north
     lng: centroid.lng,
   };
 
-  const result = await monitoredFetch('directions-api-road', async () => {
-    const url = new URL('https://maps.googleapis.com/maps/api/directions/json');
-    url.searchParams.set('origin', `${centroid.lat},${centroid.lng}`);
-    url.searchParams.set('destination', `${destination.lat},${destination.lng}`);
-    url.searchParams.set('mode', 'driving');
-    url.searchParams.set('key', API_KEY);
-
-    const response = await fetch(url.toString());
-    if (!response.ok) {
-      throw new Error(`Directions API request failed: ${response.status}`);
+  // Avoid referencing global `google` unless it exists (undeclared globals throw).
+  const travelMode = ((): google.maps.TravelMode => {
+    if (typeof google !== 'undefined' && google.maps?.TravelMode?.DRIVING) {
+      return google.maps.TravelMode.DRIVING;
     }
-    return response.json();
+    return 'DRIVING' as google.maps.TravelMode;
+  })();
+
+  const { result, status } = await routeViaJs({
+    origin: centroid,
+    destination,
+    travelMode,
   });
 
-  if (result.status !== 'OK' || !result.routes?.[0]?.legs?.[0]?.steps?.[0]) {
+  if (status !== 'OK' || !result?.routes?.[0]?.legs?.[0]?.steps?.[0]) {
     return null;
   }
 
   const firstStep = result.routes[0].legs[0].steps[0];
-  const startLocation = firstStep.start_location;
+  const startLocation = toLatLngLiteral(firstStep.start_location);
 
   // The start location of first step is where you access the road
   const roadPoint = {
@@ -335,26 +396,13 @@ async function findRoadViaDirections(
 async function findRoadViaGeocodeRoute(
   centroid: LatLng
 ): Promise<RoadAccessPoint | null> {
-  // First, reverse geocode to get the street address
-  const geocodeResult = await monitoredFetch('geocode-reverse-road', async () => {
-    const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
-    url.searchParams.set('latlng', `${centroid.lat},${centroid.lng}`);
-    url.searchParams.set('result_type', 'street_address|route');
-    url.searchParams.set('key', API_KEY);
-
-    const response = await fetch(url.toString());
-    if (!response.ok) {
-      throw new Error(`Geocode request failed: ${response.status}`);
-    }
-    return response.json();
-  });
-
-  if (geocodeResult.status !== 'OK' || !geocodeResult.results?.[0]) {
+  const { results, status } = await geocodeViaJs({ location: centroid });
+  if (status !== 'OK' || !results[0]) {
     return null;
   }
 
-  const result = geocodeResult.results[0];
-  const roadLocation = result.geometry.location;
+  const result = results[0];
+  const roadLocation = toLatLngLiteral(result.geometry.location);
 
   // The geocoded location for a street address is typically on the road
   const roadPoint = {
@@ -374,9 +422,7 @@ async function findRoadViaGeocodeRoute(
   const direction = bearingToCardinal(bearing);
 
   // Extract road name from address components
-  const routeComponent = result.address_components?.find(
-    (c: { types: string[] }) => c.types.includes('route')
-  );
+  const routeComponent = result.address_components?.find((c) => c.types.includes('route'));
 
   return {
     roadPoint,

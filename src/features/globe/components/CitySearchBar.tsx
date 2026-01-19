@@ -12,9 +12,7 @@ import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
 } from '@/hooks/usePlacesAutocompleteNew';
-import { Search, X, Loader2, MapPin, ChevronLeft, Hash } from 'lucide-react';
-
-type InputMode = 'address' | 'zipcode';
+import { Search, X, Loader2, MapPin, ChevronLeft } from 'lucide-react';
 
 interface ZipCodeBounds {
   north: number;
@@ -23,8 +21,17 @@ interface ZipCodeBounds {
   west: number;
 }
 
+export type UnifiedSearchSelectionKind = 'property' | 'area' | 'zip';
+
 interface CitySearchBarProps {
-  onCitySelect: (lat: number, lng: number, cityName: string, isZipCode?: boolean, bounds?: ZipCodeBounds) => void;
+  onCitySelect: (
+    lat: number,
+    lng: number,
+    cityName: string,
+    isZipCode?: boolean,
+    bounds?: ZipCodeBounds,
+    selectionKind?: UnifiedSearchSelectionKind
+  ) => void;
   onClear?: () => void;
   isMobile?: boolean;
   className?: string;
@@ -38,8 +45,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(!isMobile);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [inputMode, setInputMode] = useState<InputMode>('address');
-  const [zipInput, setZipInput] = useState('');
+  const [inputText, setInputText] = useState('');
   const [isSearchingZip, setIsSearchingZip] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -64,27 +70,97 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
     }
   }, [isExpanded]);
 
-  const handleAddressInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-    setSelectedCity(null);
-  };
+  // ZIP detection should ONLY trigger when the user is typing digits-only.
+  // This prevents addresses like "2010 west end avenue" from being treated as a ZIP.
+  const isZipDigitsOnlyUpTo5 = (text: string) => /^\d{0,5}$/.test(text);
+  const isZipExactTrim = (text: string) => /^\s*\d{5}\s*$/.test(text);
 
-  const handleZipInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow numbers, max 5 digits
-    const val = e.target.value.replace(/\D/g, '').slice(0, 5);
-    setZipInput(val);
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+
+    // If user is typing a ZIP, keep it numeric and avoid Places suggestions.
+    if (isZipDigitsOnlyUpTo5(raw)) {
+      // raw is already digits-only here
+      setInputText(raw);
+      setSelectedCity(null);
+      clearSuggestions();
+      // Keep Places value empty to avoid irrelevant results for numeric input
+      setValue('', false);
+      return;
+    }
+
+    // Otherwise treat as address/area input (Places autocomplete)
+    setInputText(raw);
+    setValue(raw);
+    setSelectedCity(null);
   };
 
   const handleSelect = (suggestion: typeof data[0]) => {
     const { description } = suggestion;
+    // Keep the displayed text in sync with the user's selection.
+    setInputText(description);
     setValue(description, false);
     clearSuggestions();
     setSelectedCity(description);
 
     getGeocode({ address: description })
-      .then((results) => getLatLng(results[0]))
-      .then(({ lat, lng }) => {
-        onCitySelect(lat, lng, description, false);
+      .then(async (results) => {
+        const first = results[0];
+        const { lat, lng } = await getLatLng(first);
+
+        // Infer whether this is a single property vs a broader area.
+        const types = (first as any)?.types as string[] | undefined;
+
+        // If Google returns a postal_code result, treat it as ZIP flow (polygon + scout).
+        const isPostalCode = Array.isArray(types) && types.includes('postal_code');
+        if (isPostalCode) {
+          // Extract a 5-digit ZIP from the description or address components
+          const extractedZipFromText = description.match(/\b\d{5}\b/)?.[0] ?? null;
+          const extractedZipFromComponents =
+            (first as any)?.address_components?.find((c: any) =>
+              Array.isArray(c?.types) && c.types.includes('postal_code')
+            )?.short_name ?? null;
+
+          const zip = String(extractedZipFromText || extractedZipFromComponents || '').trim();
+          if (zip.length === 5) {
+            // Extract viewport bounds for ZIP code area (same as typed ZIP flow)
+            let bounds: ZipCodeBounds | undefined;
+            const geometry = first?.geometry;
+            if (geometry?.viewport) {
+              const viewport = geometry.viewport;
+              bounds = {
+                north: viewport.getNorthEast().lat(),
+                south: viewport.getSouthWest().lat(),
+                east: viewport.getNorthEast().lng(),
+                west: viewport.getSouthWest().lng(),
+              };
+            }
+
+            // Normalize UI state to show just the ZIP
+            setInputText(zip);
+            setSelectedCity(zip);
+
+            onCitySelect(lat, lng, zip, true, bounds, 'zip');
+            if (isMobile) setIsExpanded(false);
+            return;
+          }
+        }
+
+        const isProperty =
+          Array.isArray(types) &&
+          types.some((t) =>
+            [
+              'street_address',
+              'premise',
+              'subpremise',
+              'establishment',
+              'point_of_interest',
+            ].includes(t)
+          );
+
+        const selectionKind: UnifiedSearchSelectionKind = isProperty ? 'property' : 'area';
+
+        onCitySelect(lat, lng, description, false, undefined, selectionKind);
         // Collapse on mobile after selection
         if (isMobile) {
           setIsExpanded(false);
@@ -96,12 +172,13 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
   };
 
   const handleZipSearch = useCallback(async () => {
-    if (zipInput.length !== 5) return;
+    const zip = inputText.trim();
+    if (!isZipExactTrim(zip)) return;
 
     setIsSearchingZip(true);
 
     try {
-      const results = await getGeocode({ address: `${zipInput}, USA` });
+      const results = await getGeocode({ address: `${zip}, USA` });
       const { lat, lng } = await getLatLng(results[0]);
 
       // Extract viewport bounds for ZIP code area
@@ -117,7 +194,8 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         };
       }
 
-      onCitySelect(lat, lng, zipInput, true, bounds);
+      // ZIP selection
+      onCitySelect(lat, lng, zip, true, bounds, 'zip');
 
       // Collapse on mobile after selection
       if (isMobile) {
@@ -128,11 +206,11 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
     } finally {
       setIsSearchingZip(false);
     }
-  }, [zipInput, onCitySelect, isMobile]);
+  }, [inputText, onCitySelect, isMobile]);
 
   const handleClear = () => {
-    setValue('');
-    setZipInput('');
+    setInputText('');
+    setValue('', false);
     setSelectedCity(null);
     clearSuggestions();
     onClear?.();
@@ -148,23 +226,15 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         setIsExpanded(false);
       }
     }
-    if (e.key === 'Enter' && inputMode === 'zipcode') {
+    if (e.key === 'Enter' && isZipExactTrim(inputText)) {
       handleZipSearch();
     }
   };
 
-  const toggleInputMode = () => {
-    setInputMode(prev => prev === 'address' ? 'zipcode' : 'address');
-    setValue('');
-    setZipInput('');
-    setSelectedCity(null);
-    clearSuggestions();
-  };
-
-  const isAddressMode = inputMode === 'address';
-  const placeholder = isAddressMode ? 'Enter address...' : 'Enter ZIP code...';
-  const currentValue = isAddressMode ? value : zipInput;
-  const isLoading = isAddressMode ? loading : isSearchingZip;
+  const isZipMode = /^\d{1,5}$/.test(inputText);
+  const placeholder = 'Enter address or ZIP…';
+  const currentValue = inputText;
+  const isLoading = (isZipMode ? isSearchingZip : loading) || isSearchingZip;
 
   // Mobile collapsed state - show search icon
   if (isMobile && !isExpanded) {
@@ -182,26 +252,17 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
     <div className={`relative ${className}`} data-tour="search-bar">
       {/* Search input container */}
       <div className="flex items-center backdrop-blur-md rounded-full shadow-lg overflow-hidden bg-white/95 dark:bg-zinc-800 border border-slate-200 dark:border-white/10">
-        {/* Mode toggle button */}
-        <button
-          onClick={toggleInputMode}
-          className="flex items-center justify-center w-10 h-10 shrink-0 transition-colors hover:bg-slate-100 dark:hover:bg-white/10 text-[#d4a5a5]"
-          title={isAddressMode ? 'Switch to ZIP code search' : 'Switch to address search'}
-        >
-          {isAddressMode ? (
-            <MapPin className="w-4 h-4" />
-          ) : (
-            <Hash className="w-4 h-4" />
-          )}
-        </button>
+        <div className="flex items-center justify-center w-10 h-10 shrink-0 text-[#d4a5a5]">
+          <MapPin className="w-4 h-4" />
+        </div>
 
         <input
           ref={inputRef}
           type="text"
           value={currentValue}
-          onChange={isAddressMode ? handleAddressInput : handleZipInput}
+          onChange={handleInput}
           onKeyDown={handleKeyDown}
-          disabled={isAddressMode ? !ready : false}
+          disabled={!ready && !isZipMode}
           placeholder={placeholder}
           className="flex-1 h-10 bg-transparent border-none outline-none pr-2 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden text-slate-700 dark:text-zinc-200 placeholder-slate-400"
           style={{
@@ -209,7 +270,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
             fontSize: '16px', // Prevents iOS zoom on focus
           }}
           autoComplete="off"
-          inputMode={isAddressMode ? 'text' : 'numeric'}
+          inputMode={isZipMode ? 'numeric' : 'text'}
         />
 
         {/* Loading indicator */}
@@ -227,7 +288,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         )}
 
         {/* Search button (ZIP mode) */}
-        {!isLoading && inputMode === 'zipcode' && zipInput.length === 5 && (
+        {!isLoading && isZipExactTrim(inputText) && (
           <button
             onClick={handleZipSearch}
             className="flex items-center justify-center w-8 h-8 mr-1 rounded-full bg-[#d4a5a5] hover:bg-[#c49393] transition-colors"
@@ -261,8 +322,8 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         )}
       </div>
 
-      {/* Suggestions dropdown (Address mode only) */}
-      {isAddressMode && status === 'OK' && data.length > 0 && (
+      {/* Suggestions dropdown (only when not typing a ZIP) */}
+      {!isZipMode && status === 'OK' && data.length > 0 && (
         <ul className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden">
           {data.map((suggestion) => {
             const {
@@ -292,29 +353,22 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
       )}
 
       {/* ZIP code helper text */}
-      {!isAddressMode && zipInput.length > 0 && zipInput.length < 5 && (
+      {isZipMode && inputText.length > 0 && inputText.length < 5 && (
         <div className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl p-4 text-center">
           <p className="text-sm text-slate-500 dark:text-zinc-400">
-            Enter 5-digit ZIP code ({5 - zipInput.length} more digits)
+            Enter 5-digit ZIP code ({5 - inputText.length} more digits)
           </p>
         </div>
       )}
 
       {/* No results message */}
-      {isAddressMode && status === 'ZERO_RESULTS' && (
+      {!isZipMode && status === 'ZERO_RESULTS' && (
         <div className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl p-4 text-center">
           <p className="text-sm text-slate-500 dark:text-zinc-400">
             No addresses found
           </p>
         </div>
       )}
-
-      {/* Mode indicator */}
-      <div className="absolute -bottom-6 left-0 right-0 text-center">
-        <span className="text-xs text-slate-400">
-          {isAddressMode ? 'Address search' : 'ZIP code search'} - tap icon to switch
-        </span>
-      </div>
     </div>
   );
 };

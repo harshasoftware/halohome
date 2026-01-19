@@ -35,3 +35,8 @@ src/hooks/family-tree-parts/usePersonForm.ts
 
 # Local Netlify folder
 .netlify
+
+# === ZIP boundary source data (large files) ===
+# TIGER/Line ZCTA5 shapefile extracts and exports used for importing ZIP boundaries.
+tl_*_us_zcta520/
+us_zips.geojson

@@ -7,6 +7,7 @@
  */
 
 import type { LatLng } from '@/lib/building-footprints/coordinate-utils';
+import { imagePixelToLatLng, type BoundingBox } from '@/lib/building-footprints/coordinate-utils';
 
 // Types for SAM segmentation
 export interface SegmentationPoint {
@@ -147,13 +148,18 @@ export async function loadSAMModel(
 
 /**
  * Get the Hugging Face model ID based on config
+ * 
+ * Note: SlimSAM requires SamModel/AutoProcessor (not pipeline).
+ * For now, we use SegFormer which works with image-segmentation pipeline.
+ * TODO: Migrate to SamModel/AutoProcessor for full SAM support.
  */
 function getModelId(config: SAMConfig): string {
-  // Using Xenova's converted SAM models for transformers.js
+  // Using SegFormer models that work with image-segmentation pipeline
+  // These provide automatic segmentation without prompts
   const modelMap: Record<string, string> = {
-    'sam-vit-base': 'Xenova/slimsam-77-uniform',
-    'sam-vit-large': 'Xenova/sam-vit-base',
-    'sam-vit-huge': 'Xenova/sam-vit-large',
+    'sam-vit-base': 'Xenova/segformer-b1-finetuned-ade-512-512', // General segmentation
+    'sam-vit-large': 'Xenova/segformer-b1-finetuned-cityscapes-1024-1024', // Higher detail
+    'sam-vit-huge': 'Xenova/segformer-b5-finetuned-cityscapes-1024-1024', // Best quality
   };
   return modelMap[config.model] || modelMap['sam-vit-base'];
 }
@@ -205,6 +211,17 @@ export async function segmentWithPoints(
   const inputLabels = points.map((p) => [p.label]);
 
   try {
+    // Yield control before segmentation to allow UI updates
+    await new Promise(resolve => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => resolve(undefined), { timeout: 100 });
+      } else {
+        setTimeout(() => resolve(undefined), 0);
+      }
+    });
+
+    // Note: This operation is still CPU/GPU intensive and may block briefly
+    // For full non-blocking, consider using a Web Worker
     const results = await samPipeline(imageUrl, {
       input_points: inputPoints,
       input_labels: inputLabels,
@@ -269,14 +286,62 @@ export async function segmentAutomatic(
     : imageSource;
 
   try {
-    // Use automatic mask generation
-    const results = await samPipeline(imageUrl, {
-      mask_threshold: threshold,
-      pred_iou_thresh: threshold,
-      stability_score_thresh: threshold,
+    // Yield control before segmentation to allow UI updates
+    // This helps keep the map interactive during processing
+    await new Promise(resolve => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => resolve(undefined), { timeout: 100 });
+      } else {
+        setTimeout(() => resolve(undefined), 0);
+      }
     });
 
-    return processSegmentationResults(results);
+    // SegFormer models work with simple pipeline call (no special params)
+    // Results are automatically returned as array of { label, mask, score }
+    // Note: This operation is still CPU/GPU intensive and may block briefly
+    // For full non-blocking, consider using a Web Worker
+    const results = await samPipeline(imageUrl);
+
+    console.log('[SAM] SegFormer returned', results?.length || 0, 'segmentation results');
+    if (results && results.length > 0) {
+      console.log('[SAM] First result structure:', {
+        hasLabel: !!results[0].label,
+        hasMask: !!results[0].mask,
+        hasScore: results[0].score !== undefined,
+        score: results[0].score,
+        threshold,
+        maskType: results[0].mask?.constructor?.name,
+        maskKeys: results[0].mask ? Object.keys(results[0].mask) : [],
+      });
+      // Log all scores
+      const scores = results.map((r: any) => r.score).filter((s: any) => s !== undefined);
+      if (scores.length > 0) {
+        console.log('[SAM] All scores:', scores, 'min:', Math.min(...scores), 'max:', Math.max(...scores));
+      }
+    }
+
+    // Filter by threshold if score is available
+    // Note: SegFormer may not always provide scores, so we include results without scores
+    // and use a default confidence value
+    const filteredResults = results.filter((r: any) => {
+      // SegFormer sometimes returns null scores - treat as valid result with default confidence
+      if (r.score === null || r.score === undefined) {
+        console.log(`[SAM] Result has no score, including with default confidence`);
+        return true; // Include results without scores
+      }
+      
+      // SegFormer scores are usually already normalized 0-1, but check if they're in 0-100 range
+      const normalizedScore = r.score > 1 ? r.score / 100 : r.score;
+      const passes = normalizedScore >= threshold;
+      if (!passes) {
+        console.log(`[SAM] Filtered out result: score ${r.score} (normalized: ${normalizedScore}) < threshold ${threshold}`);
+      }
+      return passes;
+    });
+
+    console.log('[SAM] After filtering:', filteredResults.length, 'results (from', results.length, 'total)');
+
+    return processSegmentationResults(filteredResults);
   } catch (error) {
     console.error('SAM automatic segmentation error:', error);
     throw error;
@@ -291,12 +356,22 @@ function processSegmentationResults(results: any[]): SegmentationResult[] {
     results = [results];
   }
 
-  return results.map((result) => {
+  return results.map((result, idx) => {
     const mask = result.mask;
-    const score = result.score || 1.0;
+    // SegFormer may return null scores - use default confidence of 0.5 for results without scores
+    // This allows the results to pass through and be evaluated by area/quality filters instead
+    const score = result.score !== null && result.score !== undefined ? result.score : 0.5;
 
     // Extract polygons from the mask
     const polygons = maskToPolygons(mask);
+    
+    console.log(`[SAM] Result ${idx}: score=${result.score} (using ${score}), polygons=${polygons.length}, mask format:`, {
+      isImageData: mask instanceof ImageData,
+      hasData: !!mask?.data,
+      hasWidth: mask?.width !== undefined,
+      hasHeight: mask?.height !== undefined,
+      maskType: mask?.constructor?.name,
+    });
 
     return {
       mask,
@@ -311,23 +386,112 @@ function processSegmentationResults(results: any[]): SegmentationResult[] {
  */
 function maskToPolygons(mask: any): Array<{ x: number; y: number }[]> {
   // Handle different mask formats from transformers.js
-  if (!mask) return [];
+  if (!mask) {
+    console.warn('[SAM] maskToPolygons: mask is null/undefined');
+    return [];
+  }
 
   const polygons: Array<{ x: number; y: number }[]> = [];
 
-  // If mask has data property (RLEMask or similar)
+  // Handle _RawImage format from transformers.js (SegFormer output)
+  // _RawImage has: data (Uint8Array), width, height, channels
+  if (mask.constructor?.name === '_RawImage' || (mask.data && mask.width && mask.height && mask.channels)) {
+    const { width, height, data, channels = 1 } = mask;
+    const binaryMask = new Uint8Array(width * height);
+    
+    console.log(`[SAM] Processing _RawImage mask: ${width}x${height}, channels: ${channels}, data length: ${data.length}`);
+    
+    // Handle different channel formats
+    if (channels === 1) {
+      // Grayscale: single channel
+      for (let i = 0; i < data.length && i < binaryMask.length; i++) {
+        binaryMask[i] = data[i] > 128 ? 1 : 0;
+      }
+    } else if (channels === 3 || channels === 4) {
+      // RGB/RGBA: check if any channel is > 128
+      const pixels = data.length / channels;
+      for (let i = 0; i < pixels && i < binaryMask.length; i++) {
+        const idx = i * channels;
+        let maxVal = 0;
+        for (let c = 0; c < channels; c++) {
+          if (data[idx + c] > maxVal) {
+            maxVal = data[idx + c];
+          }
+        }
+        binaryMask[i] = maxVal > 128 ? 1 : 0;
+      }
+    } else {
+      // Fallback: treat as grayscale
+      for (let i = 0; i < Math.min(data.length, binaryMask.length); i++) {
+        binaryMask[i] = data[i] > 128 ? 1 : 0;
+      }
+    }
+
+    const contours = findContours(binaryMask, width, height);
+    polygons.push(...contours);
+    console.log(`[SAM] _RawImage mask: ${width}x${height}, extracted ${contours.length} contours`);
+    return polygons;
+  }
+
+  // Handle ImageData format (browser native)
+  if (mask instanceof ImageData) {
+    const { width, height, data } = mask;
+    const binaryMask = new Uint8Array(width * height);
+    
+    // Convert RGBA to binary (check if any channel is > 128)
+    for (let i = 0; i < data.length; i += 4) {
+      const pixelIdx = i / 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      // Consider pixel as foreground if alpha > 128 or any RGB channel > 128
+      binaryMask[pixelIdx] = (a > 128 || r > 128 || g > 128 || b > 128) ? 1 : 0;
+    }
+
+    const contours = findContours(binaryMask, width, height);
+    polygons.push(...contours);
+    console.log(`[SAM] ImageData mask: ${width}x${height}, extracted ${contours.length} contours`);
+    return polygons;
+  }
+
+  // If mask has data property (RLEMask or tensor format)
   if (mask.data && mask.width && mask.height) {
     const { width, height, data } = mask;
 
     // Find contours using a simple marching squares algorithm
     const binaryMask = new Uint8Array(width * height);
-    for (let i = 0; i < data.length; i++) {
-      binaryMask[i] = data[i] > 0.5 ? 1 : 0;
+    
+    // Handle different data formats
+    if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
+      for (let i = 0; i < data.length; i++) {
+        binaryMask[i] = data[i] > 128 ? 1 : 0;
+      }
+    } else if (Array.isArray(data)) {
+      for (let i = 0; i < data.length; i++) {
+        binaryMask[i] = data[i] > 0.5 ? 1 : 0;
+      }
+    } else if (data.data) {
+      // Handle tensor-like format (e.g., from transformers.js)
+      const tensorData = data.data;
+      for (let i = 0; i < Math.min(tensorData.length, binaryMask.length); i++) {
+        binaryMask[i] = tensorData[i] > 0.5 ? 1 : 0;
+      }
     }
 
     const contours = findContours(binaryMask, width, height);
     polygons.push(...contours);
+    console.log(`[SAM] Tensor mask: ${width}x${height}, extracted ${contours.length} contours`);
+    return polygons;
   }
+
+  console.warn('[SAM] maskToPolygons: Unsupported mask format:', {
+    type: mask.constructor?.name,
+    keys: Object.keys(mask),
+    hasData: !!mask.data,
+    hasWidth: mask.width !== undefined,
+    hasHeight: mask.height !== undefined,
+  });
 
   return polygons;
 }
@@ -543,25 +707,15 @@ export async function unloadSAMModel(): Promise<void> {
 
 /**
  * Convert pixel coordinates to lat/lng using tile bounds
+ * Uses the shared imagePixelToLatLng function for consistency with other coordinate conversions
  */
 export function pixelPolygonsToLatLng(
   polygons: Array<{ x: number; y: number }[]>,
-  tileBounds: {
-    north: number;
-    south: number;
-    east: number;
-    west: number;
-  },
+  tileBounds: BoundingBox,
   imageWidth: number,
   imageHeight: number
 ): Array<LatLng[]> {
-  const latRange = tileBounds.north - tileBounds.south;
-  const lngRange = tileBounds.east - tileBounds.west;
-
   return polygons.map((polygon) =>
-    polygon.map((point) => ({
-      lat: tileBounds.north - (point.y / imageHeight) * latRange,
-      lng: tileBounds.west + (point.x / imageWidth) * lngRange,
-    }))
+    polygon.map((point) => imagePixelToLatLng({ x: point.x, y: point.y }, imageWidth, imageHeight, tileBounds))
   );
 }

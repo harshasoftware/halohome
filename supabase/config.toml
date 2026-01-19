@@ -11,6 +11,9 @@ verify_jwt = true
 [functions.city-info]
 verify_jwt = true
 
+[functions.entrance-detection]
+verify_jwt = true
+
 [functions.ai-subscription]
 verify_jwt = true
 
@@ -18,7 +21,9 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.copilot-runtime]
-verify_jwt = true
+# verify_jwt = false - Allow /info endpoint to be accessed without auth for agent discovery
+# Actual agent runs will handle authentication internally via JWT from request headers
+verify_jwt = false
 
 [functions.search-flights]
 verify_jwt = true

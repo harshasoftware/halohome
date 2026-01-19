@@ -19,6 +19,7 @@ import { AstroLegend } from './components/AstroLegend';
 import { LineInfoCard } from './components/LineInfoCard';
 import { LocationAnalysisCard } from './components/LocationAnalysisCard';
 import { CitySearchBar } from './components/CitySearchBar';
+import type { UnifiedSearchSelectionKind } from './components/CitySearchBar';
 import { RightPanelStack, usePanelStack } from './components/RightPanelStack';
 import { OnboardingTour } from '@/components/OnboardingTour';
 
@@ -57,7 +58,9 @@ const CityInfoPanel = lazy(() => import('./components/CityInfoPanel').then(m => 
 const RelocationPanel = lazy(() => import('./components/RelocationPanel').then(m => ({ default: m.RelocationPanel })));
 import { FavoritesPanelContent, ChartsPanelContent } from './components/panels';
 import { AstroLoadingOverlay } from './components/panels/AstroLoadingOverlay';
-import { ScoutPanel, type ScoutMarker } from './components/ScoutPanel';
+import VastuParcelScout from './components/VastuParcelScout';
+import { buildingFootprintsService } from './services/buildingFootprintsService';
+import { useVastuStore } from '@/stores/vastuStore';
 import { useBirthCharts, type BirthChart } from '@/hooks/useBirthCharts';
 import { useRelocationChart } from '@/hooks/useRelocationChart';
 import { useCompatibilityMode, type PartnerChartData } from './hooks/useCompatibilityMode';
@@ -132,6 +135,16 @@ interface GlobePageProps {
   } | null;
   // Callback when landing page prefill is consumed
   onLandingPagePrefillConsumed?: () => void;
+  // Landing page unified search prefill - triggers the same unified search flow as CitySearchBar
+  landingSearchPrefill?: {
+    lat: number;
+    lng: number;
+    place: string;
+    kind: 'zip' | 'property' | 'area';
+    bounds?: { north: number; south: number; east: number; west: number };
+  } | null;
+  // Callback when landing search prefill is consumed
+  onLandingSearchPrefillConsumed?: () => void;
   // Callback to open favorites panel (for toolbar)
   onOpenFavoritesPanel?: () => void;
   // Compatibility/Duo mode state lifted for toolbar control
@@ -175,6 +188,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
   externalCitySelect,
   landingPagePrefill,
   onLandingPagePrefillConsumed,
+  landingSearchPrefill,
+  onLandingSearchPrefillConsumed,
   onOpenFavoritesPanel: externalOpenFavoritesPanel,
   onCompatibilityStateChange,
   onNatalChartStateChange,
@@ -184,7 +199,112 @@ const GlobePage: React.FC<GlobePageProps> = ({
   const globeEl = useRef<VastuGlobeMapMethods | null>(null);
   const isMobile = useIsMobile(768);
   const [hasMounted, setHasMounted] = useState(false);
-  const [scoutMarkers, setScoutMarkers] = useState<ScoutMarker[]>([]);
+  // Scout markers for displaying property locations on globe (if needed in future)
+  const [scoutMarkers, setScoutMarkers] = useState<Array<{ lat: number; lng: number; name: string }>>([]);
+  // Parcels from VastuParcelScout for map visualization
+  const [scoutParcels, setScoutParcels] = useState<Array<{
+    id: string;
+    coordinates: Array<{ lat: number; lng: number }>;
+    vastuScore?: number;
+    type?: 'plot' | 'building';
+  }>>([]);
+  // Selected parcel ID for highlighting
+  const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
+  // Track the active ZIP search request (for requestId gating across async steps)
+  const activeZipSearchRef = useRef<{ zipCode: string; requestId: number } | null>(null);
+
+  // Memoize the onZipCodeSearch callback to prevent infinite loops
+  const handleZipCodeSearch = useCallback(async (zipCode: string, zipBoundaryGeoJSON?: GeoJSON.Polygon | GeoJSON.MultiPolygon | null) => {
+    try {
+      const { startZipSearch, setZipBoundary, clearZipSearch, setZipCodeBounds } = useGlobeInteractionStore.getState();
+
+      console.log(`[GlobePage] onZipCodeSearch CALLBACK INVOKED:`, {
+        zipCode,
+        hasBoundary: !!zipBoundaryGeoJSON,
+        boundaryType: zipBoundaryGeoJSON?.type,
+        activeRequest: activeZipSearchRef.current,
+      });
+
+      // If ZIP code is empty or invalid, clear the boundary
+      if (!zipCode || zipCode.length !== 5) {
+        console.log(`[GlobePage] Clearing ZIP boundary - invalid ZIP code: ${zipCode}`);
+        activeZipSearchRef.current = null;
+        clearZipSearch();
+        return;
+      }
+
+      // Search-start signal (no boundary yet): start a new requestId, set ZIP, clear boundary/bounds.
+      if (!zipBoundaryGeoJSON) {
+        // If we already have the boundary for this ZIP, don't restart (prevents polygon disappearing
+        // when the user clicks "Scout" after a ZIP search already drew the polygon).
+        const current = useGlobeInteractionStore.getState();
+        if (
+          current.currentZipCode === zipCode &&
+          current.zipSearchStatus === 'ready' &&
+          Array.isArray(current.zipCodeBoundary) &&
+          current.zipCodeBoundary.length >= 3
+        ) {
+          activeZipSearchRef.current = { zipCode, requestId: current.zipSearchRequestId };
+          return;
+        }
+
+        const requestId = startZipSearch(zipCode);
+        activeZipSearchRef.current = { zipCode, requestId };
+        console.log(`[GlobePage] Started ZIP search`, { zipCode, requestId });
+        return;
+      }
+
+      // Boundary is available: apply only if it matches the active requestId.
+      const active = activeZipSearchRef.current;
+      const requestId = active?.zipCode === zipCode ? active.requestId : useGlobeInteractionStore.getState().zipSearchRequestId;
+
+      console.log(`[GlobePage] Applying ZIP boundary`, { zipCode, requestId, boundaryType: zipBoundaryGeoJSON.type });
+
+      // Convert GeoJSON to LatLng array for map display
+      let coordinates: number[][];
+      if (zipBoundaryGeoJSON.type === 'Polygon') {
+        coordinates = zipBoundaryGeoJSON.coordinates[0];
+      } else if (zipBoundaryGeoJSON.type === 'MultiPolygon') {
+        coordinates = zipBoundaryGeoJSON.coordinates[0]?.[0] || [];
+      } else {
+        console.warn(`[GlobePage] Unsupported GeoJSON type: ${zipBoundaryGeoJSON.type}`);
+        setZipBoundary({ zipCode, requestId, boundary: null });
+        return;
+      }
+
+      if (!coordinates || coordinates.length < 3) {
+        console.warn(`[GlobePage] Invalid coordinates, length: ${coordinates?.length}`);
+        setZipBoundary({ zipCode, requestId, boundary: null });
+        return;
+      }
+
+      const boundary = coordinates.map(([lng, lat]: [number, number]) => ({ lat, lng }));
+      setZipBoundary({ zipCode, requestId, boundary });
+
+      // Get bounds for map fitting (guarded by requestId to avoid stale updates)
+      const { getZipBoundaryBounds } = await import('@/lib/zip-boundaries/zip-boundary-service');
+      const bounds = await getZipBoundaryBounds(zipCode);
+      const current = useGlobeInteractionStore.getState();
+      if (bounds && current.zipSearchRequestId === requestId && current.currentZipCode === zipCode) {
+        setZipCodeBounds(bounds);
+        console.log(`[GlobePage] Set ZIP bounds for map fitting`, { zipCode, requestId });
+      }
+    } catch (error) {
+      console.error(`[GlobePage] Error in onZipCodeSearch callback:`, error);
+      // Surface error state (guarded) so UI doesn't stay "searching" forever.
+      try {
+        const current = useGlobeInteractionStore.getState();
+        const active = activeZipSearchRef.current;
+        const requestId = active?.zipCode ? active.requestId : current.zipSearchRequestId;
+        const zip = active?.zipCode ?? current.currentZipCode;
+        if (zip) {
+          current.setZipBoundary({ zipCode: zip, requestId, boundary: null });
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   // Globe navigation - extracted hook for camera control
   const navigation = useGlobeNavigation({
@@ -210,6 +330,10 @@ const GlobePage: React.FC<GlobePageProps> = ({
   const setCityLocation = useGlobeInteractionStore((s) => s.setCityLocation);
   const zipCodeBounds = useGlobeInteractionStore((s) => s.zipCodeBounds);
   const setZipCodeBounds = useGlobeInteractionStore((s) => s.setZipCodeBounds);
+  const currentZipCode = useGlobeInteractionStore((s) => s.currentZipCode);
+  const zipCodeBoundary = useGlobeInteractionStore((s) => s.zipCodeBoundary);
+  const zipSearchRequestId = useGlobeInteractionStore((s) => s.zipSearchRequestId);
+  const zipSearchStatus = useGlobeInteractionStore((s) => s.zipSearchStatus);
 
   // Zone drawing state - uses extracted hook
   // Note: zoneDrawing hook is initialized after visiblePlanetaryLines is available
@@ -677,27 +801,8 @@ const GlobePage: React.FC<GlobePageProps> = ({
     hideAllPlanets,
   } = useAstroLines(effectiveBirthData, { enabled: showAstroLines && !isLocalSpace });
 
-  // Auto-open Scout panel when planetary lines are first calculated (desktop only)
-  // On mobile, user can tap the Scout FAB to open - no auto-open to avoid blocking globe interaction
-  useEffect(() => {
-    if (
-      !hasAutoOpenedScout.current &&
-      !isMobile &&
-      astroResult?.planetaryLines &&
-      astroResult.planetaryLines.length > 0
-    ) {
-      // Desktop: push scout panel to the panel stack
-      const hasScoutPanel = panelStack.stack.some(p => p.type === 'scout');
-      if (!hasScoutPanel) {
-        panelStack.push({
-          type: 'scout',
-          title: 'Scout Locations',
-          data: null,
-        });
-      }
-      hasAutoOpenedScout.current = true;
-    }
-  }, [isMobile, astroResult?.planetaryLines, panelStack]);
+  // Note: Auto-open scout panel removed - user manually opens via "Scout Locations" button
+  // Scout panel now shows Vastu property scouting, not astrocartography
 
   // --- Scout Worker Pool ---
   // Pre-compute scout locations for all categories in parallel using web worker pool.
@@ -1321,13 +1426,76 @@ const GlobePage: React.FC<GlobePageProps> = ({
   }, [zoneDrawing]);
 
   // Handle city search selection - pan/zoom to location and open History panel
-  const handleCitySelect = useCallback((
+  const handleCitySelect = useCallback(async (
     lat: number,
     lng: number,
     cityName: string,
     isZipCode?: boolean,
-    bounds?: { north: number; south: number; east: number; west: number }
+    bounds?: { north: number; south: number; east: number; west: number },
+    selectionKind?: UnifiedSearchSelectionKind
   ) => {
+    // Unified search handling:
+    // - property: show a single Regrid parcel bbox (rectangle) and clear ZIP polygon state
+    // - zip: show ZIP polygon and open Scout
+    // - area: keep existing behavior (marker + panels)
+    if (!isZipCode && selectionKind === 'property') {
+      // Clear any ZIP state (single source of truth) when searching a single address
+      activeZipSearchRef.current = null;
+      useGlobeInteractionStore.getState().clearZipSearch();
+      setZipCodeBounds(null);
+
+      // Set city location marker (also used as the "searched location" marker)
+      setCityLocation({ lat, lng, name: cityName });
+
+      // Fetch the closest parcel and draw ONLY its bounding box rectangle
+      try {
+        const footprint = await buildingFootprintsService.searchAtLocation(lat, lng, { maxResults: 20 });
+        if (footprint?.bounds) {
+          const b = footprint.bounds;
+          const rectBoundary = [
+            { lat: b.north, lng: b.west },
+            { lat: b.north, lng: b.east },
+            { lat: b.south, lng: b.east },
+            { lat: b.south, lng: b.west },
+            { lat: b.north, lng: b.west },
+          ];
+
+          // Store in Vastu store so VastuGlobeMap can render it
+          const vastu = useVastuStore.getState();
+          vastu.setPropertyAddress(cityName);
+          vastu.setPropertyCoordinates({ lat, lng });
+          vastu.setPropertyBoundary(rectBoundary);
+
+          // Fit map to the bbox so the whole parcel is visible
+          if (globeEl.current?.fitBounds) {
+            globeEl.current.fitBounds(b, 80);
+          } else {
+            navigation.flyTo(lat, lng, 0.8, 1000);
+          }
+        } else {
+          navigation.flyTo(lat, lng, 0.8, 1000);
+        }
+      } catch (error) {
+        console.error('[GlobePage] Failed to fetch parcel bbox for address:', error);
+        navigation.flyTo(lat, lng, 0.8, 1000);
+      }
+
+      // For address searches, keep opening History/Charts as before
+      if (!isMobile) {
+        const existingIndex = panelStack.stack.findIndex((p) => p.type === 'charts');
+        if (existingIndex >= 0) {
+          panelStack.setCurrentIndex(existingIndex);
+        } else {
+          panelStack.push({
+            type: 'charts',
+            title: 'History',
+            data: { searchedLocation: { lat, lng, name: cityName, isZipCode: false } },
+          });
+        }
+      }
+      return;
+    }
+
     // For ZIP codes with bounds, fit the map to the bounding box
     // Otherwise fly to the location with appropriate zoom
     if (isZipCode && bounds && globeEl.current?.fitBounds) {
@@ -1348,10 +1516,56 @@ const GlobePage: React.FC<GlobePageProps> = ({
       setZipCodeBounds(null);
     }
 
-    // Open History panel to show searched location
+    // ZIP code searches should open Scout, not History/Charts.
+    if (isZipCode) {
+      // Kick off ZIP polygon fetch immediately (independent of scouting).
+      // This ensures ZIP search draws the boundary even if user doesn't click Scout.
+      const zip = cityName.match(/\b\d{5}(-\d{4})?\b/)?.[0]?.split('-')[0] ?? cityName.trim();
+      if (zip.length === 5) {
+        // Start -> fetch -> apply (requestId-gated)
+        await handleZipCodeSearch(zip, undefined);
+        const afterStart = useGlobeInteractionStore.getState();
+        const alreadyReady =
+          afterStart.currentZipCode === zip &&
+          afterStart.zipSearchStatus === 'ready' &&
+          Array.isArray(afterStart.zipCodeBoundary) &&
+          afterStart.zipCodeBoundary.length >= 3;
+
+        if (!alreadyReady) {
+          try {
+            const { getZipBoundaryGeoJSON } = await import('@/lib/zip-boundaries/zip-boundary-service');
+            const geo = await getZipBoundaryGeoJSON(zip);
+            await handleZipCodeSearch(zip, geo);
+          } catch (e) {
+            console.error('[GlobePage] Failed to fetch ZIP boundary for zip search:', e);
+            const current = useGlobeInteractionStore.getState();
+            const requestId = current.zipSearchRequestId;
+            current.setZipBoundary({ zipCode: zip, requestId, boundary: null });
+          }
+        }
+      }
+
+      if (isMobile) {
+        setMobileScoutSheetOpen(true);
+      } else {
+        const existingIndex = panelStack.stack.findIndex((p) => p.type === 'scout');
+        if (existingIndex >= 0) {
+          panelStack.setCurrentIndex(existingIndex);
+        } else {
+          panelStack.push({
+            type: 'scout',
+            title: 'Scout',
+            data: { searchedLocation: { lat, lng, name: cityName, isZipCode } },
+          });
+        }
+      }
+      return;
+    }
+
+    // Non-ZIP searches: keep opening History/Charts as before
     if (!isMobile) {
       // Check if charts panel is already open
-      const existingIndex = panelStack.stack.findIndex(p => p.type === 'charts');
+      const existingIndex = panelStack.stack.findIndex((p) => p.type === 'charts');
       if (existingIndex >= 0) {
         panelStack.setCurrentIndex(existingIndex);
       } else {
@@ -1362,12 +1576,33 @@ const GlobePage: React.FC<GlobePageProps> = ({
         });
       }
     }
-  }, [navigation, isMobile, panelStack, setZipCodeBounds]);
+  }, [navigation, isMobile, panelStack, setZipCodeBounds, setMobileScoutSheetOpen]);
+
+  // Handle landing page unified search prefill - run the same flow as the unified search bar
+  useEffect(() => {
+    if (landingSearchPrefill && hasMounted) {
+      const prefillKey = `search:${landingSearchPrefill.kind}:${landingSearchPrefill.lat},${landingSearchPrefill.lng},${landingSearchPrefill.place}`;
+      if (processedPrefillRef.current !== prefillKey) {
+        processedPrefillRef.current = prefillKey;
+        void handleCitySelect(
+          landingSearchPrefill.lat,
+          landingSearchPrefill.lng,
+          landingSearchPrefill.place,
+          landingSearchPrefill.kind === 'zip',
+          landingSearchPrefill.bounds,
+          landingSearchPrefill.kind
+        );
+        onLandingSearchPrefillConsumed?.();
+      }
+    }
+  }, [landingSearchPrefill, hasMounted, handleCitySelect, onLandingSearchPrefillConsumed]);
 
   const handleClearCityLocation = useCallback(() => {
+    console.log(`[GlobePage] Clearing city location and ZIP boundary`);
     setCityLocation(null);
-    setZipCodeBounds(null);
-  }, [setZipCodeBounds]);
+    activeZipSearchRef.current = null;
+    useGlobeInteractionStore.getState().clearZipSearch();
+  }, [setCityLocation]);
 
   // Notify parent of zone state changes for toolbar control
   useEffect(() => {
@@ -1673,21 +1908,98 @@ const GlobePage: React.FC<GlobePageProps> = ({
     );
   }, [savedCharts, currentChart, chartsLoading, selectChart, deleteChart, updateChart, setDefaultChart, saveChart, panelStack, onSelectChart]);
 
-  // Render function for ScoutPanel
+  // Render function for ScoutPanel - Vastu property scouting only
   const renderScoutPanel = useCallback(() => {
+    // Extract ZIP code from cityLocation if available
+    let zipCode: string | undefined = undefined;
+    if (zipCodeBounds && cityLocation) {
+      // When ZIP is searched via CitySearchBar, name is just the 5-digit ZIP code
+      if (cityLocation.name) {
+        // Try to extract 5-digit ZIP code (handles formats like "12345", "ZIP Code 12345", etc.)
+        const zipMatch = cityLocation.name.match(/\b\d{5}(-\d{4})?\b/);
+        if (zipMatch) {
+          zipCode = zipMatch[0].split('-')[0]; // Get just the 5 digits
+        } else if (/^\d{5}$/.test(cityLocation.name.trim())) {
+          // If the name is just a 5-digit number, use it directly
+          zipCode = cityLocation.name.trim();
+        }
+      }
+    }
+    
     return (
-      <ScoutPanel
-        planetaryLines={astroResult?.planetaryLines ?? []}
-        aspectLines={astroResult?.aspectLines ?? []}
-        onCityClick={handleCityClick}
-        onShowCountryMarkers={setScoutMarkers}
-        onClose={() => {
-          setScoutMarkers([]); // Clear markers when panel closes
-          panelStack.closeCurrent();
-        }}
-      />
+      <div className="h-full flex flex-col min-h-0 overflow-hidden">
+        {zipCode && (
+          <div className="p-4 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 shrink-0">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Scout Properties in {zipCode}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">
+              Using SAM v2 to detect and analyze properties by Vastu principles
+            </p>
+          </div>
+        )}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <VastuParcelScout
+            onParcelSelect={(parcel) => {
+              // Center + zoom to the actual parcel polygon when possible.
+              // `navigation.flyTo(...altitude)` tops out around zoom 18 in 2D; for property scouting we want a closer zoom.
+              const globe = globeEl.current;
+
+              if (globe?.fitBounds && Array.isArray(parcel.boundary) && parcel.boundary.length > 2) {
+                let north = -Infinity;
+                let south = Infinity;
+                let east = -Infinity;
+                let west = Infinity;
+
+                for (const p of parcel.boundary) {
+                  north = Math.max(north, p.lat);
+                  south = Math.min(south, p.lat);
+                  east = Math.max(east, p.lng);
+                  west = Math.min(west, p.lng);
+                }
+
+                globe.fitBounds({ north, south, east, west }, 120);
+                return;
+              }
+
+              if (globe?.panTo) {
+                globe.panTo(parcel.coordinates.lat, parcel.coordinates.lng, 20);
+                return;
+              }
+
+              // Fallback (should be rare): 3D/altitude navigation
+              navigation.flyTo(parcel.coordinates.lat, parcel.coordinates.lng, 0.5, 1000);
+            }}
+            onCenterMap={(lat, lng) => {
+              // Center map on parcel with close zoom for property analysis.
+              // Prefer 2D pan+zoom when available; `flyTo` altitude mapping is too coarse for property-level zoom.
+              const globe = globeEl.current;
+              if (globe?.panTo) {
+                globe.panTo(lat, lng, 20);
+                return;
+              }
+              navigation.flyTo(lat, lng, 0.5, 1000);
+            }}
+            // ZIP searches should NOT auto-scout; we only prefill the input.
+            prefillZipCode={zipCode}
+            onSearchStart={() => {
+              // Optional: show loading state
+            }}
+            onSearchComplete={(success, count) => {
+              if (success && count > 0) {
+                toast.success(`Found ${count} properties${zipCode ? ` in ${zipCode}` : ''}`);
+              } else if (!success) {
+                toast.error(`Could not find properties${zipCode ? ` in ${zipCode}` : ''}`);
+              }
+            }}
+            onParcelsChange={setScoutParcels}
+            onParcelSelected={setSelectedParcelId}
+            onZipCodeSearch={handleZipCodeSearch}
+          />
+        </div>
+      </div>
     );
-  }, [astroResult?.planetaryLines, astroResult?.aspectLines, panelStack, handleCityClick]);
+  }, [panelStack, zipCodeBounds, cityLocation, navigation]);
 
   // Handler to open favorites panel
   const handleOpenFavoritesPanel = useCallback(() => {
@@ -2080,6 +2392,9 @@ const GlobePage: React.FC<GlobePageProps> = ({
                 analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
                 cityLocation={cityLocation}
                 zipCodeBounds={zipCodeBounds}
+                zipCodeBoundary={zipCodeBoundary}
+                currentZipCode={currentZipCode}
+                zipSearchStatus={zipSearchStatus}
                 relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
                 hasBirthData={!!birthData}
                 partnerLocation={partnerLocation}
@@ -2101,11 +2416,13 @@ const GlobePage: React.FC<GlobePageProps> = ({
                 onGlobeFallbackShowScout={() => setMobileScoutSheetOpen(true)}
                 favoriteLocations={favoriteLocations}
                 onFavoriteClick={handleCityClick}
+                parcels={scoutParcels}
+                selectedParcelId={selectedParcelId}
               />
             </div>
           ) : (
             <ResizablePanelGroup direction="horizontal" className="flex-1 overflow-hidden">
-              <ResizablePanel defaultSize={panelStack.isOpen ? 75 : 100} minSize={50}>
+              <ResizablePanel id="globe-map-panel" order={1} defaultSize={panelStack.isOpen ? 75 : 100} minSize={50}>
                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                   <VastuGlobeMap
                     ref={globeEl}
@@ -2124,6 +2441,11 @@ const GlobePage: React.FC<GlobePageProps> = ({
                     analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
                     cityLocation={cityLocation}
                     zipCodeBounds={zipCodeBounds}
+                    zipCodeBoundary={zipCodeBoundary}
+                    currentZipCode={currentZipCode}
+                    zipSearchStatus={zipSearchStatus}
+                    parcels={scoutParcels}
+                selectedParcelId={selectedParcelId}
                     relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
                     partnerLocation={partnerLocation}
                     selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
@@ -2149,7 +2471,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
               {panelStack.isOpen && (
                 <>
                   <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={25} minSize={15} maxSize={45} className="overflow-hidden">
+                  <ResizablePanel id="globe-right-panel" order={2} defaultSize={25} minSize={15} maxSize={45} className="overflow-hidden">
                     <RightPanelStack
                       stack={panelStack.stack}
                       currentIndex={panelStack.currentIndex}
@@ -2173,7 +2495,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
                           className="flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                         >
                           <img src="/logo.png" alt="halohome.app Logo" className="w-6 h-6" />
-                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: 'Cinzel, serif' }}>halohome.app</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>halohome.app</span>
                         </a>
                       }
                     />
@@ -2258,15 +2580,16 @@ const GlobePage: React.FC<GlobePageProps> = ({
         />
       )}
 
-      {/* Mobile Scout Sheet - bottom sheet for Scout locations */}
-      {isMobile && mobileScoutSheetOpen && birthData && (
+      {/* Mobile Scout Sheet - bottom sheet for property scouting */}
+      {isMobile && mobileScoutSheetOpen && (
         <MobileScoutSheet
-          planetaryLines={astroResult?.planetaryLines ?? []}
-          aspectLines={astroResult?.aspectLines ?? []}
-          onCityClick={handleCityClick}
-          onShowCountryMarkers={setScoutMarkers}
+          prefillZipCode={
+            cityLocation?.name
+              ? (cityLocation.name.match(/\b\d{5}(-\d{4})?\b/)?.[0]?.split('-')[0] ?? null)
+              : null
+          }
           onClose={() => {
-            setScoutMarkers([]); // Clear markers when sheet closes
+            setScoutMarkers([]); // legacy cleanup
             setMobileScoutSheetOpen(false);
           }}
         />

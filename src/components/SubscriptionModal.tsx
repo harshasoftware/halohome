@@ -74,7 +74,7 @@ export const SubscriptionModal: React.FC = () => {
 
         {/* Header */}
         <div className="text-center pt-8 pb-4 px-6">
-          <h2 className="text-2xl font-medium text-white" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="text-2xl font-medium text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
             Start Living in Harmony.
           </h2>
           <p className="text-zinc-400 mt-2">Choose the perfect plan to find your harmonious home.</p>
@@ -98,7 +98,7 @@ export const SubscriptionModal: React.FC = () => {
             </h3>
 
             {/* Price */}
-            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: 'Cinzel, serif' }}>
+            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
               $19<span className="text-lg text-zinc-500">/mo</span>
             </div>
 
@@ -154,7 +154,7 @@ export const SubscriptionModal: React.FC = () => {
             </h3>
 
             {/* Price */}
-            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: 'Cinzel, serif' }}>
+            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
               $49<span className="text-lg text-zinc-500">/mo</span>
             </div>
 
@@ -214,7 +214,7 @@ export const SubscriptionModal: React.FC = () => {
             </h3>
 
             {/* Price */}
-            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: 'Cinzel, serif' }}>
+            <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
               $99<span className="text-lg text-zinc-500">/mo</span>
             </div>
 

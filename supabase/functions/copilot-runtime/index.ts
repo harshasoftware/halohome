@@ -487,8 +487,14 @@ Deno.serve(async (req) => {
     const pathname = url.pathname;
 
     // Handle /info endpoint for AG-UI agent discovery
-    if (pathname.endsWith('/info') || url.searchParams.get('info') === 'true') {
-      console.log('Handling /info request - returning agent info');
+    // Support both /info path and ?info=true query param, or GET requests to root
+    const isInfoRequest = pathname.endsWith('/info') || 
+                         url.searchParams.get('info') === 'true' ||
+                         (req.method === 'GET' && (pathname === '/' || pathname.endsWith('/copilot-runtime')));
+    
+    if (isInfoRequest) {
+      console.log('[copilot-runtime] Handling /info request - returning agent info');
+      console.log('[copilot-runtime] Agents:', Object.keys(AGENTS));
       return new Response(
         JSON.stringify({
           version: '1.50.1',

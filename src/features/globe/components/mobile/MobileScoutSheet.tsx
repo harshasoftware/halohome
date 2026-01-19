@@ -1,30 +1,23 @@
 /**
  * MobileScoutSheet - Bottom sheet for Scout locations on mobile
  *
- * Displays the Scout panel as a mobile-optimized bottom sheet at 60% height,
- * allowing users to see the globe behind it while browsing scout results.
+ * Displays the Vastu parcel scout as a mobile-optimized bottom sheet at 60% height,
+ * allowing users to see the map behind it while browsing results.
  */
 
 import React, { useState } from 'react';
 import { Telescope } from 'lucide-react';
 import { MobileBottomSheet } from './MobileBottomSheet';
-import { ScoutPanel, type ScoutMarker } from '../ScoutPanel';
-import type { PlanetaryLine, AspectLine } from '@/lib/astro-types';
+import VastuParcelScout from '../VastuParcelScout';
 import { useGlobeInteractionStore } from '@/stores/globeInteractionStore';
 
 interface MobileScoutSheetProps {
-  planetaryLines: PlanetaryLine[];
-  aspectLines: AspectLine[];
-  onCityClick?: (lat: number, lng: number, cityName: string) => void;
-  onShowCountryMarkers?: (markers: ScoutMarker[]) => void;
+  prefillZipCode?: string | null;
   onClose: () => void;
 }
 
 export const MobileScoutSheet: React.FC<MobileScoutSheetProps> = ({
-  planetaryLines,
-  aspectLines,
-  onCityClick,
-  onShowCountryMarkers,
+  prefillZipCode,
   onClose,
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -56,13 +49,9 @@ export const MobileScoutSheet: React.FC<MobileScoutSheetProps> = ({
       onToggleMaximize={() => setIsMaximized(!isMaximized)}
       onMaximizeChange={setMobileSheetMaximized}
     >
-      <ScoutPanel
-        planetaryLines={planetaryLines}
-        aspectLines={aspectLines}
-        onCityClick={onCityClick}
-        onShowCountryMarkers={onShowCountryMarkers}
-        onClose={onClose}
-      />
+      <div className="h-full min-h-0">
+        <VastuParcelScout prefillZipCode={prefillZipCode} />
+      </div>
     </MobileBottomSheet>
   );
 };

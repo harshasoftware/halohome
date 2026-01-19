@@ -23,6 +23,8 @@ export interface CityLocation {
   name: string;
 }
 
+export type ZipSearchStatus = 'idle' | 'searching' | 'ready' | 'error';
+
 // ZIP code bounds (rectangular bounding box from Google Geocoding)
 export interface ZipCodeBounds {
   north: number;
@@ -90,6 +92,10 @@ interface GlobeInteractionState {
   selectedCityForInfo: CityLocation | null;
   cityLocation: CityLocation | null;
   zipCodeBounds: ZipCodeBounds | null;
+  currentZipCode: string | null;
+  zipCodeBoundary: Array<{ lat: number; lng: number }> | null;
+  zipSearchRequestId: number;
+  zipSearchStatus: ZipSearchStatus;
   pendingBirthCoords: { lat: number; lng: number } | null;
 
   // === Zone Drawing ===
@@ -139,6 +145,13 @@ interface GlobeInteractionState {
   setSelectedCityForInfo: (city: CityLocation | null) => void;
   setCityLocation: (location: CityLocation | null) => void;
   setZipCodeBounds: (bounds: ZipCodeBounds | null) => void;
+  startZipSearch: (zipCode: string) => number;
+  setZipBoundary: (args: {
+    zipCode: string;
+    requestId: number;
+    boundary: Array<{ lat: number; lng: number }> | null;
+  }) => void;
+  clearZipSearch: () => void;
   setPendingBirthCoords: (coords: { lat: number; lng: number } | null) => void;
   clearAllSelections: () => void;
 
@@ -221,6 +234,10 @@ const initialState = {
   selectedCityForInfo: null as CityLocation | null,
   cityLocation: null as CityLocation | null,
   zipCodeBounds: null as ZipCodeBounds | null,
+  currentZipCode: null as string | null,
+  zipCodeBoundary: null as Array<{ lat: number; lng: number }> | null,
+  zipSearchRequestId: 0,
+  zipSearchStatus: 'idle' as ZipSearchStatus,
   pendingBirthCoords: null as { lat: number; lng: number } | null,
 
   // Zone drawing
@@ -296,6 +313,33 @@ export const useGlobeInteractionStore = create<GlobeInteractionState>()(
       setZipCodeBounds: (bounds) => set((state) => {
         state.zipCodeBounds = bounds;
       }),
+      startZipSearch: (zipCode) => {
+        let nextRequestId = 0;
+        set((state) => {
+          nextRequestId = state.zipSearchRequestId + 1;
+          state.zipSearchRequestId = nextRequestId;
+          state.zipSearchStatus = 'searching';
+          state.currentZipCode = zipCode;
+          state.zipCodeBoundary = null;
+          state.zipCodeBounds = null;
+        });
+        return nextRequestId;
+      },
+      setZipBoundary: ({ zipCode, requestId, boundary }) => set((state) => {
+        // Only apply if this update matches the active request.
+        // This prevents stale async results from overwriting current ZIP state.
+        if (requestId !== state.zipSearchRequestId) return;
+        if (state.currentZipCode !== zipCode) return;
+
+        state.zipCodeBoundary = boundary;
+        state.zipSearchStatus = boundary && boundary.length >= 3 ? 'ready' : 'error';
+      }),
+      clearZipSearch: () => set((state) => {
+        state.currentZipCode = null;
+        state.zipCodeBoundary = null;
+        state.zipCodeBounds = null;
+        state.zipSearchStatus = 'idle';
+      }),
       setPendingBirthCoords: (coords) => set((state) => {
         state.pendingBirthCoords = coords;
       }),
@@ -306,6 +350,9 @@ export const useGlobeInteractionStore = create<GlobeInteractionState>()(
         state.selectedCityForInfo = null;
         state.cityLocation = null;
         state.zipCodeBounds = null;
+        state.currentZipCode = null;
+        state.zipCodeBoundary = null;
+        state.zipSearchStatus = 'idle';
       }),
 
       // === Zone Drawing Actions ===
@@ -603,6 +650,14 @@ export const useCityLocation = () =>
   useGlobeInteractionStore((state) => state.cityLocation);
 export const useZipCodeBounds = () =>
   useGlobeInteractionStore((state) => state.zipCodeBounds);
+export const useCurrentZipCode = () =>
+  useGlobeInteractionStore((state) => state.currentZipCode);
+export const useZipCodeBoundary = () =>
+  useGlobeInteractionStore((state) => state.zipCodeBoundary);
+export const useZipSearchRequestId = () =>
+  useGlobeInteractionStore((state) => state.zipSearchRequestId);
+export const useZipSearchStatus = () =>
+  useGlobeInteractionStore((state) => state.zipSearchStatus);
 export const usePendingBirthCoords = () =>
   useGlobeInteractionStore((state) => state.pendingBirthCoords);
 

@@ -83,6 +83,15 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
     place: string;
   } | null>(null);
 
+  // Landing page unified search prefill - passed to GlobePage to trigger the same unified search flow
+  const [landingSearchPrefill, setLandingSearchPrefill] = useState<{
+    lat: number;
+    lng: number;
+    place: string;
+    kind: 'zip' | 'property' | 'area';
+    bounds?: { north: number; south: number; east: number; west: number };
+  } | null>(null);
+
   // Birth charts management
   const birthCharts = useBirthCharts();
   const [showChartPicker, setShowChartPicker] = useState(false);
@@ -153,6 +162,43 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
         place,
         lat: parseFloat(lat),
         lng: parseFloat(lng),
+      });
+    }
+
+    if (lat && lng && place && action === 'search' && isDataLoaded) {
+      const kindParam = searchParams.get('kind');
+      const kind =
+        kindParam === 'zip' || kindParam === 'property' || kindParam === 'area'
+          ? kindParam
+          : 'area';
+
+      const north = searchParams.get('north');
+      const south = searchParams.get('south');
+      const east = searchParams.get('east');
+      const west = searchParams.get('west');
+      const bounds =
+        north && south && east && west
+          ? {
+              north: parseFloat(north),
+              south: parseFloat(south),
+              east: parseFloat(east),
+              west: parseFloat(west),
+            }
+          : undefined;
+
+      // Clear params to avoid re-triggering
+      const newParams = new URLSearchParams(searchParams);
+      ['lat', 'lng', 'place', 'action', 'kind', 'north', 'south', 'east', 'west'].forEach((k) =>
+        newParams.delete(k)
+      );
+      setSearchParams(newParams, { replace: true });
+
+      setLandingSearchPrefill({
+        place,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        kind,
+        bounds,
       });
     }
   }, [searchParams, isDataLoaded, setSearchParams]);
@@ -536,6 +582,11 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
     setLandingPagePrefill(null);
   }, []);
 
+  // Clear landing search prefill after GlobePage consumes it
+  const clearLandingSearchPrefill = useCallback(() => {
+    setLandingSearchPrefill(null);
+  }, []);
+
   const handleDeletePersonRequest = useCallback((personId: string) => {
     setPersonToDelete(personId);
   }, []);
@@ -778,6 +829,8 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
             // === Landing Page Flow ===
             landingPagePrefill={landingPagePrefill}
             onLandingPagePrefillConsumed={clearLandingPagePrefill}
+            landingSearchPrefill={landingSearchPrefill}
+            onLandingSearchPrefillConsumed={clearLandingSearchPrefill}
             // === Action Callbacks (modify parent data) ===
             onFilterChange={handleFilterChange}
             onViewModeChange={handleViewModeChange}

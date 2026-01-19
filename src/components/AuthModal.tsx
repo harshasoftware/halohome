@@ -84,10 +84,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ open, onOpenChange, initia
   };
 
   const getSubtitle = () => {
-    if (view === 'sign_up') return 'Start exploring your cosmic map';
+    if (view === 'sign_up') return 'Start scouting properties with Vastu insights';
     if (view === 'forgot_password') return "We'll send you a reset link";
     if (view === 'update_password') return 'Choose a new password';
-    return 'Sign in to continue your journey';
+    return 'Sign in to save your Vastu analyses';
   };
 
   const getButtonText = () => {
@@ -109,7 +109,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ open, onOpenChange, initia
           <div className="flex items-center justify-center mb-4">
             <img
               src="/logo.png"
-              alt="Astrocarto"
+              alt="Halo Home"
               className="w-12 h-12 object-contain"
             />
           </div>

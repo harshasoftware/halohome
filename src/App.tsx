@@ -12,6 +12,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import LazyErrorBoundary from "./components/LazyErrorBoundary";
 import { DatabaseProvider } from "./providers/DatabaseProvider";
 import { usePreventBrowserZoom } from "./hooks/usePreventBrowserZoom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ============================================================================
 // Dynamic Imports - Route-level Code Splitting
@@ -55,7 +56,7 @@ const RouteLoader = () => (
     <div className="text-center">
       <div
         className="uppercase text-slate-900 dark:text-white text-2xl font-semibold tracking-widest mb-4"
-        style={{ fontFamily: "Cinzel, serif" }}
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}
       >
         Halo Home
       </div>
@@ -97,6 +98,27 @@ const CopilotKitWithAuth = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Block mobile access to the responsive web app; redirect to Scan waitlist on landing.
+const DesktopOnlyAppGate = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isMobile = useIsMobile(768);
+
+  const blocked =
+    location.pathname === "/app" ||
+    location.pathname === "/guest" ||
+    location.pathname.startsWith("/project/") ||
+    location.pathname === "/ai-subscription";
+
+  useEffect(() => {
+    if (!isMobile || !blocked) return;
+    // Always send mobile users to the Scan waitlist section on landing.
+    window.location.replace("/#waitlist");
+  }, [isMobile, blocked]);
+
+  if (isMobile && blocked) return null;
+  return <>{children}</>;
+};
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" storageKey="themodernfamily-ui-theme">
     <ZoomPrevention>
@@ -107,9 +129,10 @@ const App = () => (
               <CopilotKitWithAuth>
                 <Toaster />
                 <GuestThemeEnforcer>
-                <ErrorBoundary componentName="Routes">
-                  <Suspense fallback={<RouteLoader />}>
-                    <Routes>
+                <DesktopOnlyAppGate>
+                  <ErrorBoundary componentName="Routes">
+                    <Suspense fallback={<RouteLoader />}>
+                      <Routes>
                     {/* Landing page - eagerly loaded for fast initial paint */}
                     <Route path="/" element={<Landing />} />
 
@@ -209,9 +232,10 @@ const App = () => (
                     {/* Error routes - eagerly loaded */}
                     <Route path="/project/:projectId/settings" element={<NotFound />} />
                     <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  </Suspense>
-                </ErrorBoundary>
+                      </Routes>
+                    </Suspense>
+                  </ErrorBoundary>
+                </DesktopOnlyAppGate>
                 </GuestThemeEnforcer>
               </CopilotKitWithAuth>
             </AuthProvider>
