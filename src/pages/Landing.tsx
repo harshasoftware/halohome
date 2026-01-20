@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import {
     Download, Globe, Sparkles, MapPin, MessageCircle, ScrollText,
-    Navigation, Repeat, Star, Hexagon, Building2, Crown, Loader2,
+    Navigation, Repeat, Star, Hexagon, Building2, Crown, Loader2, Compass, Briefcase,
     ArrowRight, Check, Menu, X, Heart, Smartphone, Mail, Quote,
     Share, Plus, Search
 } from 'lucide-react';
@@ -191,7 +191,15 @@ const ScrollReveal = memo(({ children, className = "", delay = 0 }: { children: 
     );
 });
 
-const SpotlightCard = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
+const SpotlightCard = ({
+    children,
+    className = "",
+    badge,
+}: {
+    children: React.ReactNode;
+    className?: string;
+    badge?: React.ReactNode;
+}) => {
     const divRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [opacity, setOpacity] = useState(0);
@@ -221,6 +229,11 @@ const SpotlightCard = ({ children, className = "" }: { children: React.ReactNode
                     background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.1), transparent 40%)`
                 }}
             />
+            {badge && (
+                <div className="absolute top-4 right-4 z-20">
+                    {badge}
+                </div>
+            )}
             <div className="relative z-10 h-full flex flex-col">
                 {children}
             </div>
@@ -829,52 +842,44 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                 </div>
             </ScrollReveal>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Free Tier */}
+            {/* Paid plans (show these by default) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Explorer Tier */}
                 <ScrollReveal delay={0} className="h-full">
                     <div className="pricing-card glass-card h-full">
-                        <h3 className="text-xl font-medium text-zinc-300">Free</h3>
-                        <div className="price-amount">$0</div>
+                        <h3 className="text-xl font-medium text-white flex items-center gap-2"><Compass size={18} className="text-[#F0A6B3]" /> Explorer</h3>
+                        <div className="price-amount">$49<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> 1 property only</li>
-                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
-                            <li className="feature-item"><Check className="check-icon" /> Basic insights</li>
-                        </ul>
-                        <a href="/guest" className="plan-btn text-center block mt-auto" style={{ textDecoration: 'none' }}>Get Started</a>
-                    </div>
-                </ScrollReveal>
-
-                {/* Seeker Tier */}
-                <ScrollReveal delay={150} className="h-full">
-                    <SpotlightCard className="pricing-card border-[#F0A6B3]/30 bg-white/5 h-full">
-                        {/* Position relative to the card edge (not the padded content area) */}
-                        <div className="absolute top-[-24px] right-[-24px] z-20">
-                            <span className="bg-[#F0A6B3] text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Popular</span>
-                        </div>
-                        <h3 className="text-xl font-medium text-white flex items-center gap-2"><Search size={18} className="text-[#F0A6B3]" /> Seeker</h3>
-                        <div className="price-amount">$19<span className="price-period">/mo</span></div>
-                        <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> 3 locations</li>
+                            <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
+                            <li className="feature-item"><Check className="check-icon" /> 10 ZIP scouts / month</li>
                             <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
                             <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                         </ul>
                         <button
                             onClick={() => handleBuy('seeker', 'subscription')}
                             disabled={!!loading}
-                            className="plan-btn primary flex items-center justify-center gap-2 mt-auto !bg-zinc-900 hover:!bg-zinc-800 !border-zinc-900"
+                            className="plan-btn flex items-center justify-center gap-2 mt-auto"
                         >
                             {loading === 'seeker' ? <Loader2 className="animate-spin" /> : 'Get Started'}
                         </button>
-                    </SpotlightCard>
+                    </div>
                 </ScrollReveal>
 
                 {/* Pioneer Tier */}
-                <ScrollReveal delay={300} className="h-full">
-                    <div className="pricing-card glass-card h-full">
+                <ScrollReveal delay={150} className="h-full">
+                    <SpotlightCard
+                        className="pricing-card border-[#F0A6B3]/30 bg-white/5 h-full"
+                        badge={
+                            <span className="bg-[#F0A6B3] text-white px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm border border-white/10">
+                                Popular
+                            </span>
+                        }
+                    >
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><MapPin size={18} className="text-[#F0A6B3]" /> Pioneer</h3>
-                        <div className="price-amount">$49<span className="price-period">/mo</span></div>
+                        <div className="price-amount">$99<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> 10 locations</li>
+                            <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
+                            <li className="feature-item"><Check className="check-icon" /> 25 ZIP scouts / month</li>
                             <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
                             <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                             <li className="feature-item"><Check className="check-icon" /> Compare properties</li>
@@ -882,20 +887,27 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                         <button
                             onClick={() => handleBuy('pioneer', 'subscription')}
                             disabled={!!loading}
-                            className="plan-btn flex items-center justify-center gap-2 mt-auto"
+                            className="plan-btn primary flex items-center justify-center gap-2 mt-auto !bg-zinc-900 hover:!bg-zinc-800 !border-zinc-900"
                         >
                             {loading === 'pioneer' ? <Loader2 className="animate-spin" /> : 'Get Started'}
                         </button>
-                    </div>
+                    </SpotlightCard>
                 </ScrollReveal>
 
-                {/* Sage Tier */}
-                <ScrollReveal delay={450} className="h-full">
+                {/* Agent Tier */}
+                <ScrollReveal delay={300} className="h-full">
                     <div className="pricing-card glass-card h-full">
-                        <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><Crown size={18} className="text-[#F0A6B3]" /> Sage</h3>
-                        <div className="price-amount">$99<span className="price-period">/mo</span></div>
+                        {/* Best value badge */}
+                        <div className="absolute top-4 right-4 z-20">
+                            <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm border border-white/10">
+                                Best Value
+                            </span>
+                        </div>
+                        <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><Briefcase size={18} className="text-[#F0A6B3]" /> Broker</h3>
+                        <div className="price-amount">$200<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> Unlimited properties</li>
+                            <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
+                            <li className="feature-item"><Check className="check-icon" /> 60 ZIP scouts / month</li>
                             <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
                             <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                             <li className="feature-item"><Check className="check-icon" /> Priority processing</li>
@@ -910,6 +922,31 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                     </div>
                 </ScrollReveal>
             </div>
+
+            {/* Free plan (compact horizontal card below paid plans) */}
+            <ScrollReveal delay={450}>
+                <div className="glass-card mt-6 px-6 py-4 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                        <Star className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" />
+                        <div>
+                            <div className="flex items-baseline gap-3">
+                                <h3 className="text-lg font-semibold text-slate-900">Free</h3>
+                                <span className="text-slate-600 font-medium">$0</span>
+                            </div>
+                            <p className="text-sm text-slate-600 mt-1">
+                                Single home searches (no ZIP scouting). Harmony Score + basic insights.
+                            </p>
+                        </div>
+                    </div>
+                    <a
+                        href="/guest"
+                        className="plan-btn text-center md:mt-0"
+                        style={{ textDecoration: 'none' }}
+                    >
+                        Try Free
+                    </a>
+                </div>
+            </ScrollReveal>
 
             {/* Add-on pricing */}
             <div className="mt-8 text-center">
