@@ -9,6 +9,42 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import type { AuthError } from '@supabase/supabase-js';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+
+async function reconcilePaymentsIfAvailable(user: { is_anonymous?: boolean } | null) {
+  // Only reconcile for real accounts (not anonymous sessions)
+  if (!user || user.is_anonymous) return;
+
+  // Avoid repeated retries within a single tab session if the function isn't deployed yet.
+  const disabledUntil = sessionStorage.getItem('reconcilePaymentsDisabledUntil');
+  if (disabledUntil && Number(disabledUntil) > Date.now()) return;
+
+  const hasReconciled = sessionStorage.getItem('reconciledPayments');
+  if (hasReconciled) return;
+
+  const { data, error } = await supabase.functions.invoke('reconcile-payments');
+
+  if (error) {
+    // If the function is not deployed, Supabase returns 404 which the browser reports like a CORS failure.
+    // Throttle further attempts for ~15 minutes to avoid noisy logs, but keep the ability to reconcile later.
+    if (error instanceof FunctionsHttpError && error.context?.status === 404) {
+      sessionStorage.setItem('reconcilePaymentsDisabledUntil', String(Date.now() + 15 * 60 * 1000));
+      return;
+    }
+
+    // For transient errors, don't mark as reconciled (so a later sign-in/session can retry).
+    console.error('[Auth] Failed to reconcile payments:', error.message);
+    return;
+  }
+
+  // Mark completed (even if reconciled=0) so we don't re-run every page load.
+  sessionStorage.setItem('reconciledPayments', 'true');
+
+  if (data?.reconciled > 0) {
+    // Optional: allow other pages to decide whether to show a toast / reload.
+    sessionStorage.setItem('reconciledPaymentsCount', String(data.reconciled));
+  }
+}
 
 /**
  * Syncs Supabase auth state with Zustand store.
@@ -55,10 +91,8 @@ export function useAuthSync() {
             localStorage.removeItem('anonymous_user_id_for_merge');
           }
 
-          // Fire and forget reconcile
-          supabase.functions.invoke('reconcile-payments').catch(err => {
-            console.error("Failed to reconcile payments on sign-in:", err.message);
-          });
+          // Reconcile purchases on sign-in (if function exists).
+          reconcilePaymentsIfAvailable(session.user).catch(() => {});
         }
       }
     );
@@ -69,6 +103,8 @@ export function useAuthSync() {
         setSession(session);
         setUser(session.user);
         setLoading(false);
+        // User may already be signed in (INITIAL_SESSION). Reconcile once per tab if available.
+        reconcilePaymentsIfAvailable(session.user).catch(() => {});
       } else {
         // No session - sign in anonymously to get a JWT for edge function calls
         // Retry up to 3 times with exponential backoff

@@ -15,7 +15,9 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.ai-subscription]
-verify_jwt = true
+# IMPORTANT: This project uses JWT Signing Keys (e.g. ES256). The Edge gateway's `verify_jwt`
+# check can reject valid tokens. We validate JWTs inside the function instead.
+verify_jwt = false
 
 [functions.astro-ai-chat]
 verify_jwt = true
@@ -35,7 +37,8 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.reconcile-payments]
-verify_jwt = true
+# Validate JWTs inside the function (JWT Signing Keys compatible).
+verify_jwt = false
 
 [functions.create-share-link]
 verify_jwt = true

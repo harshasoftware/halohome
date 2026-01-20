@@ -334,24 +334,8 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
     }
   }, [isPasswordRecovery, setIsAuthModalOpen]);
 
-  useEffect(() => {
-    const hasReconciled = sessionStorage.getItem('reconciledPayments');
-    if (user && !hasReconciled) {
-      const reconcile = async () => {
-        const { data, error } = await supabase.functions.invoke('reconcile-payments');
-
-        sessionStorage.setItem('reconciledPayments', 'true');
-
-        if (error) {
-          toast.error(`Failed to check for previous payments: ${error.message}`);
-        } else if (data?.reconciled > 0) {
-          toast.success(`${data.reconciled} previously purchased project(s) have been linked to your account! The page will now reload.`);
-          setTimeout(() => window.location.reload(), 2000);
-        }
-      };
-      reconcile();
-    }
-  }, [user]);
+  // Reconcile payments now runs centrally in `useAuthSync` (and is 404-safe when the function
+  // isn't deployed), so we avoid duplicating the call here.
 
   // Listen for edge edit events
   useEffect(() => {
@@ -722,36 +706,29 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
     });
   }, []);
 
-  // Welcome toast for new users without birth data (desktop only - mobile uses persistent banner)
+  // Welcome toast (Halo Home branding; show once per tab session, desktop only).
   useEffect(() => {
     if (!isDataLoaded) return;
 
-    // Check if we've already shown the welcome message this session
-    const hasShownWelcome = sessionStorage.getItem('astro-welcome-shown');
+    const hasShownWelcome = sessionStorage.getItem('halo-home-welcome-shown');
     if (hasShownWelcome) return;
 
-    // Show welcome message after a short delay for better UX (desktop only)
     const timer = setTimeout(() => {
       if (!isMobile) {
         if (!hasBirthData) {
           toast.info(
-            '👋 Welcome to Astrocartography! Double-click anywhere on the globe to set your birth location and enter your birth details.',
-            {
-              duration: 6000,
-              id: 'welcome-toast'
-            }
+            'Welcome to Halo Home! Double-click anywhere on the globe to set your birth location and enter your birth details.',
+            { duration: 6000, id: 'welcome-toast' }
           );
         } else {
           toast.success(
-            '🌟 Welcome back! Your astrocartography map is ready.',
-            {
-              duration: 3000,
-              id: 'welcome-toast'
-            }
+            'Welcome back to Halo Home! Your map is ready.',
+            { duration: 3000, id: 'welcome-toast' }
           );
         }
       }
-      sessionStorage.setItem('astro-welcome-shown', 'true');
+
+      sessionStorage.setItem('halo-home-welcome-shown', 'true');
     }, 1000);
 
     return () => clearTimeout(timer);

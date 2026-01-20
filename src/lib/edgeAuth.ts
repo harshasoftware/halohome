@@ -8,10 +8,27 @@ import { supabase } from '@/integrations/supabase/client';
  */
 let anonSignInPromise: Promise<string | null> | null = null;
 
-export async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
+function setFunctionsAuth(token: string) {
+  // Ensure the Functions client also carries the JWT by default.
+  // This reduces the chance that an invoke() happens before per-call headers are attached.
+  try {
+    supabase.functions.setAuth(token);
+  } catch {
+    // ignore (older clients / unexpected runtime)
+  }
+}
+
+async function getCurrentAccessToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
-  const accessToken = data.session?.access_token;
-  if (accessToken) return { Authorization: `Bearer ${accessToken}` };
+  return data.session?.access_token ?? null;
+}
+
+export async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
+  const existingToken = await getCurrentAccessToken();
+  if (existingToken) {
+    setFunctionsAuth(existingToken);
+    return { Authorization: `Bearer ${existingToken}` };
+  }
 
   // No session yet: ensure an anonymous session exists (gives us a real JWT).
   // This avoids turning off verify_jwt on public endpoints like pricing checkout.
@@ -29,6 +46,18 @@ export async function getEdgeAuthHeaders(): Promise<Record<string, string>> {
   }
 
   const anonToken = await anonSignInPromise;
-  return anonToken ? { Authorization: `Bearer ${anonToken}` } : {};
+  if (anonToken) {
+    setFunctionsAuth(anonToken);
+    return { Authorization: `Bearer ${anonToken}` };
+  }
+
+  // If sign-in failed, fall back to whatever we may have now.
+  const fallback = await getCurrentAccessToken();
+  if (fallback) {
+    setFunctionsAuth(fallback);
+    return { Authorization: `Bearer ${fallback}` };
+  }
+
+  return {};
 }
 

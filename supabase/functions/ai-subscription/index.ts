@@ -20,6 +20,7 @@ import {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SB_PUBLISHABLE_KEY');
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
@@ -40,9 +41,42 @@ if (!STRIPE_SECRET_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+// Auth verification client (per Supabase docs): validate access tokens via getClaims().
+// Prefer anon/publishable key for verification; fall back to service role if needed.
+const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY ?? SUPABASE_SERVICE_ROLE_KEY);
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
   : null;
+
+function getBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('authorization') ?? req.headers.get('Authorization');
+  if (!authHeader) return null;
+  const [bearer, token] = authHeader.split(' ');
+  if (bearer !== 'Bearer' || !token) return null;
+  return token;
+}
+
+async function requireSupabaseUser(req: Request) {
+  const token = getBearerToken(req);
+  if (!token) {
+    return { user: null as const, error: 'Missing authorization header' as const };
+  }
+
+  // NOTE (Supabase docs):
+  // `verify_jwt=true` at the Edge gateway can be incompatible with JWT Signing Keys (e.g. ES256).
+  // Instead, disable gateway verification and validate here using Supabase Auth.
+  const { data, error } = await supabaseAuth.auth.getClaims(token);
+  const claims = data?.claims as Record<string, unknown> | undefined;
+  const userId = (claims?.sub as string | undefined) ?? null;
+  const isAnonymous = (claims?.is_anonymous as boolean | undefined) ?? false;
+  const email = (claims?.email as string | undefined) ?? null;
+
+  if (error || !userId) {
+    return { user: null as const, error: 'Invalid JWT' as const };
+  }
+
+  return { user: { id: userId, email, isAnonymous }, error: null as const };
+}
 
 // Plan configurations (Halo Home scouting tiers)
 const PLANS = {
@@ -728,16 +762,27 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Require a valid Supabase JWT for all non-webhook requests.
+    // Anonymous sessions are allowed (landing page), as long as the JWT is valid.
+    const { user, error: authError } = await requireSupabaseUser(req);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: authError }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body: RequestBody = await req.json();
-    const { action, userId, anonymousId, plan, creditPackage, successUrl, cancelUrl } = body;
+    const { action, anonymousId, plan, creditPackage, successUrl, cancelUrl } = body;
+    const userId = user.id; // Never trust client-provided userId
 
     // ==========================================================================
     // RATE LIMITING CHECK - Must happen BEFORE any Stripe API calls
     // Uses different limits for checkout actions vs status checks
     // ==========================================================================
     const clientIp = getClientIp(req);
-    const rateLimitIdentifier = buildIdentifier(userId, clientIp);
-    const userTier = getUserTier(userId);
+    const rateLimitIdentifier = buildIdentifier(user.isAnonymous ? null : userId, clientIp);
+    const userTier = user.isAnonymous ? 'anonymous' : 'authenticated';
 
     // Determine which rate limit to use based on action type
     const isCheckoutAction = CHECKOUT_ACTIONS.includes(action);
