@@ -15,7 +15,7 @@ import { useAstroLines, personDataToBirthData } from '@/hooks/useAstroLines';
 import { useAstroModeState, useAstroVisibility, useAstroStore } from '@/stores/astroStore';
 import { useLocalSpaceLines } from '@/hooks/useLocalSpaceLines';
 import { useFavoriteCities } from '@/hooks/useFavoriteCities';
-import { AstroLegend } from './components/AstroLegend';
+import { VastuPreferencesPane } from './components/VastuPreferencesPane';
 import { LineInfoCard } from './components/LineInfoCard';
 import { LocationAnalysisCard } from './components/LocationAnalysisCard';
 import { CitySearchBar } from './components/CitySearchBar';
@@ -50,7 +50,7 @@ import {
 } from '@/stores/compatibilityStore';
 
 // Lazy load heavy components to improve initial load performance
-const AstroChat = lazy(() => import('./ai/AstroChat').then(m => ({ default: m.AstroChat })));
+const VastuChat = lazy(() => import('./ai/AstroChat').then(m => ({ default: m.VastuChat })));
 const NatalChartWidget = lazy(() => import('./components/NatalChartWidget').then(m => ({ default: m.NatalChartWidget })));
 const CompatibilityPanel = lazy(() => import('./components/CompatibilityPanel').then(m => ({ default: m.CompatibilityPanel })));
 const LineReportPanel = lazy(() => import('./components/LineReportPanel').then(m => ({ default: m.LineReportPanel })));
@@ -2114,63 +2114,13 @@ const GlobePage: React.FC<GlobePageProps> = ({
       style={isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : undefined}
       data-tour="welcome"
     >
-      {/* Astro Legend - Desktop: top-left overlay, Mobile: bottom sheet */}
-      {showAstroLines && birthData && (
-        isMobile ? (
-          /* Mobile legend positioned to sit above bottom nav */
-          <AstroLegend
-            visibility={visibility}
-            onTogglePlanet={handleTogglePlanet}
-            onToggleLineType={toggleLineType}
-            onToggleAspects={toggleAspects}
-            onToggleHarmoniousAspects={toggleHarmoniousAspects}
-            onToggleDisharmoniousAspects={toggleDisharmoniousAspects}
-            onToggleParans={toggleParans}
-            onToggleZenithPoints={toggleZenithPoints}
-            onToggleLocalSpace={toggleLocalSpace}
-            onToggleLineLabels={toggleLineLabels}
-            onShowAll={showAllPlanets}
-            onHideAll={hideAllPlanets}
-            isMinimized={legendMinimized}
-            onToggleMinimized={handleToggleLegend}
-            loading={astroLoading || localSpaceLoading}
-            onClearBirthData={handleClearBirthDataWithPanes}
-            mode={astroMode}
-            isRelocated={isRelocated}
-            relocationName={relocationTarget?.name}
-            localSpaceOriginName={localSpaceOrigin?.name}
-            onEnableLocalSpace={handleEnableLocalSpace}
-            onReturnToStandard={handleReturnToStandard}
-          />
-        ) : (
-          /* Desktop: Position below search bar (which is at top-4 with h-10 height) */
-          <div className="absolute top-[68px] left-4 z-10 pointer-events-auto">
-            <AstroLegend
-              visibility={visibility}
-              onTogglePlanet={handleTogglePlanet}
-              onToggleLineType={toggleLineType}
-              onToggleAspects={toggleAspects}
-              onToggleHarmoniousAspects={toggleHarmoniousAspects}
-              onToggleDisharmoniousAspects={toggleDisharmoniousAspects}
-              onToggleParans={toggleParans}
-              onToggleZenithPoints={toggleZenithPoints}
-              onToggleLocalSpace={toggleLocalSpace}
-              onToggleLineLabels={toggleLineLabels}
-              onShowAll={showAllPlanets}
-              onHideAll={hideAllPlanets}
-              isMinimized={legendMinimized}
-              onToggleMinimized={handleToggleLegend}
-              loading={astroLoading || localSpaceLoading}
-              onClearBirthData={handleClearBirthDataWithPanes}
-              mode={astroMode}
-              isRelocated={isRelocated}
-              relocationName={relocationTarget?.name}
-              localSpaceOriginName={localSpaceOrigin?.name}
-              onEnableLocalSpace={handleEnableLocalSpace}
-              onReturnToStandard={handleReturnToStandard}
-            />
-          </div>
-        )
+      {/* Preferences pane (Vastu-only) */}
+      {isMobile ? (
+        <VastuPreferencesPane />
+      ) : (
+        <div className="absolute top-[68px] left-4 z-50 pointer-events-auto">
+          <VastuPreferencesPane />
+        </div>
       )}
 
       {/* Export Report Modal (centered) - shows when export button is clicked on desktop/tablet */}
@@ -2275,85 +2225,18 @@ const GlobePage: React.FC<GlobePageProps> = ({
         </Suspense>
       )}
 
-      {/* AI Chat Panel - lazy loaded with Suspense to prevent CopilotKit initialization issues */}
-      {birthData && (
-        <Suspense fallback={null}>
-          <AstroChat
-            birthData={{
-              date: firstPersonData?.birthDate || '',
-              time: firstPersonData?.birthTime || '',
-              location: firstPersonData?.locations?.find(l => l.type === 'birth')?.place || '',
-              latitude: birthData.latitude,
-              longitude: birthData.longitude,
-            }}
-            planetaryPositions={natalChartData.planetaryPositions}
-            visibleLines={visiblePlanetaryLines}
-            aspectLines={visibleAspectLines}
-            paranLines={visibleParanLines}
-            selectedLine={selectedLine ? {
-              planet: selectedLine.planet! as import('@/lib/astro-types').Planet,
-              lineType: selectedLine.lineType! as import('@/lib/astro-types').LineType,
-              points: selectedLine.coords, // GlobePath uses coords, not points
-              color: selectedLine.color,
-            } : null}
-            locationAnalysis={locationAnalysis}
-            zoneAnalysis={zoneDrawing.zoneAnalysis}
-            mode={astroMode}
-            relocationTarget={relocationTarget ? {
-              latitude: relocationTarget.lat,
-              longitude: relocationTarget.lng,
-              name: relocationTarget.name,
-            } : undefined}
-            natalChartResult={natalChartResult}
-            natalChartSettings={natalChartSettings}
-            // Duo mode / Partner data
-            isDuoMode={compatibility.isEnabled && !!compatibility.partnerChart}
-            personName={firstPersonData?.name || 'You'}
-            partnerName={compatibility.partnerChart?.name || 'Partner'}
-            partnerBirthData={partnerBirthData ? {
-              date: compatibility.partnerChart?.birthDate || '',
-              time: compatibility.partnerChart?.birthTime || '',
-              location: compatibility.partnerChart?.cityName || '',
-              latitude: partnerBirthData.latitude,
-              longitude: partnerBirthData.longitude,
-            } : undefined}
-            partnerPlanetaryPositions={partnerNatalChartData.planetaryPositions}
-            partnerVisibleLines={partnerPlanetaryLines}
-            partnerAspectLines={partnerAspectLines}
-            partnerParanLines={partnerParanLines}
-            partnerNatalChartResult={partnerNatalChartResult}
-            relocationChartResult={relocationResult}
-            onHighlightLine={handleAIChatHighlightLine}
-            onClearHighlight={() => setSelectedLine(null)}
-            onZoomToLocation={handleAIChatZoomToLocation}
-            onAnalyzeLocation={handleAIChatAnalyzeLocation}
-            onTogglePlanet={handleTogglePlanet}
-            onRelocateTo={relocateTo}
-            onReturnToStandard={returnToStandard}
-            // Phase 1: New Globe Control Actions
-            visibilityState={{
-              planets: visibility.planets,
-              lineTypes: visibility.lineTypes,
-              aspects: visibility.aspects,
-              parans: visibility.parans,
-              zenith: visibility.zenith,
-              labels: visibility.lineLabels,
-            }}
-            onEnableLocalSpace={enableLocalSpace}
-            onHideAllPlanets={hideAllPlanets}
-            onShowAllPlanets={showAllPlanets}
-            onToggleLineType={handleSetLineTypeVisibility}
-            onToggleAspects={handleSetAspectsVisibility}
-            onToggleParans={handleSetParansVisibility}
-            onToggleZenith={handleSetZenithVisibility}
-            onToggleLabels={handleSetLabelsVisibility}
-            isOpen={showAstroChat}
-            onToggle={handleToggleAstroChat}
-            askLocationContext={askAILocation}
-            onClearAskLocationContext={() => setAskAILocation(null)}
-          />
-        </Suspense>
-      )}
+      {/* AI Chat Panel - lazy loaded with Suspense to prevent CopilotKit initialization issues
+          IMPORTANT: Must render even without birth data so Vastu Guide can open in Vastu-first flows. */}
+      <Suspense fallback={null}>
+        <VastuChat
+          isOpen={showAstroChat}
+          onToggle={handleToggleAstroChat}
+          askLocationContext={askAILocation}
+          onClearAskLocationContext={() => setAskAILocation(null)}
+          onZoomToLocation={handleAIChatZoomToLocation}
+          onAnalyzeLocation={handleAIChatAnalyzeLocation}
+        />
+      </Suspense>
 
       {/* TimelineScrubber (desktop only) */}
       {/* Removed TimelineScrubber for all devices */}

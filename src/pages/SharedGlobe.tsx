@@ -10,7 +10,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom';
 import { GlobeMethods } from 'react-globe.gl';
 import MigrationGlobe from '@/features/globe/components/MigrationGlobe';
-import { AstroLegend } from '@/features/globe/components/AstroLegend';
 import { LineInfoCard } from '@/features/globe/components/LineInfoCard';
 import { getShareData } from '@/services/shareService';
 import { useAstroLines } from '@/hooks/useAstroLines';
@@ -159,7 +158,6 @@ export default function SharedGlobePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<GlobePath | null>(null);
-  const [isLegendMinimized, setIsLegendMinimized] = useState(isMobile);
 
   // Fetch share data
   useEffect(() => {
@@ -251,19 +249,6 @@ export default function SharedGlobePage() {
         zenithPoints={visibleZenithPoints}
         onLineClick={handleLineClick}
         onLineHover={handleLineHover}
-        isMobile={isMobile}
-      />
-
-      {/* Legend */}
-      <AstroLegend
-        visibility={visibility}
-        onTogglePlanet={togglePlanet}
-        onToggleLineType={toggleLineType}
-        onToggleAspects={toggleAspects}
-        onToggleParans={toggleParans}
-        onToggleZenithPoints={toggleZenithPoints}
-        isMinimized={isLegendMinimized}
-        onToggleMinimize={() => setIsLegendMinimized(prev => !prev)}
         isMobile={isMobile}
       />
 

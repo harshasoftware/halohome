@@ -33,6 +33,14 @@ export interface BuildingFootprint extends Polygon {
   owner?: string;
   /** Type: always 'plot' for Regrid parcels */
   type: 'plot' | 'building';
+
+  // Optional environmental signals (provided by pipeline when available)
+  nearbyCemeteryCount?: number;
+  crimeIndex?: number;
+  soilGrade?: import('@/lib/vastu-scoring-preferences').SoilGrade;
+  nearbyFactoryCount?: number;
+  noiseIndex?: number;
+  aqi?: number;
 }
 
 export interface PlotWithBuilding {

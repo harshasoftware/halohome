@@ -481,10 +481,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (!hasBirthData) {
-                      toast.info('Enter birth data first to use AI assistant');
-                      return;
-                    }
                     if (onToggleAIChat) onToggleAIChat();
                   }}
                   className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
@@ -672,7 +668,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   }
 
   // Desktop toolbar - always show left action bar
-  const showLeftActionBar = true;
+  // Hide the left toolbar while Preferences (legend) is open to reduce UI clutter.
+  const showLeftActionBar = isLegendMinimized;
 
   return (
     <>

@@ -1,6 +1,6 @@
 /**
- * AstroChat Component
- * AI-powered chat panel for astrocartography insights
+ * VastuChat Component
+ * AI-powered Vastu guide / chat panel
  * Uses Perplexity AI via Supabase Edge Functions
  */
 
@@ -8,7 +8,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useCopilotContext } from './useCopilotContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,6 +16,8 @@ import {
   MapPin,
   Navigation,
   Compass,
+  Flame,
+  Moon,
   ChevronDown,
   ChevronUp,
   X,
@@ -53,22 +54,22 @@ const ZODIAC_SIGNS = [
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
 ];
 
-interface AstroChatProps {
+interface VastuChatProps {
   // Map state
-  birthData: {
+  birthData?: {
     date: string;
     time: string;
     location: string;
     latitude: number;
     longitude: number;
   } | null;
-  planetaryPositions: PlanetaryPosition[];
-  visibleLines: PlanetaryLine[];
+  planetaryPositions?: PlanetaryPosition[];
+  visibleLines?: PlanetaryLine[];
   aspectLines?: AspectLine[];
   paranLines?: ParanLine[];
-  selectedLine: PlanetaryLine | null;
-  locationAnalysis: LocationAnalysis | null;
-  mode: 'standard' | 'relocated' | 'localSpace';
+  selectedLine?: PlanetaryLine | null;
+  locationAnalysis?: LocationAnalysis | null;
+  mode?: 'standard' | 'relocated' | 'localSpace';
   relocationTarget?: { latitude: number; longitude: number; name?: string };
 
   // Zone analysis
@@ -526,15 +527,15 @@ const MarkdownMessage: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
-export const AstroChat: React.FC<AstroChatProps> = ({
-  birthData,
-  planetaryPositions,
-  visibleLines,
+export const VastuChat: React.FC<VastuChatProps> = ({
+  birthData = null,
+  planetaryPositions = [],
+  visibleLines = [],
   aspectLines = [],
   paranLines = [],
-  selectedLine,
-  locationAnalysis,
-  mode,
+  selectedLine = null,
+  locationAnalysis = null,
+  mode = 'standard',
   relocationTarget,
   // Zone analysis
   zoneAnalysis,
@@ -679,65 +680,15 @@ export const AstroChat: React.FC<AstroChatProps> = ({
     ? () => {} // Messages are managed by useChatHistory
     : setLocalMessages;
 
-  // === CopilotKit Context (Singleton pattern with deferred initialization) ===
-  // Consolidates all readable contexts and actions into a single hook to prevent initialization errors
-  useCopilotContext(
-    {
-      birthData,
-      planetaryPositions,
-      visibleLines,
-      aspectLines,
-      paranLines,
-      selectedLine,
-      locationAnalysis,
-      zoneAnalysis: zoneAnalysis || null,
-      mode,
-      relocationTarget,
-      natalChartResult: natalChartResult || null,
-      natalChartSettings,
-      isDuoMode,
-      personName,
-      partnerName,
-      partnerBirthData: partnerBirthData || null,
-      partnerPlanetaryPositions,
-      partnerVisibleLines,
-      partnerAspectLines,
-      partnerParanLines,
-      partnerNatalChartResult: partnerNatalChartResult || null,
-      visibilityState,
-    },
-    {
-      onHighlightLine,
-      onClearHighlight,
-      onZoomToLocation,
-      onAnalyzeLocation,
-      onTogglePlanet,
-      onRelocateTo,
-      // Phase 1: New Globe Control Actions
-      onReturnToStandard,
-      onEnableLocalSpace,
-      onHideAllPlanets,
-      onShowAllPlanets,
-      onToggleLineType,
-      onToggleAspects,
-      onToggleParans,
-      onToggleZenith,
-      onToggleLabels,
-    }
-  );
+  // Note: We intentionally do NOT register CopilotKit readable context here anymore.
+  // This chat is Vastu-first and should not depend on astrocartography state.
 
-  // Create a new conversation when user logs in and has birth data
+  // Create a new conversation when user logs in and opens the panel
   useEffect(() => {
-    if (isAuthenticated && !currentConversation && birthData && isOpen) {
-      createConversation({
-        date: birthData.date,
-        time: birthData.time,
-        location: birthData.location,
-        latitude: birthData.latitude,
-        longitude: birthData.longitude,
-      });
+    if (isAuthenticated && !currentConversation && isOpen) {
+      void createConversation();
     }
-  }, [isAuthenticated, currentConversation, birthData, isOpen, createConversation]);
+  }, [isAuthenticated, currentConversation, isOpen, createConversation]);
 
   // Scroll to bottom when messages change or loading state changes
   useEffect(() => {
@@ -746,14 +697,8 @@ export const AstroChat: React.FC<AstroChatProps> = ({
 
   // Handle new conversation
   const handleNewConversation = async () => {
-    if (!isAuthenticated || !birthData) return;
-    await createConversation({
-      date: birthData.date,
-      time: birthData.time,
-      location: birthData.location,
-      latitude: birthData.latitude,
-      longitude: birthData.longitude,
-    });
+    if (!isAuthenticated) return;
+    await createConversation();
     setShowHistory(false);
   };
 
@@ -1098,7 +1043,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
             <Bot className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
-            <span>Astro Guide</span>
+            <span>Vastu Guide</span>
             <span className="text-[10px] text-slate-400 font-normal ml-1.5">AI</span>
           </div>
         </CardTitle>
@@ -1235,10 +1180,10 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                   <Bot className="w-7 h-7 text-amber-500" />
                 </div>
                 <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-1">
-                  Your Personal Astro Guide
+                  Your Personal Vastu Guide
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isAuthenticated ? 'Discover the best places on Earth for you' : 'Sign in to ask questions about your chart'}
+                  {isAuthenticated ? 'Get calm, practical Vastu guidance for any home' : 'Sign in to ask questions about your home'}
                 </p>
               </div>
 
@@ -1249,10 +1194,10 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { icon: Briefcase, label: 'Career hotspots', query: 'What are the best cities for my career success?', color: 'text-blue-500' },
-                    { icon: Heart, label: 'Love & romance', query: 'Where are my most romantic locations for relationships?', color: 'text-rose-500' },
-                    { icon: Plane, label: 'Travel destinations', query: 'What are the best travel destinations for me based on my chart?', color: 'text-emerald-500' },
-                    { icon: Home, label: 'Best place to live', query: 'Where should I relocate for overall happiness and success?', color: 'text-purple-500' },
+                    { icon: Compass, label: 'Entrance direction', query: 'Is my entrance direction supportive? What should I adjust?', color: 'text-sky-500' },
+                    { icon: Flame, label: 'Kitchen placement', query: 'Where should the kitchen be for best energy flow?', color: 'text-orange-500' },
+                    { icon: Moon, label: 'Bedroom harmony', query: 'What is the best bedroom placement and bed direction?', color: 'text-indigo-500' },
+                    { icon: Home, label: 'Quick remedies', query: 'Give me 3 quick Vastu remedies I can do today with no renovation.', color: 'text-emerald-500' },
                   ].map((item) => (
                     <button
                       key={item.label}
@@ -1278,28 +1223,28 @@ export const AstroChat: React.FC<AstroChatProps> = ({
               {/* Line Explanations */}
               <div className="space-y-2 mb-4">
                 <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
-                  Understand Your Lines
+                  Common Topics
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    { line: 'Sun MC', color: '#FFD700' },
-                    { line: 'Venus DSC', color: '#FF69B4' },
-                    { line: 'Jupiter ASC', color: '#9400D3' },
-                    { line: 'Moon IC', color: '#C0C0C0' },
-                    { line: 'Mars MC', color: '#DC143C' },
-                    { line: 'Saturn DSC', color: '#8B4513' },
+                    { line: 'Entrance', color: '#38BDF8' },
+                    { line: 'Kitchen', color: '#FB923C' },
+                    { line: 'Bedrooms', color: '#818CF8' },
+                    { line: 'Pooja', color: '#34D399' },
+                    { line: 'Brahmasthan', color: '#FBBF24' },
+                    { line: 'Remedies', color: '#60A5FA' },
                   ].map((item) => (
                     <button
                       key={item.line}
                       onClick={() => {
                         if (!isAuthenticated) {
                           toast.error('Sign in required', {
-                            description: 'Please sign in to explore line meanings.',
+                            description: 'Please sign in to ask Vastu questions.',
                             action: { label: 'Sign In', onClick: handleGoogleSignIn },
                           });
                           return;
                         }
-                        setInputValue(`What does my ${item.line} line mean?`);
+                        setInputValue(`What should I know about ${item.line} in Vastu?`);
                       }}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-colors group"
                     >
@@ -1324,7 +1269,7 @@ export const AstroChat: React.FC<AstroChatProps> = ({
                       Ask me anything
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      "Which cities have the strongest Jupiter influence for me?" or "Compare Paris vs Tokyo for my chart"
+                      "Is my entrance facing the right way?" or "Give me remedies for a kitchen in the wrong zone"
                     </p>
                   </div>
                 </div>
@@ -1580,4 +1525,4 @@ export const AstroChat: React.FC<AstroChatProps> = ({
   );
 };
 
-export default AstroChat;
+export default VastuChat;

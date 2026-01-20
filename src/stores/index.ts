@@ -82,7 +82,6 @@ export {
   useAstroModeState,
   useVisibilityActions,
   useCalculationActions,
-  useAstroLegendState,
 } from './astroStore';
 
 // ============================================

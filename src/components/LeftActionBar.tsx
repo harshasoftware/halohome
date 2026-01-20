@@ -134,6 +134,13 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Always show the left action bar (Vastu app doesn't require birth data)
+  const hasModeIndicators = !!onReturnToStandard && (isRelocated || isLocalSpaceMode);
+  const hasGuidanceSection = !!onToggleFilters || !!onToggleAIChat || !!onOpenScoutPanel;
+  const hasAreasSection =
+    !!onStartSearchZone ||
+    !!onStartPropertyZone ||
+    (!!onToggleZoneDrawing && !onStartSearchZone && !onStartPropertyZone);
+  const hasSavedSection = !!onOpenFavoritesPanel || !!onOpenChartPicker;
 
   // Handle search zone button click
   const handleSearchZoneClick = () => {
@@ -213,8 +220,13 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      {/* Mode Indicators */}
-      {isRelocated && onReturnToStandard && (
+      {/* Mode indicators (only show when active) */}
+      {hasModeIndicators && isExpanded && (
+        <div className="px-2.5 pt-1 pb-1 text-[10px] font-semibold tracking-wide uppercase text-slate-400 dark:text-zinc-500">
+          Mode
+        </div>
+      )}
+      {hasModeIndicators && isRelocated && (
         <ActionButton
           icon={<Navigation className="w-4 h-4" />}
           label={`Relocated${relocationName ? `: ${relocationName}` : ''}`}
@@ -225,8 +237,7 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           actionLabel="Reset"
         />
       )}
-
-      {isLocalSpaceMode && onReturnToStandard && (
+      {hasModeIndicators && isLocalSpaceMode && (
         <ActionButton
           icon={<Compass className="w-4 h-4" />}
           label={`Local Space${localSpaceOriginName ? `: ${localSpaceOriginName}` : ''}`}
@@ -237,23 +248,18 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           actionLabel="Exit"
         />
       )}
-
-      {/* History - saved locations */}
-      {onOpenChartPicker && (
-        <HistoryMenuButton
-          charts={charts}
-          currentChartId={currentChartId}
-          onSelectChart={onSelectChart}
-          onOpenChartPicker={onOpenChartPicker}
-          onAddChart={onAddChart}
-          isExpanded={isExpanded}
-        />
+      {hasModeIndicators && (hasGuidanceSection || hasAreasSection || hasSavedSection) && (
+        <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />
       )}
 
-      {/* Divider */}
-      {onOpenChartPicker && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
+      {/* Guidance & controls */}
+      {hasGuidanceSection && isExpanded && (
+        <div className="px-2.5 pt-1 pb-1 text-[10px] font-semibold tracking-wide uppercase text-slate-400 dark:text-zinc-500">
+          Guidance
+        </div>
+      )}
 
-      {/* Preferences (Legend/Filters) */}
+      {/* Preferences (Vastu) */}
       {onToggleFilters && (
         <ActionButton
           icon={<SlidersHorizontal className="w-4 h-4" />}
@@ -288,6 +294,13 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
           isExpanded={isExpanded}
           dataTour="scout-button"
         />
+      )}
+
+      {hasGuidanceSection && hasAreasSection && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
+      {hasAreasSection && isExpanded && (
+        <div className="px-2.5 pt-1 pb-1 text-[10px] font-semibold tracking-wide uppercase text-slate-400 dark:text-zinc-500">
+          Areas
+        </div>
       )}
 
       {/* Draw Search Zone */}
@@ -386,12 +399,31 @@ export const LeftActionBar: React.FC<LeftActionBarProps> = ({
         />
       )}
 
-      {/* My Favorites - saved locations */}
+      {hasAreasSection && hasSavedSection && <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />}
+      {hasSavedSection && isExpanded && (
+        <div className="px-2.5 pt-1 pb-1 text-[10px] font-semibold tracking-wide uppercase text-slate-400 dark:text-zinc-500">
+          Saved
+        </div>
+      )}
+
+      {/* My Favorites */}
       {onOpenFavoritesPanel && (
         <FavoritesMenuButton
           favorites={favorites}
           onSelectFavorite={onFavoriteSelect}
           onOpenFavoritesPanel={onOpenFavoritesPanel}
+          isExpanded={isExpanded}
+        />
+      )}
+
+      {/* History - saved locations */}
+      {onOpenChartPicker && (
+        <HistoryMenuButton
+          charts={charts}
+          currentChartId={currentChartId}
+          onSelectChart={onSelectChart}
+          onOpenChartPicker={onOpenChartPicker}
+          onAddChart={onAddChart}
           isExpanded={isExpanded}
         />
       )}

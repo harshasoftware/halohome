@@ -34,6 +34,8 @@ import {
 } from '@/components/ui/collapsible';
 import type { VastuDirection } from '@/stores/vastuStore';
 import { useBuildingFootprints, type ParcelWithVastu } from '../hooks/useBuildingFootprints';
+import { useVastuScoringPreferences } from '@/stores/vastuPreferencesStore';
+import { applyVastuScoringPreferences, type EnvironmentalSignals, type SoilGrade } from '@/lib/vastu-scoring-preferences';
 
 // Parcel data structure (now comes from real extraction)
 interface Parcel {
@@ -43,6 +45,8 @@ interface Parcel {
   /** Full parcel boundary polygon (lat/lngs) for drawing/highlighting on map */
   boundary?: Array<{ lat: number; lng: number }>;
   vastuScore: number;
+  /** Score after applying user preferences + environmental signals (when available). */
+  displayScore: number;
   orientation?: number;
   entranceDirection: VastuDirection;
   entranceBearingDegrees?: number | null;
@@ -51,6 +55,14 @@ interface Parcel {
   highlights: string[];
   issues: string[];
   confidence?: number;
+
+  // Optional environmental signals (present only if data pipeline provides them)
+  nearbyCemeteryCount?: number;
+  crimeIndex?: number;
+  soilGrade?: SoilGrade;
+  nearbyFactoryCount?: number;
+  noiseIndex?: number;
+  aqi?: number;
 }
 
 const bearingTo16Wind = (bearingDegrees: number): string => {
@@ -95,6 +107,7 @@ function convertToDisplayParcel(parcel: ParcelWithVastu): Parcel {
     coordinates: parcel.centroid, // Centroid is a single point {lat, lng}
     boundary, // Boundary is the polygon array [{lat, lng}, ...]
     vastuScore: parcel.vastuScore,
+    displayScore: parcel.vastuScore, // overwritten after preferences are applied
     orientation: undefined,
     entranceDirection: parcel.entranceDirection,
     entranceBearingDegrees: parcel.entranceBearingDegrees ?? null,
@@ -103,6 +116,12 @@ function convertToDisplayParcel(parcel: ParcelWithVastu): Parcel {
     highlights: parcel.highlights,
     issues: parcel.issues,
     confidence: parcel.confidence,
+    nearbyCemeteryCount: parcel.nearbyCemeteryCount,
+    crimeIndex: parcel.crimeIndex,
+    soilGrade: parcel.soilGrade,
+    nearbyFactoryCount: parcel.nearbyFactoryCount,
+    noiseIndex: parcel.noiseIndex,
+    aqi: parcel.aqi,
   };
 }
 
@@ -172,8 +191,8 @@ const ParcelCard = memo(({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className={cn('text-lg font-bold', getScoreColor(parcel.vastuScore))}>
-              {parcel.vastuScore}
+            <div className={cn('text-lg font-bold', getScoreColor(parcel.displayScore))}>
+              {parcel.displayScore}
             </div>
             <CollapsibleTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -262,6 +281,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   onParcelSelected,
   onZipCodeSearch,
 }) => {
+  const scoringPrefs = useVastuScoringPreferences();
   // Store callback in ref to avoid dependency issues
   useEffect(() => {
     onZipCodeSearchRef.current = onZipCodeSearch;
@@ -304,14 +324,33 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
 
   // Convert to display format
   // Show plots (parcels) in the list; buildings are still forwarded to the map overlay via onParcelsChange.
-  const parcels: Parcel[] = rawParcels.filter((p) => p.type === 'plot').map(convertToDisplayParcel);
+  const parcels: Parcel[] = useMemo(() => {
+    const base = rawParcels
+      .filter((p) => p.type === 'plot')
+      .map(convertToDisplayParcel);
+
+    return base.map((p) => {
+      const signals: EnvironmentalSignals = {
+        nearbyCemeteryCount: p.nearbyCemeteryCount,
+        crimeIndex: p.crimeIndex,
+        soilGrade: p.soilGrade,
+        nearbyFactoryCount: p.nearbyFactoryCount,
+        noiseIndex: p.noiseIndex,
+        aqi: p.aqi,
+      };
+      return {
+        ...p,
+        displayScore: applyVastuScoringPreferences(p.vastuScore, scoringPrefs, signals),
+      };
+    });
+  }, [rawParcels, scoringPrefs]);
 
   // Plot-only stats for the list UI (raw hook stats include buildings too)
   const plotStats = useMemo(() => {
     const total = parcels.length;
-    const excellent = parcels.filter((p) => p.vastuScore >= 80).length;
-    const good = parcels.filter((p) => p.vastuScore >= 60 && p.vastuScore < 80).length;
-    const sum = parcels.reduce((acc, p) => acc + p.vastuScore, 0);
+    const excellent = parcels.filter((p) => p.displayScore >= 80).length;
+    const good = parcels.filter((p) => p.displayScore >= 60 && p.displayScore < 80).length;
+    const sum = parcels.reduce((acc, p) => acc + p.displayScore, 0);
     const avgScore = total > 0 ? Math.round(sum / total) : 0;
 
     return {
@@ -614,8 +653,8 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
 
   const filteredParcels = listParcelsWithAddress.filter((parcel) => {
     if (filter === 'all') return true;
-    if (filter === 'good') return parcel.vastuScore >= 60;
-    if (filter === 'excellent') return parcel.vastuScore >= 80;
+    if (filter === 'good') return parcel.displayScore >= 60;
+    if (filter === 'excellent') return parcel.displayScore >= 80;
     return true;
   });
 
