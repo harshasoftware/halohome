@@ -45,12 +45,37 @@ interface Parcel {
   vastuScore: number;
   orientation?: number;
   entranceDirection: VastuDirection;
+  entranceBearingDegrees?: number | null;
   shape: 'square' | 'rectangle' | 'irregular' | 'L-shaped' | 'triangular';
   size: number; // sq meters (converted from area)
   highlights: string[];
   issues: string[];
   confidence?: number;
 }
+
+const bearingTo16Wind = (bearingDegrees: number): string => {
+  const normalized = ((bearingDegrees % 360) + 360) % 360;
+  const directions = [
+    'N', 'NNE', 'NE', 'ENE',
+    'E', 'ESE', 'SE', 'SSE',
+    'S', 'SSW', 'SW', 'WSW',
+    'W', 'WNW', 'NW', 'NNW',
+  ];
+  const idx = Math.round(normalized / 22.5) % 16;
+  return directions[idx];
+};
+
+const formatEntranceDirection = (parcel: Parcel): string => {
+  if (typeof parcel.entranceBearingDegrees === 'number' && Number.isFinite(parcel.entranceBearingDegrees)) {
+    return bearingTo16Wind(parcel.entranceBearingDegrees);
+  }
+  return parcel.entranceDirection;
+};
+
+const formatBearingDegrees = (bearingDegrees: number): string => {
+  const normalized = ((bearingDegrees % 360) + 360) % 360;
+  return `${Math.round(normalized)}°`;
+};
 
 // Convert ParcelWithVastu to Parcel for display
 function convertToDisplayParcel(parcel: ParcelWithVastu): Parcel {
@@ -72,6 +97,7 @@ function convertToDisplayParcel(parcel: ParcelWithVastu): Parcel {
     vastuScore: parcel.vastuScore,
     orientation: undefined,
     entranceDirection: parcel.entranceDirection,
+    entranceBearingDegrees: parcel.entranceBearingDegrees ?? null,
     shape: parcel.shape,
     size: sizeInSqFt,
     highlights: parcel.highlights,
@@ -130,7 +156,12 @@ const ParcelCard = memo(({
               </span>
               <span className="flex items-center gap-1">
                 <Compass className="h-3 w-3" />
-                {parcel.entranceDirection}
+                <span>{formatEntranceDirection(parcel)}</span>
+                {typeof parcel.entranceBearingDegrees === 'number' && Number.isFinite(parcel.entranceBearingDegrees) && (
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                    · {formatBearingDegrees(parcel.entranceBearingDegrees)}
+                  </span>
+                )}
               </span>
               <span>{parcel.size.toLocaleString()} sq ft</span>
               {parcel.confidence !== undefined && (

@@ -185,7 +185,7 @@ export const ChartPickerModal: React.FC<ChartPickerModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Star className="h-5 w-5" />
-            My Birth Charts
+            My Homes
           </DialogTitle>
           <DialogDescription>
             Select a saved chart or create a new one

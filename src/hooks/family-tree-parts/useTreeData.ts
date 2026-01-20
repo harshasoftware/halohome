@@ -132,7 +132,7 @@ async function loadFromLocalStorage(params: UseTreeDataParams) {
     const newProjectId = uuidv4();
     const newProject = {
       id: newProjectId,
-      name: 'My Birth Chart',
+      name: 'My Home',
       nodes: [],
       edges: [],
       is_permanent: false,

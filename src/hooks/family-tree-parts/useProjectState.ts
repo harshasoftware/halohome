@@ -9,7 +9,7 @@ type ProjectInfo = Pick<FamilyTree, 'id' | 'name' | 'is_encrypted' | 'is_permane
 
 export function useProjectState(projectIdFromUrl?: string | null) {
   const [projectId, setProjectId] = useState<string | null>(projectIdFromUrl || null);
-  const [projectName, setProjectName] = useState('My Birth Chart');
+  const [projectName, setProjectName] = useState('My Home');
   const [existingProjects, setExistingProjects] = useState<ProjectInfo[]>([]);
 
   // Keep projectId in sync with URL

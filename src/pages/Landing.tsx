@@ -449,6 +449,51 @@ const Hero = memo(() => {
                                 className="hero-houses-image"
                             />
                         </picture>
+
+                        {/* Desktop micro-interactions: hover hotspots for left/right houses */}
+                        <div className="hero-house-hotspots" aria-hidden="true">
+                            {/* Left house hotspot */}
+                            <div className="hero-house-hotspot hero-house-hotspot--left">
+                                <button
+                                    type="button"
+                                    className="hero-house-hit"
+                                    aria-label="Left home Vastu score"
+                                    tabIndex={-1}
+                                />
+                                <div className="hero-house-tooltip">
+                                    <div className="hero-house-tooltip-card hero-house-tooltip-card--tall">
+                                        <div className="hero-house-tooltip-header">
+                                            <span className="hero-house-tooltip-title">Vastu Analysis</span>
+                                            <span className="hero-house-tooltip-score-pill hero-house-tooltip-score-pill--good">87</span>
+                                        </div>
+                                        <div className="hero-house-tooltip-sub">
+                                            Strong entrance alignment • Great flow
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right house hotspot */}
+                            <div className="hero-house-hotspot hero-house-hotspot--right">
+                                <button
+                                    type="button"
+                                    className="hero-house-hit"
+                                    aria-label="Right home Vastu score"
+                                    tabIndex={-1}
+                                />
+                                <div className="hero-house-tooltip">
+                                    <div className="hero-house-tooltip-card">
+                                        <div className="hero-house-tooltip-header">
+                                            <span className="hero-house-tooltip-title">Vastu Analysis</span>
+                                            <span className="hero-house-tooltip-score-pill hero-house-tooltip-score-pill--mid">72</span>
+                                        </div>
+                                        <div className="hero-house-tooltip-sub">
+                                            Good balance • Minor fixes recommended
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -505,6 +550,25 @@ const DemoCity = memo(() => (
                 <div className="city-icon" />
                 <div className="city-icon" />
             </div>
+        </div>
+    </div>
+));
+
+const DemoRoomPlacement = memo(() => (
+    <div className="bento-demo">
+        <div className="demo-room-placement">
+            <div className="room-grid">
+                {Array.from({ length: 9 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className={`room-cell room-cell-${i}`}
+                        aria-hidden="true"
+                    />
+                ))}
+                <div className="room-highlight room-highlight-a" />
+                <div className="room-highlight room-highlight-b" />
+            </div>
+            <div className="room-label">Ideal</div>
         </div>
     </div>
 ));
@@ -566,6 +630,29 @@ const DemoRelocation = memo(() => (
     </div>
 ));
 
+const DemoRemedies = memo(() => (
+    <div className="bento-demo">
+        <div className="demo-remedies">
+            <div className="remedy-card">
+                <div className="remedy-title">Remedies</div>
+                <div className="remedy-row">
+                    <span className="remedy-dot" />
+                    <span className="remedy-line" style={{ '--w': '72%' } as React.CSSProperties} />
+                </div>
+                <div className="remedy-row">
+                    <span className="remedy-dot" />
+                    <span className="remedy-line" style={{ '--w': '58%' } as React.CSSProperties} />
+                </div>
+                <div className="remedy-row">
+                    <span className="remedy-dot" />
+                    <span className="remedy-line" style={{ '--w': '66%' } as React.CSSProperties} />
+                </div>
+            </div>
+            <div className="remedy-badge">✓</div>
+        </div>
+    </div>
+));
+
 const DemoFindPlaces = memo(() => (
     <div className="bento-demo">
         <div className="demo-find-places">
@@ -589,6 +676,37 @@ const DemoDuo = memo(() => (
             </div>
             {/* Animated connection line */}
             <div className="duo-line" />
+        </div>
+    </div>
+));
+
+const DemoCompare = memo(() => (
+    <div className="bento-demo">
+        <div className="demo-compare">
+            <div className="compare-card compare-card-a">
+                <div className="compare-score compare-score-good">87</div>
+                <div className="compare-bar"><div className="compare-bar-fill" style={{ '--fill': '80%' } as React.CSSProperties} /></div>
+                <div className="compare-bar"><div className="compare-bar-fill" style={{ '--fill': '62%' } as React.CSSProperties} /></div>
+            </div>
+            <div className="compare-card compare-card-b">
+                <div className="compare-score compare-score-mid">72</div>
+                <div className="compare-bar"><div className="compare-bar-fill" style={{ '--fill': '66%' } as React.CSSProperties} /></div>
+                <div className="compare-bar"><div className="compare-bar-fill" style={{ '--fill': '54%' } as React.CSSProperties} /></div>
+            </div>
+            <div className="compare-sheen" />
+        </div>
+    </div>
+));
+
+const DemoEntrance = memo(() => (
+    <div className="bento-demo">
+        <div className="demo-entrance">
+            <div className="entrance-card">
+                <div className="entrance-door" />
+                <div className="entrance-path" />
+                <div className="entrance-pin" />
+            </div>
+            <div className="entrance-flow" />
         </div>
     </div>
 ));
@@ -635,28 +753,28 @@ const FEATURES = [
             desc: "AI suggestions for optimal room placement based on ancient Vastu principles.",
             icon: <Building2 />,
             col: "bento-col-6",
-            demo: <DemoCity />
+            demo: <DemoRoomPlacement />
         },
         {
             title: "Actionable Remedies",
             desc: "Get practical remedies and corrections according to the ancient science of interior harmony.",
             icon: <Repeat />,
             col: "bento-col-6",
-            demo: <DemoRelocation />
+            demo: <DemoRemedies />
         },
         {
             title: "Compare Properties",
             desc: "Side-by-side comparison of multiple homes to find the one with the best harmony score.",
             icon: <Heart />,
             col: "bento-col-4",
-            demo: <DemoDuo />
+            demo: <DemoCompare />
         },
         {
             title: "Entrance Analysis",
             desc: "Determine the best entry points for positive energy flow into your home.",
             icon: <ScrollText />,
             col: "bento-col-4",
-            demo: <DemoNatal />
+            demo: <DemoEntrance />
         },
         {
             title: "ZIP Code Scout",
@@ -729,7 +847,8 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                 {/* Seeker Tier */}
                 <ScrollReveal delay={150} className="h-full">
                     <SpotlightCard className="pricing-card border-[#F0A6B3]/30 bg-white/5 h-full">
-                        <div className="absolute top-0 right-0 p-4">
+                        {/* Position relative to the card edge (not the padded content area) */}
+                        <div className="absolute top-[-24px] right-[-24px] z-20">
                             <span className="bg-[#F0A6B3] text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Popular</span>
                         </div>
                         <h3 className="text-xl font-medium text-white flex items-center gap-2"><Search size={18} className="text-[#F0A6B3]" /> Seeker</h3>
@@ -878,7 +997,7 @@ const TESTIMONIALS = [
     },
     {
         id: 63,
-        name: 'Sarah L.',
+        name: 'Richard H.',
         role: 'Home Buyer',
         location: 'Seattle',
         quote: "I've always been curious about home harmony but found it complicated. Halo Home App made it simple and accessible. The insights were invaluable for my search."

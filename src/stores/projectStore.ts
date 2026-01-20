@@ -77,7 +77,7 @@ interface ProjectState {
 
 const initialState = {
   projectId: null,
-  projectName: 'My Birth Chart',
+  projectName: 'My Home',
   existingProjects: [] as ProjectInfo[],
   nodes: [] as Node[],
   edges: [] as Edge[],

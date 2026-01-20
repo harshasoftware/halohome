@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS public.birth_charts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  name TEXT NOT NULL DEFAULT 'My Birth Chart',
+  name TEXT NOT NULL DEFAULT 'My Home',
 
   -- Birth data
   birth_date DATE NOT NULL,

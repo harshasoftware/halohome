@@ -128,7 +128,7 @@ export const BirthDataDialog: React.FC<BirthDataDialogProps> = ({
 
     const dataToSave: Partial<PersonData> = {
       ...formData,
-      name: formData.name || 'My Birth Chart',
+      name: formData.name || 'My Home',
       locations,
     };
 

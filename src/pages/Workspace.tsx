@@ -36,7 +36,7 @@ function getOrCreateGuestProjectId() {
       // Create a blank project for the guest
       const newProject = {
         id: projectId,
-        name: 'My Birth Chart',
+        name: 'My Home',
         nodes: [],
         edges: [],
         is_permanent: false,
@@ -453,7 +453,7 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
   const handleBirthDataCreate = useCallback(async (data: { lat: number; lng: number; date: string; time: string; cityName?: string }) => {
     const personNodes = nodes.filter(n => n.type === 'person');
     const placeName = data.cityName || `${data.lat.toFixed(4)}, ${data.lng.toFixed(4)}`;
-    const chartName = data.cityName ? `${data.cityName} Chart` : 'My Birth Chart';
+    const chartName = data.cityName ? `${data.cityName} Home` : 'My Home';
 
     // Prepare chart data
     const chartData = {

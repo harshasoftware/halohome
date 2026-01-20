@@ -285,7 +285,9 @@ export function useBuildingFootprints(
             entranceDirection,
             // do NOT attach entrancePoint to plot (we want dots/line on building footprint)
             entrancePoint: null,
-            entranceBearingDegrees: null,
+            // Still include the bearing so UIs can show 16-wind directions for plots.
+            // When a building is available, this bearing is derived from the building perimeter.
+            entranceBearingDegrees,
             highlights,
             issues,
           });
