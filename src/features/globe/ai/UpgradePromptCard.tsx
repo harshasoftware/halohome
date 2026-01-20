@@ -11,6 +11,7 @@ import { Search, MapPin, Check, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth-context';
 import { toast } from 'sonner';
+import { getEdgeAuthHeaders } from '@/lib/edgeAuth';
 
 interface UpgradePromptCardProps {
   scansUsed?: number;
@@ -24,7 +25,7 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
   const { user } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSubscribe = async (planId: 'seeker' | 'pioneer') => {
+  const handleSubscribe = async (planId: 'explorer' | 'pioneer') => {
     setLoadingPlan(planId);
 
     try {
@@ -40,6 +41,7 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           successUrl: `${window.location.origin}/ai-subscription?subscription=success`,
           cancelUrl: `${window.location.origin}/guest`,
         },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (error) throw error;
@@ -94,18 +96,18 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
                 <Search className="w-3.5 h-3.5 text-amber-500" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Seeker</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">3 ZIP scans/mo</p>
+                <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Explorer</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">10 ZIP scouts/mo</p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-800 dark:text-white">$19</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white">$49</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">/mo</span>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2.5">
-            {['3 locations', 'Harmony Score', 'Insights & Remedies'].map((feature) => (
+            {['Unlimited single-home searches', '10 ZIP scouts/mo', 'Insights & Remedies'].map((feature) => (
               <span key={feature} className="inline-flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300">
                 <Check className="w-2.5 h-2.5 text-green-500" />
                 {feature}
@@ -114,11 +116,11 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
           </div>
 
           <Button
-            onClick={() => handleSubscribe('seeker')}
+            onClick={() => handleSubscribe('explorer')}
             disabled={loadingPlan !== null}
             className="w-full h-8 text-xs bg-amber-500 hover:bg-amber-600 text-black"
           >
-            {loadingPlan === 'seeker' ? (
+            {loadingPlan === 'explorer' ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               'Get Started'
@@ -137,17 +139,17 @@ export const UpgradePromptCard: React.FC<UpgradePromptCardProps> = ({
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Pioneer</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">10 ZIP scans/mo</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">25 ZIP scouts/mo</p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-800 dark:text-white">$49</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-white">$89</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">/mo</span>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-1 mb-2.5">
-            {['10 locations', 'Harmony Score', 'Compare properties'].map((feature) => (
+            {['Unlimited single-home searches', '25 ZIP scouts/mo', 'Compare properties'].map((feature) => (
               <span key={feature} className="inline-flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300">
                 <Check className="w-2.5 h-2.5 text-green-500" />
                 {feature}

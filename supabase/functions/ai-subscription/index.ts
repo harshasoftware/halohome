@@ -30,8 +30,9 @@ console.log('[ai-subscription] Config status:', {
   SUPABASE_SERVICE_ROLE_KEY: !!SUPABASE_SERVICE_ROLE_KEY,
   STRIPE_SECRET_KEY: !!STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: !!STRIPE_WEBHOOK_SECRET,
-  STRIPE_STARTER_PRICE_ID: !!Deno.env.get('STRIPE_STARTER_PRICE_ID'),
-  STRIPE_PRO_PRICE_ID: !!Deno.env.get('STRIPE_PRO_PRICE_ID'),
+  STRIPE_EXPLORER_PRICE_ID: !!Deno.env.get('STRIPE_EXPLORER_PRICE_ID'),
+  STRIPE_PIONEER_PRICE_ID: !!Deno.env.get('STRIPE_PIONEER_PRICE_ID'),
+  STRIPE_BROKER_PRICE_ID: !!Deno.env.get('STRIPE_BROKER_PRICE_ID'),
 });
 
 if (!STRIPE_SECRET_KEY) {
@@ -43,21 +44,28 @@ const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
   : null;
 
-// Plan configurations
+// Plan configurations (Halo Home scouting tiers)
 const PLANS = {
-  starter: {
-    name: 'AI Starter',
-    questions: 50,
-    price: 1000, // $10/month
+  explorer: {
+    name: 'Explorer',
+    questions: 10, // ZIP scouts / month
+    price: 4900, // $49/month
     hasSonarPro: false,
-    priceId: Deno.env.get('STRIPE_STARTER_PRICE_ID'),
+    priceId: Deno.env.get('STRIPE_EXPLORER_PRICE_ID'),
   },
-  pro: {
-    name: 'AI Pro',
-    questions: 200,
-    price: 2000, // $20/month
+  pioneer: {
+    name: 'Pioneer',
+    questions: 25, // ZIP scouts / month
+    price: 8900, // $89/month
+    hasSonarPro: false,
+    priceId: Deno.env.get('STRIPE_PIONEER_PRICE_ID'),
+  },
+  broker: {
+    name: 'Broker',
+    questions: 60, // ZIP scouts / month
+    price: 17900, // $179/month
     hasSonarPro: true,
-    priceId: Deno.env.get('STRIPE_PRO_PRICE_ID'),
+    priceId: Deno.env.get('STRIPE_BROKER_PRICE_ID'),
   },
 };
 
@@ -114,10 +122,6 @@ async function createSubscriptionCheckout(
     customerId = sub.stripe_customer_id;
   }
 
-  // Check if NEWYEARPLAN promo is still valid (expires Jan 15, 2026)
-  const promoExpiry = new Date('2026-01-15T23:59:59Z');
-  const isPromoValid = plan === 'starter' && new Date() < promoExpiry;
-
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
@@ -128,9 +132,7 @@ async function createSubscriptionCheckout(
     success_url: successUrl,
     cancel_url: cancelUrl,
     // Stripe only allows one: discounts (auto-apply) OR allow_promotion_codes (manual entry)
-    ...(isPromoValid
-      ? { discounts: [{ promotion_code: 'promo_1SkMYfCZ5pZyvwXInTYSmEOl' }] }
-      : { allow_promotion_codes: true }),
+    allow_promotion_codes: true,
     metadata: {
       userId,
       plan,
@@ -251,19 +253,13 @@ async function createAnonymousSubscriptionCheckout(
     throw new Error(`Invalid plan: ${plan}. Price ID not configured. Set STRIPE_${plan.toUpperCase()}_PRICE_ID env var.`);
   }
 
-  // Check if NEWYEARPLAN promo is still valid (expires Jan 15, 2026)
-  const promoExpiry = new Date('2026-01-15T23:59:59Z');
-  const isPromoValid = plan === 'starter' && new Date() < promoExpiry;
-
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: planConfig.priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
     // Stripe only allows one: discounts (auto-apply) OR allow_promotion_codes (manual entry)
-    ...(isPromoValid
-      ? { discounts: [{ promotion_code: 'promo_1SkMYfCZ5pZyvwXInTYSmEOl' }] }
-      : { allow_promotion_codes: true }),
+    allow_promotion_codes: true,
     metadata: {
       plan,
       type: 'anonymous_subscription',
@@ -925,8 +921,9 @@ Deno.serve(async (req) => {
           supabase: !!SUPABASE_URL && !!SUPABASE_SERVICE_ROLE_KEY,
           stripe: !!stripe,
           stripeWebhook: !!STRIPE_WEBHOOK_SECRET,
-          starterPriceId: !!PLANS.starter.priceId,
-          proPriceId: !!PLANS.pro.priceId,
+          explorerPriceId: !!PLANS.explorer.priceId,
+          pioneerPriceId: !!PLANS.pioneer.priceId,
+          brokerPriceId: !!PLANS.broker.priceId,
         };
 
         // Test database connection

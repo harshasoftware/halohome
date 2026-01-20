@@ -9,7 +9,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MapPin,
   Zap,
-  Crown,
+  Briefcase,
+  Compass,
   Check,
   ArrowLeft,
   History,
@@ -18,7 +19,6 @@ import {
   CheckCircle2,
   X,
   Home,
-  Search,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth-context';
 import { useAISubscription } from '@/features/globe/ai/useAISubscription';
@@ -153,27 +153,27 @@ export default function AISubscription() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                      status.planType === 'sage' ? 'bg-amber-500/20 border border-amber-500/30' :
+                      status.planType === 'broker' ? 'bg-amber-500/20 border border-amber-500/30' :
                       status.planType === 'pioneer' ? 'bg-amber-500/15 border border-amber-500/25' :
-                      status.planType === 'seeker' ? 'bg-amber-500/10 border border-amber-500/20' :
+                      status.planType === 'explorer' ? 'bg-amber-500/10 border border-amber-500/20' :
                       'bg-white/5 border border-white/10'
                     }`}>
-                      {status.planType === 'sage' ? (
-                        <Crown className="w-7 h-7 text-amber-500" />
+                      {status.planType === 'broker' ? (
+                        <Briefcase className="w-7 h-7 text-amber-500" />
                       ) : status.planType === 'pioneer' ? (
                         <MapPin className="w-7 h-7 text-amber-400" />
                       ) : (
-                        <Search className="w-7 h-7 text-amber-400" />
+                        <Compass className="w-7 h-7 text-amber-400" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-3">
                         <span className="text-xl text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
                           {status.planType === 'free' ? 'Free' :
-                           status.planType === 'seeker' ? 'Seeker' :
-                           status.planType === 'pioneer' ? 'Pioneer' : 'Sage'}
+                           status.planType === 'explorer' ? 'Explorer' :
+                           status.planType === 'pioneer' ? 'Pioneer' : 'Broker'}
                         </span>
-                        {status.planType === 'sage' && (
+                        {status.planType === 'broker' && (
                           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500 text-black">
                             Pro
                           </span>
@@ -249,33 +249,34 @@ export default function AISubscription() {
               </button>
             </div>
 
-            {/* Seeker */}
+            {/* Explorer */}
             <div className="pricing-card glass-card relative border-amber-500/30" style={{ background: 'rgba(245, 158, 11, 0.05)' }}>
               <div className="absolute top-0 right-0 p-4">
                 <span className="bg-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                  {status?.planType === 'seeker' ? 'Current' : 'Popular'}
+                  {status?.planType === 'explorer' ? 'Current' : 'Popular'}
                 </span>
               </div>
               <h3 className="text-xl font-medium text-white flex items-center gap-2">
-                <Search className="w-5 h-5 text-amber-400" />
-                Seeker
+                <Compass className="w-5 h-5 text-amber-400" />
+                Explorer
               </h3>
-              <div className="price-amount">$19<span className="price-period">/mo</span></div>
+              <div className="price-amount">$49<span className="price-period">/mo</span></div>
               <ul className="feature-list">
-                <li className="feature-item"><Check className="check-icon" /> 3 locations</li>
+                <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
+                <li className="feature-item"><Check className="check-icon" /> 10 ZIP scouts / month</li>
                 <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
                 <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
               </ul>
               <button
-                onClick={() => handleSubscribe('seeker')}
-                disabled={loadingPlan !== null || status?.planType === 'seeker' || ['pioneer', 'sage'].includes(status?.planType || '')}
+                onClick={() => handleSubscribe('explorer')}
+                disabled={loadingPlan !== null || status?.planType === 'explorer' || ['pioneer', 'broker'].includes(status?.planType || '')}
                 className="plan-btn primary !bg-amber-500 hover:!bg-amber-600 !border-amber-500 flex items-center justify-center gap-2"
               >
-                {loadingPlan === 'seeker' ? (
+                {loadingPlan === 'explorer' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
-                ) : status?.planType === 'seeker' ? (
+                ) : status?.planType === 'explorer' ? (
                   'Current Plan'
-                ) : ['pioneer', 'sage'].includes(status?.planType || '') ? (
+                ) : ['pioneer', 'broker'].includes(status?.planType || '') ? (
                   'Downgrade N/A'
                 ) : (
                   'Get Started'
@@ -296,23 +297,24 @@ export default function AISubscription() {
                 <MapPin className="w-5 h-5 text-amber-400" />
                 Pioneer
               </h3>
-              <div className="price-amount">$49<span className="price-period">/mo</span></div>
+              <div className="price-amount">$89<span className="price-period">/mo</span></div>
               <ul className="feature-list">
-                <li className="feature-item"><Check className="check-icon" /> 10 locations</li>
+                <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
+                <li className="feature-item"><Check className="check-icon" /> 25 ZIP scouts / month</li>
                 <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
                 <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                 <li className="feature-item"><Check className="check-icon" /> Compare properties</li>
               </ul>
               <button
                 onClick={() => handleSubscribe('pioneer')}
-                disabled={loadingPlan !== null || status?.planType === 'pioneer' || status?.planType === 'sage'}
+                disabled={loadingPlan !== null || status?.planType === 'pioneer' || status?.planType === 'broker'}
                 className="plan-btn flex items-center justify-center gap-2"
               >
                 {loadingPlan === 'pioneer' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : status?.planType === 'pioneer' ? (
                   'Current Plan'
-                ) : status?.planType === 'sage' ? (
+                ) : status?.planType === 'broker' ? (
                   'Downgrade N/A'
                 ) : (
                   'Get Started'
@@ -320,9 +322,9 @@ export default function AISubscription() {
               </button>
             </div>
 
-            {/* Sage */}
+            {/* Broker */}
             <div className="pricing-card glass-card relative">
-              {status?.planType === 'sage' && (
+              {status?.planType === 'broker' && (
                 <div className="absolute top-0 right-0 p-4">
                   <span className="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                     Current
@@ -330,24 +332,25 @@ export default function AISubscription() {
                 </div>
               )}
               <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2">
-                <Crown className="w-5 h-5 text-amber-400" />
-                Sage
+                <Briefcase className="w-5 h-5 text-amber-400" />
+                Broker
               </h3>
-              <div className="price-amount">$99<span className="price-period">/mo</span></div>
+              <div className="price-amount">$179<span className="price-period">/mo</span></div>
               <ul className="feature-list">
-                <li className="feature-item"><Check className="check-icon" /> Unlimited properties</li>
+                <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
+                <li className="feature-item"><Check className="check-icon" /> 60 ZIP scouts / month</li>
                 <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
                 <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                 <li className="feature-item"><Check className="check-icon" /> Priority processing</li>
               </ul>
               <button
-                onClick={() => handleSubscribe('sage')}
-                disabled={loadingPlan !== null || status?.planType === 'sage'}
+                onClick={() => handleSubscribe('broker')}
+                disabled={loadingPlan !== null || status?.planType === 'broker'}
                 className="plan-btn flex items-center justify-center gap-2"
               >
-                {loadingPlan === 'sage' ? (
+                {loadingPlan === 'broker' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
-                ) : status?.planType === 'sage' ? (
+                ) : status?.planType === 'broker' ? (
                   'Current Plan'
                 ) : (
                   'Get Started'

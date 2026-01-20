@@ -716,26 +716,6 @@ body {
     color: #52525B;
 }
 
-/* Dark mode compatibility (if enabled on landing) */
-.dark .hero-house-tooltip-card {
-    background: rgba(10, 10, 10, 0.88);
-    border-color: rgba(255, 255, 255, 0.14);
-}
-
-.dark .hero-house-tooltip-card::after {
-    background: rgba(10, 10, 10, 0.88);
-    border-right-color: rgba(255, 255, 255, 0.14);
-    border-bottom-color: rgba(255, 255, 255, 0.14);
-}
-
-.dark .hero-house-tooltip-title {
-    color: rgba(255, 255, 255, 0.92);
-}
-
-.dark .hero-house-tooltip-sub {
-    color: rgba(255, 255, 255, 0.70);
-}
-
 @media (prefers-reduced-motion: reduce) {
     .hero-house-tooltip,
     .hero-house-hit::before {

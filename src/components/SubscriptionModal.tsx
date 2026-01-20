@@ -9,12 +9,13 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import { Search, MapPin, Crown, Check, Loader2, X } from 'lucide-react';
+import { Compass, MapPin, Briefcase, Check, Loader2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth-context';
 import { toast } from 'sonner';
 import { useSubscriptionModal } from '@/stores/uiStore';
 import { useAISubscription } from '@/features/globe/ai/useAISubscription';
+import { getEdgeAuthHeaders } from '@/lib/edgeAuth';
 
 export const SubscriptionModal: React.FC = () => {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export const SubscriptionModal: React.FC = () => {
   const { status } = useAISubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSubscribe = async (planId: 'seeker' | 'pioneer' | 'sage') => {
+  const handleSubscribe = async (planId: 'explorer' | 'pioneer' | 'broker') => {
     setLoadingPlan(planId);
 
     try {
@@ -37,6 +38,7 @@ export const SubscriptionModal: React.FC = () => {
           successUrl: `${window.location.origin}/ai-subscription?subscription=success`,
           cancelUrl: window.location.href,
         },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (error) throw error;
@@ -82,31 +84,35 @@ export const SubscriptionModal: React.FC = () => {
 
         {/* Plans Grid */}
         <div className="grid md:grid-cols-3 gap-4 p-6 pt-2">
-          {/* Seeker Plan - Featured */}
+          {/* Explorer Plan */}
           <div className="relative rounded-3xl p-6 flex flex-col bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/30 hover:border-amber-500/50 transition-all hover:-translate-y-1">
             {/* Badge */}
             <div className="absolute top-0 right-0 p-4">
               <span className="bg-amber-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                {currentPlan === 'seeker' ? 'Current' : 'Popular'}
+                {currentPlan === 'explorer' ? 'Current' : 'Popular'}
               </span>
             </div>
 
             {/* Plan Name */}
             <h3 className="text-xl font-medium text-white flex items-center gap-2">
-              <Search size={18} className="text-amber-400" />
-              Seeker
+              <Compass size={18} className="text-amber-400" />
+              Explorer
             </h3>
 
             {/* Price */}
             <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
-              $19<span className="text-lg text-zinc-500">/mo</span>
+              $49<span className="text-lg text-zinc-500">/mo</span>
             </div>
 
             {/* Features */}
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>3 locations</span>
+                <span>Unlimited single-home searches</span>
+              </li>
+              <li className="flex items-center gap-3 text-zinc-300">
+                <Check className="w-4 h-4 text-white flex-shrink-0" />
+                <span>10 ZIP scouts / month</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
@@ -120,15 +126,15 @@ export const SubscriptionModal: React.FC = () => {
 
             {/* Button */}
             <button
-              onClick={() => handleSubscribe('seeker')}
-              disabled={loadingPlan !== null || currentPlan === 'seeker' || ['pioneer', 'sage'].includes(currentPlan)}
+              onClick={() => handleSubscribe('explorer')}
+              disabled={loadingPlan !== null || currentPlan === 'explorer' || ['pioneer', 'broker'].includes(currentPlan)}
               className="w-full py-4 rounded-xl font-medium transition-all bg-amber-500 hover:bg-amber-600 text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loadingPlan === 'seeker' ? (
+              {loadingPlan === 'explorer' ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
-              ) : currentPlan === 'seeker' ? (
+              ) : currentPlan === 'explorer' ? (
                 'Current Plan'
-              ) : ['pioneer', 'sage'].includes(currentPlan) ? (
+              ) : ['pioneer', 'broker'].includes(currentPlan) ? (
                 'Downgrade N/A'
               ) : (
                 'Get Started'
@@ -155,18 +161,18 @@ export const SubscriptionModal: React.FC = () => {
 
             {/* Price */}
             <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
-              $49<span className="text-lg text-zinc-500">/mo</span>
+              $89<span className="text-lg text-zinc-500">/mo</span>
             </div>
 
             {/* Features */}
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>10 locations</span>
+                <span>Unlimited single-home searches</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Harmony Score</span>
+                <span>25 ZIP scouts / month</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
@@ -181,14 +187,14 @@ export const SubscriptionModal: React.FC = () => {
             {/* Button */}
             <button
               onClick={() => handleSubscribe('pioneer')}
-              disabled={loadingPlan !== null || currentPlan === 'pioneer' || currentPlan === 'sage'}
+              disabled={loadingPlan !== null || currentPlan === 'pioneer' || currentPlan === 'broker'}
               className="w-full py-4 rounded-xl font-medium transition-all bg-transparent border border-zinc-700 hover:bg-white hover:text-[#0a0a0f] text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loadingPlan === 'pioneer' ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : currentPlan === 'pioneer' ? (
                 'Current Plan'
-              ) : currentPlan === 'sage' ? (
+              ) : currentPlan === 'broker' ? (
                 'Downgrade N/A'
               ) : (
                 'Get Started'
@@ -196,10 +202,10 @@ export const SubscriptionModal: React.FC = () => {
             </button>
           </div>
 
-          {/* Sage Plan */}
+          {/* Broker Plan */}
           <div className="relative rounded-3xl p-6 flex flex-col bg-white/[0.02] border border-zinc-800 hover:border-zinc-700 transition-all hover:-translate-y-1 backdrop-blur-xl">
             {/* Badge */}
-            {currentPlan === 'sage' && (
+            {currentPlan === 'broker' && (
               <div className="absolute top-0 right-0 p-4">
                 <span className="bg-green-500 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                   Current
@@ -209,20 +215,20 @@ export const SubscriptionModal: React.FC = () => {
 
             {/* Plan Name */}
             <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2">
-              <Crown size={18} className="text-amber-400" />
-              Sage
+              <Briefcase size={18} className="text-amber-400" />
+              Broker
             </h3>
 
             {/* Price */}
             <div className="text-4xl font-medium text-white my-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
-              $99<span className="text-lg text-zinc-500">/mo</span>
+              $179<span className="text-lg text-zinc-500">/mo</span>
             </div>
 
             {/* Features */}
             <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
-                <span>Unlimited properties</span>
+                <span>Unlimited single-home searches</span>
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
@@ -234,19 +240,23 @@ export const SubscriptionModal: React.FC = () => {
               </li>
               <li className="flex items-center gap-3 text-zinc-300">
                 <Check className="w-4 h-4 text-white flex-shrink-0" />
+                <span>60 ZIP scouts / month</span>
+              </li>
+              <li className="flex items-center gap-3 text-zinc-300">
+                <Check className="w-4 h-4 text-white flex-shrink-0" />
                 <span>Priority processing</span>
               </li>
             </ul>
 
             {/* Button */}
             <button
-              onClick={() => handleSubscribe('sage')}
-              disabled={loadingPlan !== null || currentPlan === 'sage'}
+              onClick={() => handleSubscribe('broker')}
+              disabled={loadingPlan !== null || currentPlan === 'broker'}
               className="w-full py-4 rounded-xl font-medium transition-all bg-transparent border border-zinc-700 hover:bg-white hover:text-[#0a0a0f] text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loadingPlan === 'sage' ? (
+              {loadingPlan === 'broker' ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
-              ) : currentPlan === 'sage' ? (
+              ) : currentPlan === 'broker' ? (
                 'Current Plan'
               ) : (
                 'Get Started'

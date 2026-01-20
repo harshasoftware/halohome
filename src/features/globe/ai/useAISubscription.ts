@@ -6,10 +6,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth-context';
+import { getEdgeAuthHeaders } from '@/lib/edgeAuth';
 
 export interface SubscriptionStatus {
   id: string;
-  planType: 'free' | 'starter' | 'pro' | 'credits';
+  // Backward-compatible: older deployments used starter/pro or seeker/sage.
+  planType: 'free' | 'explorer' | 'pioneer' | 'broker' | 'credits' | 'starter' | 'pro' | 'seeker' | 'sage';
   questionsLimit: number;
   questionsUsed: number;
   questionsRemaining: number;
@@ -74,6 +76,7 @@ export function useAISubscription() {
           userId: user?.id,
           anonymousId,
         },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (fnError) throw fnError;
@@ -89,6 +92,7 @@ export function useAISubscription() {
     try {
       const { data, error: fnError } = await supabase.functions.invoke('ai-subscription', {
         body: { action: 'getPlans' },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (fnError) throw fnError;
@@ -109,6 +113,7 @@ export function useAISubscription() {
           action: 'getUsage',
           userId: user.id,
         },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (fnError) throw fnError;
@@ -134,6 +139,7 @@ export function useAISubscription() {
           successUrl: `${window.location.origin}/ai-subscription?subscription=success`,
           cancelUrl: `${window.location.origin}/ai-subscription?subscription=canceled`,
         },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (fnError) throw fnError;
@@ -161,6 +167,7 @@ export function useAISubscription() {
           successUrl: `${window.location.origin}/ai-subscription?credits=success`,
           cancelUrl: `${window.location.origin}/ai-subscription?credits=canceled`,
         },
+        headers: await getEdgeAuthHeaders(),
       });
 
       if (fnError) throw fnError;

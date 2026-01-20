@@ -60,6 +60,7 @@ const LandingScanDemo = lazy(() =>
 );
 import { supabase } from '@/integrations/supabase/client';
 import { monitoredEdgeFunction } from '@/lib/monitoring';
+import { getEdgeAuthHeaders } from '@/lib/edgeAuth';
 import Footer from '@/components/Footer';
 import './Landing.css';
 
@@ -856,11 +857,11 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                             <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('seeker', 'subscription')}
+                            onClick={() => handleBuy('explorer', 'subscription')}
                             disabled={!!loading}
                             className="plan-btn flex items-center justify-center gap-2 mt-auto"
                         >
-                            {loading === 'seeker' ? <Loader2 className="animate-spin" /> : 'Get Started'}
+                            {loading === 'explorer' ? <Loader2 className="animate-spin" /> : 'Get Started'}
                         </button>
                     </div>
                 </ScrollReveal>
@@ -913,11 +914,11 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                             <li className="feature-item"><Check className="check-icon" /> Priority processing</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('sage', 'subscription')}
+                            onClick={() => handleBuy('broker', 'subscription')}
                             disabled={!!loading}
                             className="plan-btn flex items-center justify-center gap-2 mt-auto"
                         >
-                            {loading === 'sage' ? <Loader2 className="animate-spin" /> : 'Get Started'}
+                            {loading === 'broker' ? <Loader2 className="animate-spin" /> : 'Get Started'}
                         </button>
                     </div>
                 </ScrollReveal>
@@ -1246,7 +1247,7 @@ export default function Landing() {
             // Use monitored edge function for payment tracking
             const data = await monitoredEdgeFunction<{ url?: string }>(
                 `payment/${func}`,
-                () => supabase.functions.invoke(func, { body })
+                async () => supabase.functions.invoke(func, { body, headers: await getEdgeAuthHeaders() })
             );
 
             if (data?.url) window.location.href = data.url;

@@ -292,7 +292,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
           Manage Subscription
           {subscriptionStatus && subscriptionStatus.planType !== 'free' && (
             <span className="ml-auto text-xs text-[#d4a5a5]">
-              {subscriptionStatus.planType === 'starter' ? 'Traveler' : 'Mystic'}
+              {subscriptionStatus.planType.charAt(0).toUpperCase() + subscriptionStatus.planType.slice(1)}
             </span>
           )}
         </DropdownMenuItem>

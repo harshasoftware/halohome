@@ -131,8 +131,7 @@ const ScoutPanelComponent: React.FC<ScoutPanelProps> = ({
 
   // Subscription check for gating categories
   const { status: subscriptionStatus } = useAISubscription();
-  const isPaidUser = subscriptionStatus?.planType === 'starter' ||
-                     subscriptionStatus?.planType === 'pro';
+  const isPaidUser = !!subscriptionStatus && subscriptionStatus.planType !== 'free';
 
   // State for showing upgrade modal when clicking locked categories
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
