@@ -252,7 +252,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
     <div className={`relative ${className}`} data-tour="search-bar">
       {/* Search input container */}
       <div className="flex items-center backdrop-blur-md rounded-full shadow-lg overflow-hidden bg-white/95 dark:bg-zinc-800 border border-slate-200 dark:border-white/10">
-        <div className="flex items-center justify-center w-10 h-10 shrink-0 text-[#d4a5a5]">
+        <div className="flex items-center justify-center w-10 h-10 shrink-0 text-amber-600 dark:text-amber-400">
           <MapPin className="w-4 h-4" />
         </div>
 
@@ -276,7 +276,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex items-center justify-center w-8 h-8 mr-1">
-            <Loader2 className="w-4 h-4 animate-spin text-[#d4a5a5]" />
+            <Loader2 className="w-4 h-4 animate-spin text-amber-600 dark:text-amber-400" />
           </div>
         )}
 
@@ -291,7 +291,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
         {!isLoading && isZipExactTrim(inputText) && (
           <button
             onClick={handleZipSearch}
-            className="flex items-center justify-center w-8 h-8 mr-1 rounded-full bg-[#d4a5a5] hover:bg-[#c49393] transition-colors"
+            className="flex items-center justify-center w-8 h-8 mr-1 rounded-full bg-amber-500 hover:bg-amber-600 transition-colors"
           >
             <Search className="w-4 h-4 text-white" />
           </button>
@@ -337,7 +337,7 @@ export const CitySearchBar: React.FC<CitySearchBarProps> = ({
                 onClick={() => handleSelect(suggestion)}
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/10 transition-colors border-b border-slate-100 dark:border-white/5 last:border-b-0"
               >
-                <MapPin className="w-4 h-4 text-[#d4a5a5] shrink-0" />
+                <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm text-slate-800 dark:text-zinc-200 truncate">
                     {main_text}

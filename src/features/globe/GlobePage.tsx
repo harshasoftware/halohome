@@ -1934,68 +1934,70 @@ const GlobePage: React.FC<GlobePageProps> = ({
               Scout Properties in {zipCode}
             </h2>
             <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">
-              Using SAM v2 to detect and analyze properties by Vastu principles
+              Browse and analyze properties using Vastu principles
             </p>
           </div>
         )}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <VastuParcelScout
-            onParcelSelect={(parcel) => {
-              // Center + zoom to the actual parcel polygon when possible.
-              // `navigation.flyTo(...altitude)` tops out around zoom 18 in 2D; for property scouting we want a closer zoom.
-              const globe = globeEl.current;
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0">
+            <VastuParcelScout
+              onParcelSelect={(parcel) => {
+                // Center + zoom to the actual parcel polygon when possible.
+                // `navigation.flyTo(...altitude)` tops out around zoom 18 in 2D; for property scouting we want a closer zoom.
+                const globe = globeEl.current;
 
-              if (globe?.fitBounds && Array.isArray(parcel.boundary) && parcel.boundary.length > 2) {
-                let north = -Infinity;
-                let south = Infinity;
-                let east = -Infinity;
-                let west = Infinity;
+                if (globe?.fitBounds && Array.isArray(parcel.boundary) && parcel.boundary.length > 2) {
+                  let north = -Infinity;
+                  let south = Infinity;
+                  let east = -Infinity;
+                  let west = Infinity;
 
-                for (const p of parcel.boundary) {
-                  north = Math.max(north, p.lat);
-                  south = Math.min(south, p.lat);
-                  east = Math.max(east, p.lng);
-                  west = Math.min(west, p.lng);
+                  for (const p of parcel.boundary) {
+                    north = Math.max(north, p.lat);
+                    south = Math.min(south, p.lat);
+                    east = Math.max(east, p.lng);
+                    west = Math.min(west, p.lng);
+                  }
+
+                  globe.fitBounds({ north, south, east, west }, 120);
+                  return;
                 }
 
-                globe.fitBounds({ north, south, east, west }, 120);
-                return;
-              }
+                if (globe?.panTo) {
+                  globe.panTo(parcel.coordinates.lat, parcel.coordinates.lng, 20);
+                  return;
+                }
 
-              if (globe?.panTo) {
-                globe.panTo(parcel.coordinates.lat, parcel.coordinates.lng, 20);
-                return;
-              }
-
-              // Fallback (should be rare): 3D/altitude navigation
-              navigation.flyTo(parcel.coordinates.lat, parcel.coordinates.lng, 0.5, 1000);
-            }}
-            onCenterMap={(lat, lng) => {
-              // Center map on parcel with close zoom for property analysis.
-              // Prefer 2D pan+zoom when available; `flyTo` altitude mapping is too coarse for property-level zoom.
-              const globe = globeEl.current;
-              if (globe?.panTo) {
-                globe.panTo(lat, lng, 20);
-                return;
-              }
-              navigation.flyTo(lat, lng, 0.5, 1000);
-            }}
-            // ZIP searches should NOT auto-scout; we only prefill the input.
-            prefillZipCode={zipCode}
-            onSearchStart={() => {
-              // Optional: show loading state
-            }}
-            onSearchComplete={(success, count) => {
-              if (success && count > 0) {
-                toast.success(`Found ${count} properties${zipCode ? ` in ${zipCode}` : ''}`);
-              } else if (!success) {
-                toast.error(`Could not find properties${zipCode ? ` in ${zipCode}` : ''}`);
-              }
-            }}
-            onParcelsChange={setScoutParcels}
-            onParcelSelected={setSelectedParcelId}
-            onZipCodeSearch={handleZipCodeSearch}
-          />
+                // Fallback (should be rare): 3D/altitude navigation
+                navigation.flyTo(parcel.coordinates.lat, parcel.coordinates.lng, 0.5, 1000);
+              }}
+              onCenterMap={(lat, lng) => {
+                // Center map on parcel with close zoom for property analysis.
+                // Prefer 2D pan+zoom when available; `flyTo` altitude mapping is too coarse for property-level zoom.
+                const globe = globeEl.current;
+                if (globe?.panTo) {
+                  globe.panTo(lat, lng, 20);
+                  return;
+                }
+                navigation.flyTo(lat, lng, 0.5, 1000);
+              }}
+              // ZIP searches should NOT auto-scout; we only prefill the input.
+              prefillZipCode={zipCode}
+              onSearchStart={() => {
+                // Optional: show loading state
+              }}
+              onSearchComplete={(success, count) => {
+                if (success && count > 0) {
+                  toast.success(`Found ${count} properties${zipCode ? ` in ${zipCode}` : ''}`);
+                } else if (!success) {
+                  toast.error(`Could not find properties${zipCode ? ` in ${zipCode}` : ''}`);
+                }
+              }}
+              onParcelsChange={setScoutParcels}
+              onParcelSelected={setSelectedParcelId}
+              onZipCodeSearch={handleZipCodeSearch}
+            />
+          </div>
         </div>
       </div>
     );
@@ -2356,7 +2358,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
       {/* TimelineScrubber (desktop only) */}
       {/* Removed TimelineScrubber for all devices */}
       <div className="flex-1 flex flex-col min-h-0 relative">
-        <div className="flex-1 flex items-center justify-center relative" data-tour="globe">
+        <div className="flex-1 flex min-h-0 relative" data-tour="globe">
           {/* City Search Bar - floating top-left */}
           {/* Shows as "Enter your birthplace" when no valid birth data, otherwise as regular search */}
           {/* Hidden on mobile when AI chat is open */}
@@ -2494,7 +2496,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
                           href="/"
                           className="flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 transition-colors"
                         >
-                          <img src="/logo.png" alt="halohome.app Logo" className="w-6 h-6" />
+                          <FontAwesomeIcon icon={faHouse} className="w-4 h-4 text-slate-700 dark:text-slate-200" />
                           <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>halohome.app</span>
                         </a>
                       }

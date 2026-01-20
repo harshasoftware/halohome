@@ -835,7 +835,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             <TooltipTrigger asChild>
               <button
                 onClick={() => setScanWaitlistOpen(true)}
-                className="relative flex items-center justify-center h-9 w-9 rounded-full border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#F0A6B3] dark:hover:text-[#F0A6B3] transition-colors"
+                className="relative flex items-center justify-center h-9 w-9 rounded-full border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                 aria-label="Join Scan app waitlist"
               >
                 <Smartphone className="h-[1.1rem] w-[1.1rem]" />

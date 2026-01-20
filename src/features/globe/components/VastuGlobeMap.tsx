@@ -538,15 +538,15 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
   const zipStatusUi = useMemo(() => {
     if (!currentZipCode) return null;
     if (zipSearchStatus === 'searching') {
-      return { label: 'Searching…', cls: 'bg-blue-50 text-blue-700 border-blue-200' };
+      return { label: 'Searching…', cls: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-200 dark:border-blue-500/30' };
     }
     if (zipSearchStatus === 'ready') {
-      return { label: 'Ready', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      return { label: 'Ready', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/30' };
     }
     if (zipSearchStatus === 'error') {
-      return { label: 'Error', cls: 'bg-red-50 text-red-700 border-red-200' };
+      return { label: 'Error', cls: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-200 dark:border-red-500/30' };
     }
-    return { label: 'Idle', cls: 'bg-slate-50 text-slate-600 border-slate-200' };
+    return { label: 'Idle', cls: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/10 dark:text-zinc-200 dark:border-white/15' };
   }, [currentZipCode, zipSearchStatus]);
 
   return (
@@ -806,8 +806,8 @@ const VastuGlobeMapComponent = forwardRef<VastuGlobeMapMethods, VastuGlobeMapPro
 
       {/* ZIP search status */}
       {currentZipCode && zipStatusUi && (
-        <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-10">
-          <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm shadow border border-slate-200 text-xs text-slate-700">
+        <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-10">
+          <div className="pointer-events-auto flex items-center gap-2 h-[42px] px-3 rounded-full bg-white/95 dark:bg-[#0a0a0a]/90 backdrop-blur-sm shadow dark:shadow-black/40 border border-slate-200 dark:border-white/15 text-xs text-slate-700 dark:text-zinc-100">
             <span className="font-medium">{currentZipCode}</span>
             <span className={`px-2 py-0.5 rounded-full border ${zipStatusUi.cls}`}>
               {zipStatusUi.label}

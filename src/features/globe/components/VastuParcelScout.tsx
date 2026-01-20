@@ -24,6 +24,7 @@ import {
   ChevronUp,
   ExternalLink,
   Scan,
+  Telescope,
   Sparkles,
 } from 'lucide-react';
 import {
@@ -112,7 +113,7 @@ const ParcelCard = memo(({
         className={cn(
           'p-3 rounded-lg border transition-all cursor-pointer',
           isSelected
-            ? 'border-[#d4a5a5] bg-[#d4a5a5]/10 dark:bg-[#d4a5a5]/10'
+            ? 'border-amber-500 bg-amber-500/10 dark:bg-amber-500/15'
             : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
         )}
         onClick={() => onSelect(parcel)}
@@ -241,6 +242,8 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   const lastAutoSearchRef = useRef<string | null>(null);
   const lastBoundaryNotificationRef = useRef<string | null>(null); // Track last ZIP code we notified about
   const onZipCodeSearchRef = useRef(onZipCodeSearch); // Store callback in ref to avoid dependency issues
+  // Deduplicate onSearchComplete callbacks (e.g. StrictMode/dev double-invocation)
+  const lastSearchCompleteKeyRef = useRef<string | null>(null);
 
   // Prefill ZIP input without triggering a scout.
   useEffect(() => {
@@ -271,6 +274,23 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   // Convert to display format
   // Show plots (parcels) in the list; buildings are still forwarded to the map overlay via onParcelsChange.
   const parcels: Parcel[] = rawParcels.filter((p) => p.type === 'plot').map(convertToDisplayParcel);
+
+  // Plot-only stats for the list UI (raw hook stats include buildings too)
+  const plotStats = useMemo(() => {
+    const total = parcels.length;
+    const excellent = parcels.filter((p) => p.vastuScore >= 80).length;
+    const good = parcels.filter((p) => p.vastuScore >= 60 && p.vastuScore < 80).length;
+    const sum = parcels.reduce((acc, p) => acc + p.vastuScore, 0);
+    const avgScore = total > 0 ? Math.round(sum / total) : 0;
+
+    return {
+      total,
+      excellent,
+      good,
+      avgScore,
+      processingTimeMs: stats.processingTimeMs,
+    };
+  }, [parcels, stats.processingTimeMs]);
 
   // Reverse-geocode addresses for the list (Google Maps Geocoder), cached by rounded lat/lng.
   const addressCacheRef = useRef(new Map<string, string>());
@@ -387,6 +407,8 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   const handleSearch = useCallback(async () => {
     if (!zipCode || zipCode.length < 5) return;
     setSelectedParcelId(null);
+    lastSearchCompleteKeyRef.current = null;
+    onSearchStart?.();
     // Notify parent that a ZIP code search is starting (for boundary display)
     console.log(`[VastuParcelScout] Manual search starting for ZIP: ${zipCode}`);
     if (onZipCodeSearch) {
@@ -398,7 +420,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
     } catch (err) {
       console.error(`[VastuParcelScout] Search failed:`, err);
     }
-  }, [zipCode, searchByZipCode, onZipCodeSearch]);
+  }, [zipCode, searchByZipCode, onZipCodeSearch, onSearchStart]);
 
   const handleParcelSelect = useCallback((parcel: Parcel) => {
     setSelectedParcelId(parcel.id);
@@ -437,6 +459,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
 
     const performAutoSearch = async () => {
       onSearchStart?.();
+      lastSearchCompleteKeyRef.current = null;
       // Notify parent that a ZIP code search is starting (for boundary display)
       console.log(`[VastuParcelScout] Auto-search starting for ZIP: ${autoSearchZipCode}`);
       if (onZipCodeSearch) {
@@ -533,7 +556,14 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
 
   // Notify when search completes and log results
   useEffect(() => {
+    if (isLoading) return;
+    if (!zipCode || zipCode.length < 5) return;
+
     if (parcels.length > 0) {
+      const key = `success:${zipCode}:${parcels.length}`;
+      if (lastSearchCompleteKeyRef.current === key) return;
+      lastSearchCompleteKeyRef.current = key;
+
       console.log(`[VastuParcelScout] Found ${parcels.length} parcels:`, parcels.map(p => ({
         id: p.id,
         score: p.vastuScore,
@@ -541,18 +571,15 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
         coords: p.coordinates,
       })));
       onSearchComplete?.(true, parcels.length);
-    } else if (!isLoading && parcels.length === 0 && zipCode) {
+    } else if (parcels.length === 0) {
+      const key = `empty:${zipCode}:0`;
+      if (lastSearchCompleteKeyRef.current === key) return;
+      lastSearchCompleteKeyRef.current = key;
+
       console.warn(`[VastuParcelScout] No parcels found for ZIP code: ${zipCode}`);
       onSearchComplete?.(false, 0);
     }
   }, [parcels, isLoading, zipCode, onSearchComplete]);
-
-  // Notify when search completes (old effect - keeping for compatibility)
-  useEffect(() => {
-    if (!isLoading && lastAutoSearchRef.current) {
-      onSearchComplete?.(parcels.length > 0, parcels.length);
-    }
-  }, [isLoading, parcels.length, onSearchComplete]);
 
   const filteredParcels = listParcelsWithAddress.filter((parcel) => {
     if (filter === 'all') return true;
@@ -562,7 +589,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col min-h-0 h-full flex-1">
       {/* Search Header */}
       <div className="p-4 border-b border-slate-200 dark:border-white/10">
         <div className="flex gap-2">
@@ -577,12 +604,12 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
           <Button
             onClick={handleSearch}
             disabled={isLoading || zipCode.length < 5}
-            className="bg-[#d4a5a5] hover:bg-[#c49595]"
+            className="bg-amber-500 hover:bg-amber-600"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Scan className="h-4 w-4" />
+              <Telescope className="h-4 w-4" />
             )}
           </Button>
         </div>
@@ -615,17 +642,17 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
           <div className="p-3 bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-500">
-                {stats.total} parcels • Avg: <span className={getScoreColor(stats.avgScore)}>{stats.avgScore}</span>
-                {stats.processingTimeMs > 0 && (
+                {plotStats.total} parcels • Avg: <span className={getScoreColor(plotStats.avgScore)}>{plotStats.avgScore}</span>
+                {plotStats.processingTimeMs > 0 && (
                   <span className="text-slate-400 ml-1">
-                    ({(stats.processingTimeMs / 1000).toFixed(1)}s)
+                    ({(plotStats.processingTimeMs / 1000).toFixed(1)}s)
                   </span>
                 )}
               </span>
               <div className="flex gap-1">
-                <span className="text-green-600">{stats.excellent} excellent</span>
+                <span className="text-green-600">{plotStats.excellent} excellent</span>
                 <span className="text-slate-400">•</span>
-                <span className="text-yellow-600">{stats.good} good</span>
+                <span className="text-yellow-600">{plotStats.good} good</span>
               </div>
             </div>
           </div>
@@ -639,21 +666,18 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
                 className={cn(
                   'px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors capitalize',
                   filter === f
-                    ? 'border-[#d4a5a5] text-[#d4a5a5]'
+                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 )}
               >
-                {f} ({f === 'all' ? stats.total : f === 'good' ? stats.good + stats.excellent : stats.excellent})
+                {f} ({f === 'all' ? plotStats.total : f === 'good' ? plotStats.good + plotStats.excellent : plotStats.excellent})
               </button>
             ))}
           </div>
 
           {/* Parcel List */}
           <div
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-3 space-y-2"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-            onWheelCapture={(e) => e.stopPropagation()}
-            onTouchMoveCapture={(e) => e.stopPropagation()}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-scroll-optimized p-3 space-y-2"
           >
             {filteredParcels.map((parcel) => (
               <ParcelCard
@@ -670,14 +694,14 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
       {/* Empty State */}
       {!isLoading && parcels.length === 0 && !error && (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <Scan className="h-12 w-12 text-[#d4a5a5]/50 mb-4" />
+          <Scan className="h-12 w-12 text-amber-500/60 dark:text-amber-400/60 mb-4" />
           <p className="text-lg font-medium">Vastu Parcel Scout</p>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
-            Enter a ZIP code to scan and analyze properties with SAM v2 AI segmentation.
+            Enter a ZIP code to scan and analyze properties for Vastu insights.
           </p>
-          <div className="mt-4 p-3 rounded-lg bg-[#d4a5a5]/10 text-xs text-[#d4a5a5] max-w-xs">
+          <div className="mt-4 p-3 rounded-lg bg-amber-500/10 text-xs text-amber-700 dark:text-amber-300 max-w-xs">
             <Sparkles className="h-4 w-4 inline mr-1" />
-            Uses Meta's SAM v2 to detect plots and buildings for Vastu analysis.
+            Scans parcels and buildings to generate Vastu scores.
           </div>
         </div>
       )}
@@ -687,10 +711,6 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
         <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
           Analysis based on Vastu Shastra principles.
           <br />
-          <span className="text-[#d4a5a5] flex items-center justify-center gap-1 mt-1">
-            <Sparkles className="h-3 w-3" />
-            SAM v2 segmentation • No third-party data costs
-          </span>
         </p>
       </div>
     </div>
