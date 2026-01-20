@@ -139,6 +139,19 @@ export async function findRoadAccess(
   options: RoadAccessOptions = {}
 ): Promise<RoadAccessPoint> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
+  // Guard against bad upstream geometry (NaN/undefined) which will crash Google Directions.
+  if (!Number.isFinite(centroid?.lat) || !Number.isFinite(centroid?.lng)) {
+    const safe = opts.boundary?.find((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lng)) ?? { lat: 0, lng: 0 };
+    return {
+      roadPoint: safe,
+      centroid: safe,
+      distanceMeters: 0,
+      direction: 'N',
+      bearingDegrees: 0,
+      confidence: 0,
+      method: 'boundary_estimate',
+    };
+  }
   const cacheKey = `${centroid.lat.toFixed(6)},${centroid.lng.toFixed(6)}`;
 
   // Check cache

@@ -41,7 +41,9 @@ export interface RegridParcel {
   };
   geometry: {
     type: 'Polygon' | 'MultiPolygon';
-    coordinates: number[][][]; // [lng, lat] pairs
+    // Polygon => number[][][]; MultiPolygon => number[][][][]
+    // Keep permissive because Regrid varies by dataset.
+    coordinates: any;
   };
 }
 
@@ -51,10 +53,38 @@ export interface RegridSearchResult {
     type: 'FeatureCollection';
     features: RegridParcel[];
   };
+  // Matched building footprints (requires bundle access + return_matched_buildings=true)
+  buildings?: {
+    type: 'FeatureCollection';
+    features: RegridBuilding[];
+  };
   // Also support direct FeatureCollection format (if API returns it)
   type?: 'FeatureCollection';
   features?: RegridParcel[];
   total?: number;
+}
+
+/**
+ * Matched building footprint (EarthDefine) from Regrid API v2.
+ * The exact schema can vary; we only rely on geometry + a stable identifier + optional parcel linkage.
+ */
+export interface RegridBuilding {
+  type: 'Feature';
+  id?: number;
+  properties: {
+    // Common identifiers
+    ed_bld_uuid?: string;
+    ed_str_uuid?: string;
+    path?: string;
+    // Parcel linkage (ll_uuid values of parcels this building overlaps)
+    ll_uuids?: string[];
+    fields?: { [key: string]: any };
+    [key: string]: any;
+  };
+  geometry: {
+    type: 'Polygon' | 'MultiPolygon';
+    coordinates: any;
+  };
 }
 
 export interface RegridSearchOptions {
@@ -64,17 +94,51 @@ export interface RegridSearchOptions {
   bounds?: BoundingBox;
   /** GeoJSON polygon for accurate ZIP boundary queries (preferred over bounds) */
   geojson?: GeoJSON.Polygon | GeoJSON.MultiPolygon;
+  /** Request matched building footprints when available in your bundle */
+  returnMatchedBuildings?: boolean;
   /** Progress callback */
   onProgress?: (phase: string, percent: number) => void;
 }
 
 /**
- * Convert Regrid GeoJSON coordinates to our Polygon format
+ * Convert Regrid geometry to our Polygon coordinates.
+ * Handles Polygon + MultiPolygon (chooses the largest outer ring by vertex count).
  */
-function regridCoordinatesToPolygon(coordinates: number[][][]): Polygon['coordinates'] {
-  // Regrid uses [lng, lat] format, we need [lat, lng]
-  const polygon = coordinates[0]; // First ring is the outer boundary
-  return polygon.map(([lng, lat]) => ({ lat, lng }));
+function regridGeometryToPolygonCoordinates(
+  geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: any }
+): Polygon['coordinates'] {
+  const isFiniteNumber = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+
+  const toLatLng = (pair: any): { lat: number; lng: number } | null => {
+    const lng = Array.isArray(pair) ? pair[0] : undefined;
+    const lat = Array.isArray(pair) ? pair[1] : undefined;
+    if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) return null;
+    return { lat, lng };
+  };
+
+  const normalizeRing = (ring: any[]): Polygon['coordinates'] => {
+    const out: Polygon['coordinates'] = [];
+    for (const p of ring) {
+      const ll = toLatLng(p);
+      if (ll) out.push(ll);
+    }
+    return out;
+  };
+
+  // Polygon: coordinates[0] is outer ring
+  if (geometry.type === 'Polygon') {
+    const outer = Array.isArray(geometry.coordinates?.[0]) ? geometry.coordinates[0] : [];
+    return normalizeRing(outer);
+  }
+
+  // MultiPolygon: coordinates[polyIdx][ringIdx][ptIdx]
+  const polys: any[] = Array.isArray(geometry.coordinates) ? geometry.coordinates : [];
+  let bestRing: any[] = [];
+  for (const poly of polys) {
+    const outer = Array.isArray(poly?.[0]) ? poly[0] : null;
+    if (outer && outer.length > bestRing.length) bestRing = outer;
+  }
+  return normalizeRing(bestRing);
 }
 
 /**
@@ -153,7 +217,7 @@ export function regridParcelToFootprint(parcel: RegridParcel): {
   regridId: string;
   owner?: string;
 } {
-  const coordinates = regridCoordinatesToPolygon(parcel.geometry.coordinates);
+  const coordinates = regridGeometryToPolygonCoordinates(parcel.geometry);
   const centroid = calculateCentroid(coordinates);
   const area = calculateArea(coordinates);
   const bounds = calculateBounds(coordinates);
@@ -179,6 +243,41 @@ export function regridParcelToFootprint(parcel: RegridParcel): {
 }
 
 /**
+ * Convert a matched building footprint to our BuildingFootprint-like shape.
+ * (The caller decides how to type/style it.)
+ */
+export function regridBuildingToFootprint(building: RegridBuilding): {
+  id: string;
+  coordinates: LatLng[];
+  centroid: LatLng;
+  area: number;
+  bounds: BoundingBox;
+  buildingId: string;
+  llUuids?: string[];
+} {
+  const coordinates = regridGeometryToPolygonCoordinates(building.geometry);
+  const centroid = calculateCentroid(coordinates);
+  const area = calculateArea(coordinates);
+  const bounds = calculateBounds(coordinates);
+
+  const buildingId =
+    building.properties.ed_bld_uuid ||
+    building.properties.path ||
+    building.id?.toString() ||
+    '';
+
+  return {
+    id: `regrid-bld-${buildingId}`,
+    coordinates,
+    centroid,
+    area,
+    bounds,
+    buildingId,
+    llUuids: building.properties.ll_uuids,
+  };
+}
+
+/**
  * Search for SFH parcels using Regrid API
  * 
  * Prefers geojson (actual ZIP boundary) over bounds (approximate bounding box)
@@ -186,12 +285,12 @@ export function regridParcelToFootprint(parcel: RegridParcel): {
  */
 export async function searchSFHParcels(
   options: RegridSearchOptions
-): Promise<RegridParcel[]> {
+): Promise<{ parcels: RegridParcel[]; buildings: RegridBuilding[] }> {
   if (!REGRID_API_KEY) {
     throw new Error('VITE_REGRID_API_KEY is not set in environment variables');
   }
 
-  const { bounds, geojson, limit = 10, onProgress } = options;
+  const { bounds, geojson, limit = 10, onProgress, returnMatchedBuildings = false } = options;
   
   onProgress?.('Fetching parcels from Regrid', 10);
 
@@ -224,6 +323,9 @@ export async function searchSFHParcels(
     limit: limit.toString(),
     'fields[lbcs_activity][eq]': '1100', // Single Family Home (residential) - using lbcs_activity not landuse_code
   });
+  if (returnMatchedBuildings) {
+    params.set('return_matched_buildings', 'true');
+  }
 
   // Use POST to send GeoJSON in request body (avoids URI length limits)
   const url = `${REGRID_BASE_URL}/parcels/query?${params.toString()}`;
@@ -252,10 +354,11 @@ export async function searchSFHParcels(
 
     // According to OpenAPI spec: FeaturesResponse has parcels.features structure
     const parcels = data.parcels?.features || data.features || [];
+    const buildings = data.buildings?.features || [];
     
     onProgress?.('Complete', 100);
 
-    return parcels;
+    return { parcels, buildings };
   } catch (error) {
     console.error('[Regrid] Failed to fetch parcels:', error);
     throw error;

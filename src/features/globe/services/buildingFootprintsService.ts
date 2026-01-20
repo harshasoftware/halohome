@@ -18,7 +18,7 @@ import {
   createPolygon,
   haversineDistance,
 } from '@/lib/building-footprints/coordinate-utils';
-import { searchSFHParcels, regridParcelToFootprint, type RegridParcel } from '@/lib/regrid/regrid-service';
+import { searchSFHParcels, regridBuildingToFootprint, regridParcelToFootprint } from '@/lib/regrid/regrid-service';
 import { getGeocode, getLatLng } from 'use-places-autocomplete';
 
 export interface BuildingFootprint extends Polygon {
@@ -63,7 +63,7 @@ export interface FootprintSearchResult {
 export interface SearchOptions {
   /** Extract plot boundaries from Regrid (always true for Regrid) */
   extractPlots?: boolean;
-  /** Extract building footprints (not supported with Regrid, always false) */
+  /** Extract matched building footprints (requires Regrid Matched Buildings bundle) */
   extractBuildings?: boolean;
   /** Maximum number of parcels to fetch from Regrid (default: 10 for trial account) */
   maxResults?: number;
@@ -77,7 +77,7 @@ export interface SearchOptions {
 
 const DEFAULT_OPTIONS: Required<Omit<SearchOptions, 'onProgress'>> & { onProgress?: SearchOptions['onProgress'] } = {
   extractPlots: true,
-  extractBuildings: false, // Not supported with Regrid
+  extractBuildings: false,
   maxResults: 10, // Trial account limit
   minConfidence: 0.4,
   onProgress: undefined,
@@ -319,23 +319,30 @@ export async function searchByBounds(
   let plots: BuildingFootprint[] = [];
   let buildings: BuildingFootprint[] = [];
 
+  const isFiniteNumber = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+  const isValidRing = (coords: LatLng[]) =>
+    Array.isArray(coords) && coords.length >= 3 && coords.every((p) => isFiniteNumber(p.lat) && isFiniteNumber(p.lng));
+
   // Fetch SFH parcels from Regrid
   if (opts.extractPlots) {
     opts.onProgress?.('Fetching SFH parcels from Regrid', 20);
     
     try {
-      const regridParcels = await searchSFHParcels({
+      const { parcels: regridParcels, buildings: regridBuildings } = await searchSFHParcels({
         bounds,
         geojson: opts.geojson, // Use actual ZIP boundary polygon if available
         limit: opts.maxResults || 10,
+        returnMatchedBuildings: !!opts.extractBuildings,
         onProgress: (phase, percent) => {
           opts.onProgress?.(phase, 20 + percent * 0.7);
         },
       });
 
       // Convert Regrid parcels to BuildingFootprint format
-      plots = regridParcels.map((parcel) => {
+      plots = regridParcels
+        .map((parcel) => {
         const footprint = regridParcelToFootprint(parcel);
+        if (!isValidRing(footprint.coordinates)) return null;
         
         // Determine shape from coordinates
         const shape = determineShape(footprint.coordinates);
@@ -350,7 +357,29 @@ export async function searchByBounds(
           owner: footprint.owner,
           type: 'plot' as const,
         };
-      });
+      })
+      .filter((x): x is BuildingFootprint => !!x);
+
+      // Convert matched buildings (if requested and available in bundle)
+      if (opts.extractBuildings && regridBuildings.length > 0) {
+        buildings = regridBuildings
+          .map((b) => {
+          const footprint = regridBuildingToFootprint(b);
+          if (!isValidRing(footprint.coordinates)) return null;
+          const shape = determineShape(footprint.coordinates);
+
+          return {
+            ...footprint,
+            source: 'regrid' as const,
+            shape,
+            confidence: 1.0,
+            type: 'building' as const,
+          };
+        })
+        .filter((x): x is BuildingFootprint => !!x);
+      } else {
+        buildings = [];
+      }
 
       opts.onProgress?.('Processing parcel data', 90);
     } catch (error) {
@@ -360,8 +389,7 @@ export async function searchByBounds(
     }
   }
 
-  // Regrid doesn't provide building footprints, only parcel boundaries
-  // Buildings array remains empty
+  // If extractPlots is disabled, there are no buildings to associate either.
 
   // Sort by area (largest first)
   plots.sort((a, b) => b.area - a.area);
@@ -487,7 +515,7 @@ export async function segmentAtPoint(
     const bounds = getZipCodeBounds(lat, lng, 0.2);
     
     // Fetch parcels from Regrid
-    const regridParcels = await searchSFHParcels({
+    const { parcels: regridParcels } = await searchSFHParcels({
       bounds,
       limit: 10, // Get up to 10 parcels, then find closest
       onProgress: () => {}, // Silent for point clicks
@@ -499,7 +527,7 @@ export async function segmentAtPoint(
 
     // Find the parcel closest to the click point
     const clickPoint: LatLng = { lat, lng };
-    let closest: RegridParcel | null = null;
+    let closest: any | null = null;
     let closestDistance = Infinity;
 
     for (const parcel of regridParcels) {

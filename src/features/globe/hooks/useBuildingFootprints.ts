@@ -12,20 +12,108 @@ import {
   type FootprintSearchResult,
   type SearchOptions,
 } from '../services/buildingFootprintsService';
-import {
-  entranceDetectionService,
-  type EntranceDetectionResult,
-} from '../services/entranceDetectionService';
+import { roadAccessService } from '../services/roadAccessService';
 import {
   performVastuAnalysis,
   type VastuDirection,
 } from '@/lib/vastu-utils';
 import type { VastuAnalysis } from '@/stores/vastuStore';
 
+type LatLng = { lat: number; lng: number };
+
+function calculateBearing(from: LatLng, to: LatLng): number {
+  const lat1 = (from.lat * Math.PI) / 180;
+  const lat2 = (to.lat * Math.PI) / 180;
+  const dLng = ((to.lng - from.lng) * Math.PI) / 180;
+
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+
+  const bearing = (Math.atan2(y, x) * 180) / Math.PI;
+  return (bearing + 360) % 360;
+}
+
+function bearingToCardinal(bearing: number): VastuDirection {
+  const normalized = ((bearing % 360) + 360) % 360;
+  const directions: VastuDirection[] = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(normalized / 45) % 8;
+  return directions[index];
+}
+
+function intersectSegment(a: LatLng, b: LatLng, c: LatLng, d: LatLng): { point: LatLng; t: number } | null {
+  // Treat lng as x and lat as y for a small-area planar approximation.
+  const ax = a.lng, ay = a.lat;
+  const bx = b.lng, by = b.lat;
+  const cx = c.lng, cy = c.lat;
+  const dx = d.lng, dy = d.lat;
+
+  const rpx = bx - ax;
+  const rpy = by - ay;
+  const spx = dx - cx;
+  const spy = dy - cy;
+
+  const denom = rpx * spy - rpy * spx;
+  if (Math.abs(denom) < 1e-12) return null; // parallel
+
+  const qpx = cx - ax;
+  const qpy = cy - ay;
+
+  const t = (qpx * spy - qpy * spx) / denom;
+  const u = (qpx * rpy - qpy * rpx) / denom;
+
+  if (t < 0 || t > 1) return null;
+  if (u < 0 || u > 1) return null;
+
+  return {
+    point: { lat: ay + t * rpy, lng: ax + t * rpx },
+    t,
+  };
+}
+
+function distanceSq(a: LatLng, b: LatLng): number {
+  const dx = a.lng - b.lng;
+  const dy = a.lat - b.lat;
+  return dx * dx + dy * dy;
+}
+
+function findEntrancePointOnPerimeter(centroid: LatLng, roadPoint: LatLng, perimeter: LatLng[]): LatLng | null {
+  if (!perimeter || perimeter.length < 3) return null;
+
+  // Ensure closed ring for edge iteration
+  const ring = perimeter[0].lat === perimeter[perimeter.length - 1].lat && perimeter[0].lng === perimeter[perimeter.length - 1].lng
+    ? perimeter
+    : [...perimeter, perimeter[0]];
+
+  let best: { point: LatLng; t: number } | null = null;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const hit = intersectSegment(centroid, roadPoint, ring[i], ring[i + 1]);
+    if (!hit) continue;
+    if (!best || hit.t < best.t) best = hit;
+  }
+
+  if (best) return best.point;
+
+  // Fallback: nearest perimeter vertex to the road point
+  let nearest = ring[0];
+  let bestD = distanceSq(nearest, roadPoint);
+  for (const p of ring) {
+    const d2 = distanceSq(p, roadPoint);
+    if (d2 < bestD) {
+      bestD = d2;
+      nearest = p;
+    }
+  }
+  return nearest;
+}
+
 export interface ParcelWithVastu extends BuildingFootprint {
   vastuScore: number;
   vastuAnalysis: VastuAnalysis | null;
   entranceDirection: VastuDirection;
+  /** Entrance point on building perimeter when available (lat/lng). */
+  entrancePoint?: { lat: number; lng: number } | null;
+  /** Bearing in degrees from centroid -> entrance point (0=N, 90=E). */
+  entranceBearingDegrees?: number | null;
   highlights: string[];
   issues: string[];
 }
@@ -96,88 +184,157 @@ export function useBuildingFootprints(
   }, []);
 
   const processFootprints = useCallback(
-    async (footprints: BuildingFootprint[]): Promise<ParcelWithVastu[]> => {
-      if (footprints.length === 0) return [];
+    async (result: FootprintSearchResult): Promise<ParcelWithVastu[]> => {
+      const plotsWithBuildings = result.plotsWithBuildings ?? [];
+      if (plotsWithBuildings.length === 0) return [];
 
-      // Step 1: Batch detect entrances for all footprints
+      // Step 1: Determine entrance direction using Google road/directions approach,
+      // snapping the direction to the BUILDING footprint when available.
       handleProgress('Detecting entrances', 85);
 
-      const entranceLocations = footprints.map((f) => ({
-        lat: f.centroid.lat,
-        lng: f.centroid.lng,
-      }));
+      const entranceTargets = plotsWithBuildings.map((pwb) => {
+        const plot = pwb.plot;
+        const mainBuilding =
+          pwb.buildings && pwb.buildings.length > 0
+            ? [...pwb.buildings].sort((a, b) => b.area - a.area)[0]
+            : null;
 
-      let entranceResults: Map<string, EntranceDetectionResult> = new Map();
+        const target = mainBuilding ?? plot;
+        return {
+          id: plot.id,
+          target,
+          plot,
+          mainBuilding,
+          centroid: target.centroid,
+          boundary: target.coordinates,
+        };
+      });
+
+      let entranceDirections = new Map<
+        string,
+        {
+          direction: VastuDirection;
+          source: string;
+          entrancePoint: { lat: number; lng: number } | null;
+          entranceBearingDegrees: number | null;
+        }
+      >();
       try {
-        entranceResults = await entranceDetectionService.detectBatch(
-          entranceLocations,
-          {
-            useRoadAccessFallback: true,
-            maxConcurrent: 5,
-          }
+        const roadResults = await roadAccessService.findRoadAccessBatch(
+          entranceTargets.map((t) => ({
+            id: t.id,
+            centroid: t.centroid,
+            boundary: t.boundary,
+          })),
+          { maxConcurrent: 5, allowEstimation: true, searchRadius: 120 }
         );
+
+        for (const t of entranceTargets) {
+          const ra = roadResults.get(t.id);
+          const roadPoint = ra?.roadPoint;
+          const entrancePoint =
+            roadPoint ? findEntrancePointOnPerimeter(t.centroid, roadPoint, t.boundary) : null;
+
+          // IMPORTANT: Use centroid -> entrance-on-perimeter bearing (not centroid -> road bearing).
+          const bearing = entrancePoint ? calculateBearing(t.centroid, entrancePoint) : (ra?.bearingDegrees ?? 0);
+          const dir = bearingToCardinal(bearing);
+          entranceDirections.set(t.id, {
+            direction: dir,
+            source: ra?.method ?? 'road_access',
+            entrancePoint: entrancePoint ?? null,
+            entranceBearingDegrees: entrancePoint ? bearing : null,
+          });
+        }
       } catch (err) {
-        console.warn('Batch entrance detection failed:', err);
+        console.warn('[useBuildingFootprints] Road-access entrance batch failed:', err);
       }
 
-      // Step 2: Run Vastu analysis for each footprint with detected entrance
+      // Step 2: Run Vastu analysis for each plot using the building footprint when available.
       handleProgress('Analyzing Vastu for parcels', 92);
 
       const parcelsWithVastu: ParcelWithVastu[] = [];
 
-      for (const footprint of footprints) {
+      for (const t of entranceTargets) {
+        const plot = t.plot;
+        const analysisBoundary = t.boundary.map((c) => ({ lat: c.lat, lng: c.lng }));
+        const entranceDirection = (entranceDirections.get(plot.id)?.direction ?? 'N') as VastuDirection;
+        const entranceSource = entranceDirections.get(plot.id)?.source;
+        const entrancePoint = entranceDirections.get(plot.id)?.entrancePoint ?? null;
+        const entranceBearingDegrees = entranceDirections.get(plot.id)?.entranceBearingDegrees ?? null;
+
         try {
-          // Get entrance direction for this footprint
-          const entranceKey = `${footprint.centroid.lat},${footprint.centroid.lng}`;
-          const entranceResult = entranceResults.get(entranceKey);
-          const detectedEntrance = entranceResult?.entrances[0];
-          const entranceDirection = (detectedEntrance?.facingDirection || 'N') as VastuDirection;
-
-          // Convert polygon coordinates for Vastu analysis
-          const boundary = footprint.coordinates.map((c) => ({
-            lat: c.lat,
-            lng: c.lng,
-          }));
-
-          // Perform Vastu analysis with detected entrance direction
           const vastuAnalysis = performVastuAnalysis(
-            undefined, // address
-            footprint.centroid,
-            boundary,
+            plot.address, // address if available
+            t.centroid,
+            analysisBoundary,
             entranceDirection
           );
 
-          // Generate highlights and issues
           const { highlights, issues } = generateHighlightsAndIssues(
             vastuAnalysis,
-            footprint.shape,
-            detectedEntrance?.source
+            plot.shape,
+            entranceSource
           );
 
+          // 1) Plot polygon (property boundary) - always show parcel outline
           parcelsWithVastu.push({
-            ...footprint,
+            ...plot,
+            // keep plot geometry intact for "property border"
             vastuScore: vastuAnalysis?.overallScore ?? 50,
             vastuAnalysis,
             entranceDirection,
+            // do NOT attach entrancePoint to plot (we want dots/line on building footprint)
+            entrancePoint: null,
+            entranceBearingDegrees: null,
             highlights,
             issues,
           });
+
+          // 2) Building polygon (matched footprint) - show building outline + centroid/entrance dots/line
+          if (t.mainBuilding) {
+            parcelsWithVastu.push({
+              ...t.mainBuilding,
+              // ensure it carries the same analysis score + entrance metadata
+              vastuScore: vastuAnalysis?.overallScore ?? 50,
+              vastuAnalysis,
+              entranceDirection,
+              entrancePoint: entrancePoint ?? null,
+              entranceBearingDegrees,
+              highlights,
+              issues,
+              // Link building to its plot for selection/highlight behavior in overlays
+              ...( { parentPlotId: plot.id } as any ),
+            });
+          }
         } catch (err) {
-          // If Vastu analysis fails, still include the parcel with default values
           parcelsWithVastu.push({
-            ...footprint,
+            ...plot,
             vastuScore: 50,
             vastuAnalysis: null,
             entranceDirection: 'N',
+            entrancePoint: null,
+            entranceBearingDegrees: null,
             highlights: [],
             issues: ['Unable to perform complete Vastu analysis'],
           });
+
+          if (t.mainBuilding) {
+            parcelsWithVastu.push({
+              ...t.mainBuilding,
+              vastuScore: 50,
+              vastuAnalysis: null,
+              entranceDirection,
+              entrancePoint: entrancePoint ?? null,
+              entranceBearingDegrees,
+              highlights: [],
+              issues: ['Unable to perform complete Vastu analysis'],
+              ...( { parentPlotId: plot.id } as any ),
+            });
+          }
         }
       }
 
-      // Sort by Vastu score (highest first)
       parcelsWithVastu.sort((a, b) => b.vastuScore - a.vastuScore);
-
       return parcelsWithVastu;
     },
     [handleProgress]
@@ -222,7 +379,7 @@ export function useBuildingFootprints(
           setZipBoundary(null);
         }
 
-        const parcelsWithVastu = await processFootprints(result.footprints);
+        const parcelsWithVastu = await processFootprints(result);
         if (seq !== searchSeqRef.current) return;
 
         setParcels(parcelsWithVastu);

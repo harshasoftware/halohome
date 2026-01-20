@@ -108,6 +108,9 @@ interface VastuMapProps {
     coordinates: Array<{ lat: number; lng: number }>;
     vastuScore?: number;
     type?: 'plot' | 'building';
+    centroid?: { lat: number; lng: number };
+    entrancePoint?: { lat: number; lng: number } | null;
+    entranceBearingDegrees?: number | null;
   }>;
   /** Selected parcel ID to highlight */
   selectedParcelId?: string | null;
@@ -741,10 +744,12 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
               const footprint: BuildingFootprint = {
                 id: p.id,
                 coordinates: p.coordinates,
-                centroid: {
-                  lat: p.coordinates.reduce((sum, c) => sum + c.lat, 0) / p.coordinates.length,
-                  lng: p.coordinates.reduce((sum, c) => sum + c.lng, 0) / p.coordinates.length,
-                },
+                centroid:
+                  p.centroid ??
+                  ({
+                    lat: p.coordinates.reduce((sum, c) => sum + c.lat, 0) / p.coordinates.length,
+                    lng: p.coordinates.reduce((sum, c) => sum + c.lng, 0) / p.coordinates.length,
+                  } as { lat: number; lng: number }),
                 area: 0,
                 bounds: {
                   north: Math.max(...p.coordinates.map(c => c.lat)),
@@ -763,6 +768,8 @@ const VastuMap = forwardRef<VastuMapMethods, VastuMapProps>(({
               
               // Store vastuScore for the overlay to access
               (footprint as any).vastuScore = p.vastuScore ?? 50;
+              (footprint as any).entrancePoint = p.entrancePoint ?? null;
+              (footprint as any).entranceBearingDegrees = p.entranceBearingDegrees ?? null;
               
               return footprint;
             })}

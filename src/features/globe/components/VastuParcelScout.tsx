@@ -6,7 +6,7 @@
  * No longer requires Regrid API.
  */
 
-import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,7 +64,8 @@ function convertToDisplayParcel(parcel: ParcelWithVastu): Parcel {
 
   return {
     id: parcel.id,
-    address: undefined, // Will be reverse geocoded if needed
+    // Prefer Regrid-provided headline address when available; reverse-geocode only as fallback.
+    address: parcel.address || undefined,
     coordinates: parcel.centroid, // Centroid is a single point {lat, lng}
     boundary, // Boundary is the polygon array [{lat, lng}, ...]
     vastuScore: parcel.vastuScore,
@@ -119,7 +120,7 @@ const ParcelCard = memo(({
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm truncate">
-              {parcel.address || `${parcel.coordinates.lat.toFixed(5)}, ${parcel.coordinates.lng.toFixed(5)}`}
+              {parcel.address || 'Fetching address…'}
             </p>
             <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1">
@@ -268,7 +269,100 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
   });
 
   // Convert to display format
-  const parcels: Parcel[] = rawParcels.map(convertToDisplayParcel);
+  // Show plots (parcels) in the list; buildings are still forwarded to the map overlay via onParcelsChange.
+  const parcels: Parcel[] = rawParcels.filter((p) => p.type === 'plot').map(convertToDisplayParcel);
+
+  // Reverse-geocode addresses for the list (Google Maps Geocoder), cached by rounded lat/lng.
+  const addressCacheRef = useRef(new Map<string, string>());
+  const inFlightRef = useRef(new Set<string>());
+  const [addressById, setAddressById] = useState<Record<string, string>>({});
+
+  const listParcelsWithAddress = useMemo(() => {
+    return parcels.map((p) => ({
+      ...p,
+      address: p.address || addressById[p.id] || undefined,
+    }));
+  }, [parcels, addressById]);
+
+  useEffect(() => {
+    // Only run when Google Maps JS API is available
+    if (typeof google === 'undefined' || !google.maps?.Geocoder) return;
+    if (listParcelsWithAddress.length === 0) return;
+
+    const geocoder = new google.maps.Geocoder();
+    const toKey = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+    const targets = listParcelsWithAddress
+      .filter((p) => !p.address)
+      .map((p) => ({
+        id: p.id,
+        lat: p.coordinates.lat,
+        lng: p.coordinates.lng,
+      }))
+      .filter((t) => Number.isFinite(t.lat) && Number.isFinite(t.lng));
+
+    if (targets.length === 0) return;
+
+    let cancelled = false;
+
+    const run = async () => {
+      const maxConcurrent = 4;
+      let idx = 0;
+
+      const worker = async () => {
+        while (!cancelled && idx < targets.length) {
+          const t = targets[idx++];
+          const coordKey = toKey(t.lat, t.lng);
+
+          // If already cached, just apply
+          const cached = addressCacheRef.current.get(coordKey);
+          if (cached) {
+            if (!cancelled) {
+              setAddressById((prev) => (prev[t.id] ? prev : { ...prev, [t.id]: cached }));
+            }
+            continue;
+          }
+
+          // Avoid duplicate in-flight for same coordinate
+          if (inFlightRef.current.has(coordKey)) continue;
+          inFlightRef.current.add(coordKey);
+
+          try {
+            const { results, status } = await new Promise<{
+              results: google.maps.GeocoderResult[];
+              status: google.maps.GeocoderStatus;
+            }>((resolve) => {
+              geocoder.geocode({ location: { lat: t.lat, lng: t.lng } }, (results, status) => {
+                resolve({ results: results ?? [], status });
+              });
+            });
+
+            if (cancelled) return;
+
+            if (status === 'OK' && results[0]?.formatted_address) {
+              const addr = results[0].formatted_address;
+              addressCacheRef.current.set(coordKey, addr);
+              setAddressById((prev) => ({ ...prev, [t.id]: addr }));
+            }
+          } catch {
+            // Ignore: keep "Fetching address…" fallback
+          } finally {
+            inFlightRef.current.delete(coordKey);
+          }
+
+          // Light throttling to avoid hitting rate limits hard
+          await new Promise((r) => setTimeout(r, 120));
+        }
+      };
+
+      await Promise.all(Array.from({ length: maxConcurrent }, () => worker()));
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [listParcelsWithAddress]);
 
   // Notify parent when parcels change (for map visualization)
   useEffect(() => {
@@ -278,6 +372,9 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
         coordinates: p.coordinates,
         vastuScore: p.vastuScore,
         type: p.type,
+        centroid: p.centroid,
+        entrancePoint: (p as any).entrancePoint ?? null,
+        entranceBearingDegrees: (p as any).entranceBearingDegrees ?? null,
         // Preserve Regrid data if available
         address: (p as any).address,
         regridId: (p as any).regridId,
@@ -457,7 +554,7 @@ const VastuParcelScout: React.FC<VastuParcelScoutProps> = ({
     }
   }, [isLoading, parcels.length, onSearchComplete]);
 
-  const filteredParcels = parcels.filter((parcel) => {
+  const filteredParcels = listParcelsWithAddress.filter((parcel) => {
     if (filter === 'all') return true;
     if (filter === 'good') return parcel.vastuScore >= 60;
     if (filter === 'excellent') return parcel.vastuScore >= 80;
