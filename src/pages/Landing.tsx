@@ -876,7 +876,7 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                         }
                     >
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><MapPin size={18} className="text-[#F0A6B3]" /> Pioneer</h3>
-                        <div className="price-amount">$99<span className="price-period">/mo</span></div>
+                        <div className="price-amount">$89<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
                             <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
                             <li className="feature-item"><Check className="check-icon" /> 25 ZIP scouts / month</li>
@@ -904,7 +904,7 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                             </span>
                         </div>
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><Briefcase size={18} className="text-[#F0A6B3]" /> Broker</h3>
-                        <div className="price-amount">$200<span className="price-period">/mo</span></div>
+                        <div className="price-amount">$179<span className="price-period">/mo</span></div>
                         <ul className="feature-list flex-1">
                             <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
                             <li className="feature-item"><Check className="check-icon" /> 60 ZIP scouts / month</li>
