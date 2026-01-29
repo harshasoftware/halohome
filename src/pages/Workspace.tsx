@@ -19,6 +19,7 @@ import GlobePage from '@/features/globe/GlobePage';
 import { v4 as uuidv4 } from 'uuid';
 
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { GuestAuthOverlay } from '@/components/auth/GuestAuthOverlay';
 
 export type ViewMode = 'map';
 
@@ -179,11 +180,11 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
       const bounds =
         north && south && east && west
           ? {
-              north: parseFloat(north),
-              south: parseFloat(south),
-              east: parseFloat(east),
-              west: parseFloat(west),
-            }
+            north: parseFloat(north),
+            south: parseFloat(south),
+            east: parseFloat(east),
+            west: parseFloat(west),
+          }
           : undefined;
 
       // Clear params to avoid re-triggering
@@ -606,7 +607,8 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
   const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
-    if (!user && !hasRedirectedRef.current) {
+    // Redirect to project route ONLY if NOT on /guest route
+    if (!user && !hasRedirectedRef.current && location.pathname !== '/guest') {
       // If no projectId in URL or it's literally 'undefined', redirect to a valid guest project route
       if (!projectIdFromUrl || projectIdFromUrl === 'undefined') {
         hasRedirectedRef.current = true;
@@ -615,7 +617,7 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
         navigate(`/project/${guestProjectId}/map`, { replace: true });
       }
     }
-  }, [user, projectIdFromUrl, navigate]);
+  }, [user, projectIdFromUrl, navigate, location.pathname]);
 
   // --- MIGRATION LOGIC: Call this after upgrading guest project to permanent ---
   // Usage: migrateGuestProjectToPermanent(newProjectId)
@@ -745,6 +747,7 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
 
   return (
     <>
+      <GuestAuthOverlay />
       <div
         className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-black flex flex-col overflow-hidden"
         style={isMobile ? {
@@ -754,47 +757,47 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
         } : undefined}
       >
         <Toolbar
-            // === Project Data ===
-            treeName={projectName}
-            familyTreeId={projectId}
-            isProjectPermanent={isProjectPermanent}
-            nodes={nodes}
-            edges={edges}
-            selectedNodeId={selectedNodeId}
-            isPersonDialogOpen={isPersonDialogOpen}
-            // === Action Callbacks ===
-            onAddPerson={handleAddPerson}
-            onUpgrade={handleUpgrade}
-            onSignIn={handleSignIn}
-            onRenameRequest={handleRenameRequest}
-            onNewProject={handleNewProject}
-            onClearAllDataRequest={handleClearAllDataRequest}
-            onDeleteNodeConfirmed={(nodeId) => {
-              if (deletePerson) {
-                deletePerson(nodeId);
-                toast.success("Node deleted successfully.");
-              } else {
-                toast.error("Failed to delete node. Function not available.");
-              }
-            }}
-            onImportFamilyTree={(treeData) => {
-              if (chartManager && chartManager.replaceTreeData) {
-                chartManager.replaceTreeData(treeData.nodes, treeData.edges);
-                toast.success("Chart data imported successfully.");
-              } else {
-                toast.error("Failed to import chart data. Function not available.");
-              }
-            }}
-            onClearBirthData={handleClearBirthData}
-            onOpenChartPicker={() => setShowChartPicker(true)}
-            onFavoriteSelect={handleFavoriteSelect}
-            // === Charts quick access ===
-            charts={birthCharts.charts}
-            currentChartId={birthCharts.currentChart?.id ?? null}
-            onSelectChart={handleSelectSavedChart}
-            // === Optional prop (store has it too, but parent can override) ===
-            hasBirthData={hasBirthData}
-          />
+          // === Project Data ===
+          treeName={projectName}
+          familyTreeId={projectId}
+          isProjectPermanent={isProjectPermanent}
+          nodes={nodes}
+          edges={edges}
+          selectedNodeId={selectedNodeId}
+          isPersonDialogOpen={isPersonDialogOpen}
+          // === Action Callbacks ===
+          onAddPerson={handleAddPerson}
+          onUpgrade={handleUpgrade}
+          onSignIn={handleSignIn}
+          onRenameRequest={handleRenameRequest}
+          onNewProject={handleNewProject}
+          onClearAllDataRequest={handleClearAllDataRequest}
+          onDeleteNodeConfirmed={(nodeId) => {
+            if (deletePerson) {
+              deletePerson(nodeId);
+              toast.success("Node deleted successfully.");
+            } else {
+              toast.error("Failed to delete node. Function not available.");
+            }
+          }}
+          onImportFamilyTree={(treeData) => {
+            if (chartManager && chartManager.replaceTreeData) {
+              chartManager.replaceTreeData(treeData.nodes, treeData.edges);
+              toast.success("Chart data imported successfully.");
+            } else {
+              toast.error("Failed to import chart data. Function not available.");
+            }
+          }}
+          onClearBirthData={handleClearBirthData}
+          onOpenChartPicker={() => setShowChartPicker(true)}
+          onFavoriteSelect={handleFavoriteSelect}
+          // === Charts quick access ===
+          charts={birthCharts.charts}
+          currentChartId={birthCharts.currentChart?.id ?? null}
+          onSelectChart={handleSelectSavedChart}
+          // === Optional prop (store has it too, but parent can override) ===
+          hasBirthData={hasBirthData}
+        />
         <div className="flex-1 relative min-h-0">
           <GlobePage
             // === Data Props ===
@@ -814,13 +817,13 @@ const WorkspaceContent = ({ defaultView = 'map' }) => {
             onBirthDataCreate={handleBirthDataCreate}
             onClearBirthData={handleClearBirthData}
             onSelectChart={handleSelectSavedChart}
-            // Note: Most UI state callbacks removed - GlobePage now reads/writes stores directly
-            // - isLegendMinimized, showExportPanel → uiStore
-            // - zone state → globeInteractionStore
-            // - isAIChatOpen → uiStore
-            // - mode state → astroStore
-            // - compatibility state → compatibilityStore
-            // - natal chart state → natalChartStore
+          // Note: Most UI state callbacks removed - GlobePage now reads/writes stores directly
+          // - isLegendMinimized, showExportPanel → uiStore
+          // - zone state → globeInteractionStore
+          // - isAIChatOpen → uiStore
+          // - mode state → astroStore
+          // - compatibility state → compatibilityStore
+          // - natal chart state → natalChartStore
           />
         </div>
         <IndexPageModals

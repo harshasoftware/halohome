@@ -18,6 +18,9 @@ import {
   type VastuDirection,
 } from '@/lib/vastu-utils';
 import type { VastuAnalysis } from '@/stores/vastuStore';
+import { enrichMultipleParcelsWithBuildingData, type EnrichableParcel } from '@/services/hybridPropertyService';
+
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 type LatLng = { lat: number; lng: number };
 
@@ -188,6 +191,77 @@ export function useBuildingFootprints(
       const plotsWithBuildings = result.plotsWithBuildings ?? [];
       if (plotsWithBuildings.length === 0) return [];
 
+      // Step 0: Enrich with Google Building Footprints (if API key available)
+      if (GOOGLE_API_KEY) {
+        handleProgress('Fetching Google building data', 20);
+
+        // Map plots to EnrichableParcel interface
+        const parcelsToEnrich = plotsWithBuildings.map(p => ({
+          id: p.plot.id,
+          address: p.plot.address,
+          properties: { headline: p.plot.address, ll_uuid: p.plot.id }
+        }));
+
+        const enrichedResults = await enrichMultipleParcelsWithBuildingData(
+          parcelsToEnrich,
+          GOOGLE_API_KEY,
+          {
+            concurrency: 5,
+            onProgress: (curr, total) => {
+              // Map 20-80% progress range
+              const p = 20 + (curr / total) * 60;
+              handleProgress(`Enriching parcels: ${curr}/${total}`, p);
+            }
+          }
+        );
+
+        // Update footprints with Google data
+        for (const pwb of plotsWithBuildings) {
+          const enrichment = enrichedResults.get(pwb.plot.id);
+          if (enrichment?.building) {
+            const gBuilding = enrichment.building;
+
+            // Convert GeoJSON polygon to LatLng[]
+            // Google Polygon: [[[lng, lat], ...]]
+            let coords: { lat: number; lng: number }[] = [];
+            if (gBuilding.displayPolygon.coordinates?.[0]) {
+              coords = gBuilding.displayPolygon.coordinates[0].map(pt => ({
+                lat: pt[1],
+                lng: pt[0]
+              }));
+            }
+
+            if (coords.length > 2) {
+              // Calculate simple centroid
+              const avgLat = coords.reduce((sum, p) => sum + p.lat, 0) / coords.length;
+              const avgLng = coords.reduce((sum, p) => sum + p.lng, 0) / coords.length;
+              const centroid = { lat: avgLat, lng: avgLng };
+
+              // Create BuildingFootprint from Google data
+              const newBuilding: BuildingFootprint = {
+                id: `gb_${pwb.plot.id}`,
+                coordinates: coords,
+                centroid,
+                area: 0, // Recalculate if needed, or approx
+                bounds: {
+                  north: Math.max(...coords.map(c => c.lat)),
+                  south: Math.min(...coords.map(c => c.lat)),
+                  east: Math.max(...coords.map(c => c.lng)),
+                  west: Math.min(...coords.map(c => c.lng)),
+                },
+                source: 'google' as const, // Cast to literal
+                shape: 'irregular', // improved analysis later
+                confidence: 1.0,
+                type: 'building' as const,
+              };
+
+              // Replace existing buildings with high quality Google footprint
+              pwb.buildings = [newBuilding];
+            }
+          }
+        }
+      }
+
       // Step 1: Determine entrance direction using Google road/directions approach,
       // snapping the direction to the BUILDING footprint when available.
       handleProgress('Detecting entrances', 85);
@@ -305,7 +379,7 @@ export function useBuildingFootprints(
               highlights,
               issues,
               // Link building to its plot for selection/highlight behavior in overlays
-              ...( { parentPlotId: plot.id } as any ),
+              ...({ parentPlotId: plot.id } as any),
             });
           }
         } catch (err) {
@@ -330,7 +404,7 @@ export function useBuildingFootprints(
               entranceBearingDegrees,
               highlights: [],
               issues: ['Unable to perform complete Vastu analysis'],
-              ...( { parentPlotId: plot.id } as any ),
+              ...({ parentPlotId: plot.id } as any),
             });
           }
         }
@@ -367,12 +441,12 @@ export function useBuildingFootprints(
           onProgress: handleProgress,
         });
         if (seq !== searchSeqRef.current) return;
-        
+
         // Store bounds from result for tile progress tracking
         if (result.bounds) {
           setCurrentBounds(result.bounds);
         }
-        
+
         // Store ZIP boundary if available
         if (result.zipBoundary) {
           console.log(`[useBuildingFootprints] Storing ZIP boundary from search result`);
@@ -533,8 +607,8 @@ function generateHighlightsAndIssues(
     const confidenceNote = entranceSource === 'google_api'
       ? ' (verified)'
       : entranceSource === 'road_access'
-      ? ' (from road access)'
-      : '';
+        ? ' (from road access)'
+        : '';
 
     // Check for highly auspicious directions (NE, E, N)
     const highlyAuspiciousDirections = ['NE', 'E', 'N'];

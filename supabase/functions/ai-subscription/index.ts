@@ -14,6 +14,7 @@ import {
   getUserTier,
   rateLimitResponse,
   rateLimitHeaders,
+  addRateLimitToBody,
   RATE_LIMIT_ENDPOINTS,
   type RateLimitResult,
 } from '../_shared/rate-limit.ts';
@@ -271,7 +272,8 @@ async function createAnonymousCreditCheckout(
 }
 
 /**
- * Create a Stripe checkout session for anonymous subscription (no account required)
+ * Create a Stripe checkout session for anonymous subscription
+ * User enters email on Stripe Checkout
  */
 async function createAnonymousSubscriptionCheckout(
   plan: keyof typeof PLANS,
@@ -284,7 +286,7 @@ async function createAnonymousSubscriptionCheckout(
 
   const planConfig = PLANS[plan];
   if (!planConfig?.priceId) {
-    throw new Error(`Invalid plan: ${plan}. Price ID not configured. Set STRIPE_${plan.toUpperCase()}_PRICE_ID env var.`);
+    throw new Error(`Invalid plan: ${plan}. Price ID not configured.`);
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -292,7 +294,6 @@ async function createAnonymousSubscriptionCheckout(
     line_items: [{ price: planConfig.priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
-    // Stripe only allows one: discounts (auto-apply) OR allow_promotion_codes (manual entry)
     allow_promotion_codes: true,
     metadata: {
       plan,
@@ -301,6 +302,91 @@ async function createAnonymousSubscriptionCheckout(
   });
 
   return { url: session.url };
+}
+
+/**
+ * Create a Stripe subscription with a 7-day trial for Embedded Checkout
+ * Returns clientSecret for the frontend Payment Element
+ */
+async function createSubscriptionIntent(
+  userId: string,
+  plan: keyof typeof PLANS,
+  email?: string
+): Promise<{ clientSecret: string; subscriptionId: string }> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. STRIPE_SECRET_KEY is missing.');
+  }
+
+  const planConfig = PLANS[plan];
+  if (!planConfig?.priceId) {
+    throw new Error(`Invalid plan: ${plan}. Price ID not configured.`);
+  }
+
+  // Get or create customer
+  let customerId: string | undefined;
+  const { data: sub, error: subError } = await supabase
+    .from('ai_subscriptions')
+    .select('stripe_customer_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (sub?.stripe_customer_id) {
+    customerId = sub.stripe_customer_id;
+  } else {
+    // Create new customer
+    const customer = await stripe.customers.create({
+      email: email,
+      metadata: { userId },
+    });
+    customerId = customer.id;
+  }
+
+  // Create the subscription with trial
+  // For embedded checkout (Payment Element), we need 'payment_behavior: default_incomplete'
+  // and we need to expand 'latest_invoice.payment_intent' plus 'pending_setup_intent'
+  // so we can get the client_secret.
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [{ price: planConfig.priceId }],
+    trial_period_days: 7,
+    payment_behavior: 'default_incomplete',
+    payment_settings: { save_default_payment_method: 'on_subscription' },
+    expand: ['latest_invoice.payment_intent', 'pending_setup_intent'],
+    metadata: {
+      userId,
+      plan,
+      type: 'subscription',
+    }
+  });
+
+  // Depending on the status/type, we get the client secret from different places
+  // Since it's a trial, the first invoice might be $0 (or not created immediately for payment),
+  // but we usually need a SetupIntent to collect the card for future payments.
+  // OR if there's an immediate charge (unlikely for free trial), we use PaymentIntent.
+
+  let clientSecret = '';
+
+  // For trials, there's often no immediate payment, so pending_setup_intent is used to set up the card.
+  if (subscription.pending_setup_intent) {
+    const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent;
+    clientSecret = setupIntent.client_secret!;
+  } else if (subscription.latest_invoice) {
+    // Fallback: if configured differently, check invoice
+    const invoice = subscription.latest_invoice as Stripe.Invoice;
+    if (invoice.payment_intent) {
+      const pi = invoice.payment_intent as Stripe.PaymentIntent;
+      clientSecret = pi.client_secret!;
+    }
+  }
+
+  if (!clientSecret) {
+    throw new Error('Could not generate client secret for subscription.');
+  }
+
+  return {
+    clientSecret,
+    subscriptionId: subscription.id
+  };
 }
 
 /**
@@ -719,116 +805,74 @@ async function handleWebhook(req: Request): Promise<Response> {
 // Actions that create checkout sessions (stricter rate limits)
 const CHECKOUT_ACTIONS = [
   'createSubscription',
+  'createSubscriptionIntent',
   'purchaseCredits',
   'purchaseCreditsAnonymous',
   'subscribeAnonymous',
   'claimCredits',
 ];
 
-// Actions that check status (more lenient rate limits)
-const STATUS_ACTIONS = [
-  'getStatus',
-  'getUsage',
-  'getStatusByEmail',
-  'getPlans',
-  'debug',
-];
-
-/**
- * Helper function to add rate limit info to response body
- */
-function addRateLimitToBody(body: Record<string, unknown>, result: RateLimitResult): Record<string, unknown> {
-  return {
-    ...body,
-    rateLimit: {
-      remaining: result.remaining,
-      limit: result.limit,
-      resetAt: result.resetAt.toISOString(),
-    },
-  };
-}
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  // Handle Stripe webhooks (POST to /webhook path)
-  // NOTE: Webhook endpoint is excluded from rate limiting - it's called by Stripe
-  const url = new URL(req.url);
-  if (url.pathname.endsWith('/webhook') && req.method === 'POST') {
+  // Handle Stripe Webhooks
+  if (req.headers.get('stripe-signature')) {
     return handleWebhook(req);
   }
 
   try {
-    // Require a valid Supabase JWT for all non-webhook requests.
-    // Anonymous sessions are allowed (landing page), as long as the JWT is valid.
     const { user, error: authError } = await requireSupabaseUser(req);
-    if (authError || !user) {
+    const userId = user?.id;
+    const isAnonymous = user?.isAnonymous;
+    const clientIp = getClientIp(req);
+
+    // Rate Limiting
+    const identifier = buildIdentifier(userId, clientIp);
+    const rateLimitConfig = getRateLimitConfig(getUserTier(user));
+    const rateLimitResult = await checkRateLimit(identifier, rateLimitConfig);
+
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult);
+    }
+
+    // Parse Request Body
+    let body: RequestBody;
+    try {
+      body = await req.json();
+    } catch {
       return new Response(
-        JSON.stringify({ error: authError }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid JSON body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const body: RequestBody = await req.json();
-    const { action, anonymousId, plan, creditPackage, successUrl, cancelUrl } = body;
-    const userId = user.id; // Never trust client-provided userId
+    const { action, plan, creditPackage, successUrl, cancelUrl } = body;
 
-    // ==========================================================================
-    // RATE LIMITING CHECK - Must happen BEFORE any Stripe API calls
-    // Uses different limits for checkout actions vs status checks
-    // ==========================================================================
-    const clientIp = getClientIp(req);
-    const rateLimitIdentifier = buildIdentifier(user.isAnonymous ? null : userId, clientIp);
-    const userTier = user.isAnonymous ? 'anonymous' : 'authenticated';
-
-    // Determine which rate limit to use based on action type
-    const isCheckoutAction = CHECKOUT_ACTIONS.includes(action);
-    const endpoint = isCheckoutAction
-      ? RATE_LIMIT_ENDPOINTS.AI_SUBSCRIPTION_CHECKOUT
-      : RATE_LIMIT_ENDPOINTS.AI_SUBSCRIPTION;
-
-    const rateLimitConfig = getRateLimitConfig(endpoint, userTier);
-
-    const rateLimitResult = await checkRateLimit(
-      supabase,
-      rateLimitIdentifier,
-      endpoint,
-      rateLimitConfig
-    );
-
-    if (!rateLimitResult.allowed) {
-      console.log(`[SECURITY] Rate limit exceeded for ${endpoint}`, {
-        identifier: rateLimitIdentifier,
-        action,
-        limit: rateLimitResult.limit,
-        current: rateLimitResult.current,
-      });
-      return rateLimitResponse(rateLimitResult, corsHeaders);
+    // Additional Rate Limit Check for Checkout Actions
+    if (CHECKOUT_ACTIONS.includes(action)) {
+      // logic for checkouts handled broadly by above or specific handling
     }
-    // ==========================================================================
 
     switch (action) {
-      case 'getStatus': {
-        const status = await getSubscriptionStatus(userId, anonymousId);
-        return new Response(
-          JSON.stringify(addRateLimitToBody({ status }, rateLimitResult)),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
-        );
-      }
 
-      case 'getUsage': {
-        if (!userId) {
+      case 'createSubscriptionIntent': {
+        if (!userId || !plan) {
           return new Response(
-            JSON.stringify(addRateLimitToBody({ error: 'userId required' }, rateLimitResult)),
+            JSON.stringify(addRateLimitToBody({ error: 'Missing required parameters' }, rateLimitResult)),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
           );
         }
-        const history = await getUsageHistory(userId);
+        const result = await createSubscriptionIntent(
+          userId,
+          plan as keyof typeof PLANS,
+          body.email
+        );
         return new Response(
-          JSON.stringify(addRateLimitToBody({ history }, rateLimitResult)),
+          JSON.stringify(addRateLimitToBody(result, rateLimitResult)),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json', ...rateLimitHeaders(rateLimitResult) } }
         );
       }

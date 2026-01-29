@@ -9,11 +9,12 @@ import {
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAndroid, faApple } from '@fortawesome/free-brands-svg-icons';
-import { faHouse } from '@fortawesome/free-solid-svg-icons';
+
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { LandingConstellations } from './components/Constellations';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 
 // Error boundary for lazy-loaded demo components
 class DemoErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -80,8 +81,8 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
     return (
         <nav className={`nav-fixed ${isScrolled ? 'nav-scrolled' : ''}`}>
             <div className="nav-container">
-                <div className="nav-logo">
-                    <FontAwesomeIcon icon={faHouse} className="mr-2" />
+                <div className="nav-logo flex items-center gap-2">
+                    <img src="/logo.png" alt="Halo Home" className="w-6 h-6 rounded-md" />
                     Halo Home
                 </div>
 
@@ -402,17 +403,17 @@ const Hero = memo(() => {
             ease: "power3.out",
             stagger: 0.1 // Slight stagger for visual hierarchy
         })
-        .to([textRef.current, subTextRef.current], {
-            opacity: 0,
-            y: -20,
-            filter: "blur(10px)",
-            duration: 0.8,
-            ease: "power3.in",
-            delay: 3, 
-            onComplete: () => {
-                setIndex((prev) => (prev + 1) % HERO_HEADLINES.length);
-            }
-        });
+            .to([textRef.current, subTextRef.current], {
+                opacity: 0,
+                y: -20,
+                filter: "blur(10px)",
+                duration: 0.8,
+                ease: "power3.in",
+                delay: 3,
+                onComplete: () => {
+                    setIndex((prev) => (prev + 1) % HERO_HEADLINES.length);
+                }
+            });
 
     }, [index]);
 
@@ -422,8 +423,8 @@ const Hero = memo(() => {
             <div className="hero-mobile-bg-image">
                 <picture>
                     <source srcSet="/images/hero-houses.webp" type="image/webp" />
-                    <img 
-                        src="/images/hero-houses.png" 
+                    <img
+                        src="/images/hero-houses.png"
                         alt=""
                         className="hero-houses-bg"
                         aria-hidden="true"
@@ -457,8 +458,8 @@ const Hero = memo(() => {
                     <div className="hero-image-wrapper">
                         <picture>
                             <source srcSet="/images/hero-houses.webp" type="image/webp" />
-                            <img 
-                                src="/images/hero-houses.png" 
+                            <img
+                                src="/images/hero-houses.png"
                                 alt="Modern and traditional houses - 3D isometric view"
                                 className="hero-houses-image"
                             />
@@ -727,76 +728,76 @@ const DemoEntrance = memo(() => (
 
 // Memoize features array outside component to prevent recreation
 const FEATURES = [
-        {
-            title: "Scout Any Location",
-            desc: "Just enter any ZIP code to instantly check the harmony of properties in any area. No consultants needed.",
-            icon: <Globe />,
-            col: "bento-col-8",
-            demo: <DemoGlobe />
-        },
-        {
-            title: "AI Harmony Analysis",
-            desc: "Get detailed harmony scores with practical tips. Our AI makes Vastu simple and accessible.",
-            icon: <Sparkles />,
-            col: "bento-col-4",
-            demo: <DemoAIChat />
-        },
-        {
-            title: "Harmony Score",
-            desc: "See and compare the harmony score of different spaces you're considering. Make informed decisions.",
-            icon: <Star />,
-            col: "bento-col-4",
-            demo: <DemoPlanets />
-        },
-        {
-            title: "8 Direction Analysis",
-            desc: "Full analysis of all eight Vastu directions and their energies for complete spatial understanding.",
-            icon: <Navigation />,
-            col: "bento-col-4",
-            demo: <DemoLocalSpace />
-        },
-        {
-            title: "Property Boundaries",
-            desc: "Analyze parcel shape, orientation, and Vastu compliance with accurate boundary data.",
-            icon: <Hexagon />,
-            col: "bento-col-4",
-            demo: <DemoZone />
-        },
-        {
-            title: "Room Placement",
-            desc: "AI suggestions for optimal room placement based on ancient Vastu principles.",
-            icon: <Building2 />,
-            col: "bento-col-6",
-            demo: <DemoRoomPlacement />
-        },
-        {
-            title: "Actionable Remedies",
-            desc: "Get practical remedies and corrections according to the ancient science of interior harmony.",
-            icon: <Repeat />,
-            col: "bento-col-6",
-            demo: <DemoRemedies />
-        },
-        {
-            title: "Compare Properties",
-            desc: "Side-by-side comparison of multiple homes to find the one with the best harmony score.",
-            icon: <Heart />,
-            col: "bento-col-4",
-            demo: <DemoCompare />
-        },
-        {
-            title: "Entrance Analysis",
-            desc: "Determine the best entry points for positive energy flow into your home.",
-            icon: <ScrollText />,
-            col: "bento-col-4",
-            demo: <DemoEntrance />
-        },
-        {
-            title: "ZIP Code Scout",
-            desc: "Scan entire neighborhoods to find the best Vastu-aligned properties in any area.",
-            icon: <MapPin />,
-            col: "bento-col-4",
-            demo: <DemoFindPlaces />
-        }
+    {
+        title: "Scout Any Location",
+        desc: "Just enter any ZIP code to instantly check the harmony of properties in any area. No consultants needed.",
+        icon: <Globe />,
+        col: "bento-col-8",
+        demo: <DemoGlobe />
+    },
+    {
+        title: "AI Harmony Analysis",
+        desc: "Get detailed harmony scores with practical tips. Our AI makes Vastu simple and accessible.",
+        icon: <Sparkles />,
+        col: "bento-col-4",
+        demo: <DemoAIChat />
+    },
+    {
+        title: "Harmony Score",
+        desc: "See and compare the harmony score of different spaces you're considering. Make informed decisions.",
+        icon: <Star />,
+        col: "bento-col-4",
+        demo: <DemoPlanets />
+    },
+    {
+        title: "8 Direction Analysis",
+        desc: "Full analysis of all eight Vastu directions and their energies for complete spatial understanding.",
+        icon: <Navigation />,
+        col: "bento-col-4",
+        demo: <DemoLocalSpace />
+    },
+    {
+        title: "Property Boundaries",
+        desc: "Analyze parcel shape, orientation, and Vastu compliance with accurate boundary data.",
+        icon: <Hexagon />,
+        col: "bento-col-4",
+        demo: <DemoZone />
+    },
+    {
+        title: "Room Placement",
+        desc: "AI suggestions for optimal room placement based on ancient Vastu principles.",
+        icon: <Building2 />,
+        col: "bento-col-6",
+        demo: <DemoRoomPlacement />
+    },
+    {
+        title: "Actionable Remedies",
+        desc: "Get practical remedies and corrections according to the ancient science of interior harmony.",
+        icon: <Repeat />,
+        col: "bento-col-6",
+        demo: <DemoRemedies />
+    },
+    {
+        title: "Compare Properties",
+        desc: "Side-by-side comparison of multiple homes to find the one with the best harmony score.",
+        icon: <Heart />,
+        col: "bento-col-4",
+        demo: <DemoCompare />
+    },
+    {
+        title: "Entrance Analysis",
+        desc: "Determine the best entry points for positive energy flow into your home.",
+        icon: <ScrollText />,
+        col: "bento-col-4",
+        demo: <DemoEntrance />
+    },
+    {
+        title: "ZIP Code Scout",
+        desc: "Scan entire neighborhoods to find the best Vastu-aligned properties in any area.",
+        icon: <MapPin />,
+        col: "bento-col-4",
+        demo: <DemoFindPlaces />
+    }
 ];
 
 const Features = memo(() => (
@@ -825,14 +826,8 @@ const Features = memo(() => (
     </section>
 ));
 
-const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Promise<void> }) => {
-    const [loading, setLoading] = useState<string | null>(null);
-
-    const handleBuy = async (id: string, type: 'subscription' | 'report') => {
-        setLoading(id);
-        await onPurchase(type, id);
-        setLoading(null);
-    };
+const Pricing = () => {
+    const navigate = useNavigate();
 
     return (
         <section id="pricing" className="section-wrapper">
@@ -850,18 +845,19 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                     <div className="pricing-card glass-card h-full">
                         <h3 className="text-xl font-medium text-white flex items-center gap-2"><Compass size={18} className="text-[#F0A6B3]" /> Explorer</h3>
                         <div className="price-amount">$49<span className="price-period">/mo</span></div>
+                        <p className="text-zinc-400 text-sm mb-4">Serious homeowner / small investor</p>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
-                            <li className="feature-item"><Check className="check-icon" /> 10 ZIP scouts / month</li>
-                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
-                            <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
+                            <li className="feature-item"><Check className="check-icon" /> Analyze 5 properties / month</li>
+                            <li className="feature-item"><Check className="check-icon" /> Orientation, Geometry & Env scores</li>
+                            <li className="feature-item"><Check className="check-icon" /> Environmental slope & shadow check</li>
+                            <li className="feature-item"><Check className="check-icon" /> Basic PDF Report</li>
+                            <li className="feature-item"><Check className="check-icon" /> Save up to 10 properties</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('explorer', 'subscription')}
-                            disabled={!!loading}
+                            onClick={() => navigate('/ai-subscription?plan=explorer')}
                             className="plan-btn flex items-center justify-center gap-2 mt-auto"
                         >
-                            {loading === 'explorer' ? <Loader2 className="animate-spin" /> : 'Get Started'}
+                            Start Free Trial
                         </button>
                     </div>
                 </ScrollReveal>
@@ -878,24 +874,24 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                     >
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><MapPin size={18} className="text-[#F0A6B3]" /> Pioneer</h3>
                         <div className="price-amount">$89<span className="price-period">/mo</span></div>
+                        <p className="text-zinc-400 text-sm mb-4">Architects & Designers</p>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
-                            <li className="feature-item"><Check className="check-icon" /> 25 ZIP scouts / month</li>
-                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
-                            <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
-                            <li className="feature-item"><Check className="check-icon" /> Compare properties</li>
+                            <li className="feature-item"><Check className="check-icon" /> Analyze 25 properties / month</li>
+                            <li className="feature-item"><Check className="check-icon" /> Detailed Solar & Daylight insights</li>
+                            <li className="feature-item"><Check className="check-icon" /> Multi-property comparison</li>
+                            <li className="feature-item"><Check className="check-icon" /> Detailed PDF Report</li>
+                            <li className="feature-item"><Check className="check-icon" /> Save up to 100 projects</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('pioneer', 'subscription')}
-                            disabled={!!loading}
+                            onClick={() => navigate('/ai-subscription?plan=pioneer')}
                             className="plan-btn primary flex items-center justify-center gap-2 mt-auto !bg-zinc-900 hover:!bg-zinc-800 !border-zinc-900"
                         >
-                            {loading === 'pioneer' ? <Loader2 className="animate-spin" /> : 'Get Started'}
+                            Start Free Trial
                         </button>
                     </SpotlightCard>
                 </ScrollReveal>
 
-                {/* Agent Tier */}
+                {/* Broker Tier */}
                 <ScrollReveal delay={300} className="h-full">
                     <div className="pricing-card glass-card h-full">
                         {/* Best value badge */}
@@ -906,19 +902,19 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                         </div>
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><Briefcase size={18} className="text-[#F0A6B3]" /> Broker</h3>
                         <div className="price-amount">$179<span className="price-period">/mo</span></div>
+                        <p className="text-zinc-400 text-sm mb-4">Developers & Consultants</p>
                         <ul className="feature-list flex-1">
-                            <li className="feature-item"><Check className="check-icon" /> Unlimited single-home searches</li>
-                            <li className="feature-item"><Check className="check-icon" /> 60 ZIP scouts / month</li>
-                            <li className="feature-item"><Check className="check-icon" /> Harmony Score</li>
-                            <li className="feature-item"><Check className="check-icon" /> Insights & Remedies</li>
-                            <li className="feature-item"><Check className="check-icon" /> Priority processing</li>
+                            <li className="feature-item"><Check className="check-icon" /> Unlimited properties (fair use)</li>
+                            <li className="feature-item"><Check className="check-icon" /> White-label reports (your logo)</li>
+                            <li className="feature-item"><Check className="check-icon" /> Portfolio-wide dashboards</li>
+                            <li className="feature-item"><Check className="check-icon" /> Export options (CSV/JSON)</li>
+                            <li className="feature-item"><Check className="check-icon" /> Priority support & onboarding</li>
                         </ul>
                         <button
-                            onClick={() => handleBuy('broker', 'subscription')}
-                            disabled={!!loading}
+                            onClick={() => navigate('/ai-subscription?plan=broker')}
                             className="plan-btn flex items-center justify-center gap-2 mt-auto"
                         >
-                            {loading === 'broker' ? <Loader2 className="animate-spin" /> : 'Get Started'}
+                            Start Free Trial
                         </button>
                     </div>
                 </ScrollReveal>
@@ -935,7 +931,7 @@ const Pricing = ({ onPurchase }: { onPurchase: (type: string, id: string) => Pro
                                 <span className="text-slate-600 font-medium">$0</span>
                             </div>
                             <p className="text-sm text-slate-600 mt-1">
-                                Single home searches (no ZIP scouting). Harmony Score + basic insights.
+                                Analyze one property end-to-end. Basic Vastu scores & Mandala grid.
                             </p>
                         </div>
                     </div>
@@ -1220,6 +1216,8 @@ const MobileAppWaitlist = () => {
     );
 };
 
+import GoogleOneTap from '@/components/auth/GoogleOneTap';
+
 export default function Landing() {
     const { isInstalled, isIOS, promptInstall } = usePWAInstall();
     const [isInstallOpen, setIsInstallOpen] = useState(false);
@@ -1310,6 +1308,7 @@ export default function Landing() {
 
     return (
         <div className="page-root">
+            <GoogleOneTap />
             <div className="bg-noise" />
             {/* <MysticalParticles /> */}
             {/* <LandingConstellations /> */}
@@ -1387,7 +1386,7 @@ export default function Landing() {
                 </div>
 
                 <div className="bg-section-white section-block">
-                    <Pricing onPurchase={handlePurchase} />
+                    <Pricing />
                 </div>
 
                 {/* Testimonials - Social proof after pricing */}

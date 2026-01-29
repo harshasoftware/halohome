@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState, Suspense, lazy } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse } from '@fortawesome/free-solid-svg-icons';
+
 import { toast } from 'sonner';
 import VastuGlobeMap, { type VastuGlobeMapMethods } from './components/VastuGlobeMap';
 import { GlobeContextMenu } from './components/GlobeContextMenu';
@@ -1925,7 +1925,7 @@ const GlobePage: React.FC<GlobePageProps> = ({
         }
       }
     }
-    
+
     return (
       <div className="h-full flex flex-col min-h-0 overflow-hidden">
         {zipCode && (
@@ -2109,63 +2109,94 @@ const GlobePage: React.FC<GlobePageProps> = ({
 
   return (
     <GoogleMapsWrapper>
-    <div
-      className="h-full w-full flex flex-col relative bg-white dark:bg-[#050505]"
-      style={isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : undefined}
-      data-tour="welcome"
-    >
-      {/* Preferences pane (Vastu-only) */}
-      {isMobile ? (
-        <VastuPreferencesPane />
-      ) : (
-        <div className="absolute top-[68px] left-4 z-50 pointer-events-auto">
+      <div
+        className="h-full w-full flex flex-col relative bg-white dark:bg-[#050505]"
+        style={isMobile ? { paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' } : undefined}
+        data-tour="welcome"
+      >
+        {/* Preferences pane (Vastu-only) */}
+        {isMobile ? (
           <VastuPreferencesPane />
-        </div>
-      )}
+        ) : (
+          <div className="absolute top-[68px] left-4 z-50 pointer-events-auto">
+            <VastuPreferencesPane />
+          </div>
+        )}
 
-      {/* Export Report Modal (centered) - shows when export button is clicked on desktop/tablet */}
-      <Dialog open={showExportPanel && !isMobile} onOpenChange={(open) => !open && handleCloseExportPanel()}>
-        <DialogContent className="max-w-[520px] p-0 gap-0 border-0 bg-transparent shadow-none [&>button]:hidden">
-          <Suspense fallback={null}>
-            <LineReportPanel
-              planetaryLines={visiblePlanetaryLines}
-              zenithPoints={visibleZenithPoints}
-              birthDate={firstPersonData?.birthDate || 'Unknown'}
-              birthTime={firstPersonData?.birthTime || 'Unknown'}
-              birthLocation={firstPersonData?.locations?.find(l => l.type === 'birth')?.place || 'Unknown'}
-              onClose={handleCloseExportPanel}
-            />
-          </Suspense>
-        </DialogContent>
-      </Dialog>
+        {/* Export Report Modal (centered) - shows when export button is clicked on desktop/tablet */}
+        <Dialog open={showExportPanel && !isMobile} onOpenChange={(open) => !open && handleCloseExportPanel()}>
+          <DialogContent className="max-w-[520px] p-0 gap-0 border-0 bg-transparent shadow-none [&>button]:hidden">
+            <Suspense fallback={null}>
+              <LineReportPanel
+                planetaryLines={visiblePlanetaryLines}
+                zenithPoints={visibleZenithPoints}
+                birthDate={firstPersonData?.birthDate || 'Unknown'}
+                birthTime={firstPersonData?.birthTime || 'Unknown'}
+                birthLocation={firstPersonData?.locations?.find(l => l.type === 'birth')?.place || 'Unknown'}
+                onClose={handleCloseExportPanel}
+              />
+            </Suspense>
+          </DialogContent>
+        </Dialog>
 
 
-      {/* Astrocartography Loading Overlay (includes scout progress) */}
-      {(astroLoading || isScoutComputing) && birthData && (
-        <AstroLoadingOverlay
-          progress={astroProgress}
-          scoutProgress={isScoutComputing ? {
-            percent: scoutProgress,
-            detail: scoutDetail,
-            phase: scoutPhase,
-          } : null}
-        />
-      )}
+        {/* Astrocartography Loading Overlay (includes scout progress) */}
+        {(astroLoading || isScoutComputing) && birthData && (
+          <AstroLoadingOverlay
+            progress={astroProgress}
+            scoutProgress={isScoutComputing ? {
+              percent: scoutProgress,
+              detail: scoutDetail,
+              phase: scoutPhase,
+            } : null}
+          />
+        )}
 
-      {/* halohome.app Banner (bottom right, desktop only, hidden when panel is open) */}
-      {!isMobile && !panelStack.isOpen && (
-        <a
-          href="/"
-          className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-lg shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
-        >
-          <FontAwesomeIcon icon={faHouse} className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-          <span className="text-sm text-slate-600 dark:text-slate-300 select-none">halohome.app</span>
-        </a>
-      )}
+        {/* halohome.app Banner (bottom right, desktop only, hidden when panel is open) */}
+        {!isMobile && !panelStack.isOpen && (
+          <a
+            href="/"
+            className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-lg shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <img src="/logo.png" alt="Halo Home" className="w-3.5 h-3.5 rounded-sm" />
+            <span className="text-sm text-slate-600 dark:text-slate-300 select-none">halohome.app</span>
+          </a>
+        )}
 
-      {/* Natal Chart Widget (bottom left, desktop only) */}
-      {!isMobile && birthData && natalChartData.planetaryPositions.length > 0 && (
-        <div className="fixed bottom-4 left-4 z-10 pointer-events-auto">
+        {/* Natal Chart Widget (bottom left, desktop only) */}
+        {!isMobile && birthData && natalChartData.planetaryPositions.length > 0 && (
+          <div className="fixed bottom-4 left-4 z-10 pointer-events-auto">
+            <Suspense fallback={null}>
+              <NatalChartWidget
+                planetaryPositions={natalChartData.planetaryPositions}
+                natalChartResult={natalChartResult ?? undefined}
+                ascendant={natalChartData.ascendant}
+                midheaven={natalChartData.midheaven}
+                birthDate={firstPersonData?.birthDate}
+                birthTime={firstPersonData?.birthTime}
+                birthLocation={firstPersonData?.locations?.find(l => l.type === 'birth')?.place}
+                isMinimized={natalChartMinimized}
+                onToggleMinimized={handleToggleNatalChart}
+                settings={natalChartSettings}
+                onSettingsChange={setNatalChartSettings}
+                // Duo mode props
+                isDuoMode={compatibility.isEnabled && !!compatibility.partnerChart}
+                personName={firstPersonData?.name || 'You'}
+                partnerPlanetaryPositions={partnerNatalChartData.planetaryPositions}
+                partnerNatalChartResult={partnerNatalChartResult ?? undefined}
+                partnerAscendant={partnerNatalChartData.ascendant}
+                partnerMidheaven={partnerNatalChartData.midheaven}
+                partnerName={compatibility.partnerChart?.name || 'Partner'}
+                // Relocation chart props - only show when in relocated mode
+                relocationResult={natalWidgetRelocationResult}
+                relocationLocationName={natalWidgetRelocationName}
+              />
+            </Suspense>
+          </div>
+        )}
+
+        {/* Natal Chart Widget (mobile bottom sheet) */}
+        {isMobile && birthData && natalChartData.planetaryPositions.length > 0 && !natalChartMinimized && (
           <Suspense fallback={null}>
             <NatalChartWidget
               planetaryPositions={natalChartData.planetaryPositions}
@@ -2192,366 +2223,335 @@ const GlobePage: React.FC<GlobePageProps> = ({
               relocationLocationName={natalWidgetRelocationName}
             />
           </Suspense>
-        </div>
-      )}
+        )}
 
-      {/* Natal Chart Widget (mobile bottom sheet) */}
-      {isMobile && birthData && natalChartData.planetaryPositions.length > 0 && !natalChartMinimized && (
+        {/* AI Chat Panel - lazy loaded with Suspense to prevent CopilotKit initialization issues
+          IMPORTANT: Must render even without birth data so Vastu Guide can open in Vastu-first flows. */}
         <Suspense fallback={null}>
-          <NatalChartWidget
-            planetaryPositions={natalChartData.planetaryPositions}
-            natalChartResult={natalChartResult ?? undefined}
-            ascendant={natalChartData.ascendant}
-            midheaven={natalChartData.midheaven}
-            birthDate={firstPersonData?.birthDate}
-            birthTime={firstPersonData?.birthTime}
-            birthLocation={firstPersonData?.locations?.find(l => l.type === 'birth')?.place}
-            isMinimized={natalChartMinimized}
-            onToggleMinimized={handleToggleNatalChart}
-            settings={natalChartSettings}
-            onSettingsChange={setNatalChartSettings}
-            // Duo mode props
-            isDuoMode={compatibility.isEnabled && !!compatibility.partnerChart}
-            personName={firstPersonData?.name || 'You'}
-            partnerPlanetaryPositions={partnerNatalChartData.planetaryPositions}
-            partnerNatalChartResult={partnerNatalChartResult ?? undefined}
-            partnerAscendant={partnerNatalChartData.ascendant}
-            partnerMidheaven={partnerNatalChartData.midheaven}
-            partnerName={compatibility.partnerChart?.name || 'Partner'}
-            // Relocation chart props - only show when in relocated mode
-            relocationResult={natalWidgetRelocationResult}
-            relocationLocationName={natalWidgetRelocationName}
+          <VastuChat
+            isOpen={showAstroChat}
+            onToggle={handleToggleAstroChat}
+            askLocationContext={askAILocation}
+            onClearAskLocationContext={() => setAskAILocation(null)}
+            onZoomToLocation={handleAIChatZoomToLocation}
+            onAnalyzeLocation={handleAIChatAnalyzeLocation}
           />
         </Suspense>
-      )}
 
-      {/* AI Chat Panel - lazy loaded with Suspense to prevent CopilotKit initialization issues
-          IMPORTANT: Must render even without birth data so Vastu Guide can open in Vastu-first flows. */}
-      <Suspense fallback={null}>
-        <VastuChat
-          isOpen={showAstroChat}
-          onToggle={handleToggleAstroChat}
-          askLocationContext={askAILocation}
-          onClearAskLocationContext={() => setAskAILocation(null)}
-          onZoomToLocation={handleAIChatZoomToLocation}
-          onAnalyzeLocation={handleAIChatAnalyzeLocation}
-        />
-      </Suspense>
-
-      {/* TimelineScrubber (desktop only) */}
-      {/* Removed TimelineScrubber for all devices */}
-      <div className="flex-1 flex flex-col min-h-0 relative">
-        <div className="flex-1 flex min-h-0 relative" data-tour="globe">
-          {/* City Search Bar - floating top-left */}
-          {/* Shows as "Enter your birthplace" when no valid birth data, otherwise as regular search */}
-          {/* Hidden on mobile when AI chat is open */}
-          {/* Hidden when valid birth data exists but lines are still calculating (prevents flicker) */}
-          {!(isMobile && showAstroChat) &&
-           (!hasValidBirthData || (astroResult?.planetaryLines && astroResult.planetaryLines.length > 0)) && (
-            <div className={`absolute z-40 ${isMobile ? 'top-3 left-3' : 'top-4 left-4'}`}>
-              <CitySearchBar
-                onCitySelect={handleCitySelect}
-                onClear={handleClearCityLocation}
-                isMobile={isMobile}
-                mode={hasValidBirthData ? 'search' : 'birthplace'}
-              />
-            </div>
-          )}
-
-          {isMobile ? (
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{ transform: 'translateY(-5%)' }}>
-              <VastuGlobeMap
-                ref={globeEl}
-                locations={filteredLocations}
-                migrations={filteredMigrations}
-                onPersonClick={handlePersonClick}
-                astroLines={showAstroLines ? effectiveAstroLines : []}
-                aspectLines={showAstroLines && !isLocalSpace ? visibleAspectLines : []}
-                paranLines={showAstroLines && !isLocalSpace ? visibleParanLines : []}
-                zenithPoints={showAstroLines && !isLocalSpace ? visibleZenithPoints : []}
-                onCoordinateSelect={handleCoordinateSelect}
-                onLocationAnalyze={isLocalSpace ? undefined : handleLocationAnalyze}
-                birthDataKey={birthLocationKey}
-                onLineClick={handleLineClick}
-                isMobile={true}
-                analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
-                cityLocation={cityLocation}
-                zipCodeBounds={zipCodeBounds}
-                zipCodeBoundary={zipCodeBoundary}
-                currentZipCode={currentZipCode}
-                zipSearchStatus={zipSearchStatus}
-                relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
-                hasBirthData={!!birthData}
-                partnerLocation={partnerLocation}
-                selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
-                isDrawingZone={zoneDrawing.isDrawing}
-                drawingMode={zoneDrawing.drawingMode}
-                zoneDrawingPoints={zoneDrawing.drawingPoints}
-                drawnZone={zoneDrawing.drawnZone}
-                searchZone={zoneDrawing.searchZone}
-                onZonePointAdd={handleZonePointAdd}
-                onZoneComplete={handleZoneComplete}
-                isLocalSpaceMode={isLocalSpace}
-                localSpaceOrigin={localSpaceOrigin}
-                showLineLabels={visibility.showLineLabels}
-                onSingleClick={handleGlobeSingleClick}
-                onContextMenu={handleGlobeContextMenu}
-                scoutMarkers={scoutMarkers}
-                onScoutMarkerClick={handleCityClick}
-                onGlobeFallbackShowScout={() => setMobileScoutSheetOpen(true)}
-                favoriteLocations={favoriteLocations}
-                onFavoriteClick={handleCityClick}
-                parcels={scoutParcels}
-                selectedParcelId={selectedParcelId}
-              />
-            </div>
-          ) : (
-            <ResizablePanelGroup direction="horizontal" className="flex-1 overflow-hidden">
-              <ResizablePanel id="globe-map-panel" order={1} defaultSize={panelStack.isOpen ? 75 : 100} minSize={50}>
-                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                  <VastuGlobeMap
-                    ref={globeEl}
-                    locations={filteredLocations}
-                    migrations={filteredMigrations}
-                    onPersonClick={handlePersonClick}
-                    astroLines={showAstroLines ? effectiveAstroLines : []}
-                    aspectLines={showAstroLines && !isLocalSpace ? visibleAspectLines : []}
-                    paranLines={showAstroLines && !isLocalSpace ? visibleParanLines : []}
-                    zenithPoints={showAstroLines && !isLocalSpace ? visibleZenithPoints : []}
-                    onCoordinateSelect={handleCoordinateSelect}
-                    onLocationAnalyze={isLocalSpace ? undefined : handleLocationAnalyze}
-                    birthDataKey={birthLocationKey}
-                    onLineClick={handleLineClick}
-                    hasBirthData={!!birthData}
-                    analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
-                    cityLocation={cityLocation}
-                    zipCodeBounds={zipCodeBounds}
-                    zipCodeBoundary={zipCodeBoundary}
-                    currentZipCode={currentZipCode}
-                    zipSearchStatus={zipSearchStatus}
-                    parcels={scoutParcels}
-                selectedParcelId={selectedParcelId}
-                    relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
-                    partnerLocation={partnerLocation}
-                    selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
-                    isDrawingZone={zoneDrawing.isDrawing}
-                    drawingMode={zoneDrawing.drawingMode}
-                    zoneDrawingPoints={zoneDrawing.drawingPoints}
-                    drawnZone={zoneDrawing.drawnZone}
-                    searchZone={zoneDrawing.searchZone}
-                    onZonePointAdd={handleZonePointAdd}
-                    onZoneComplete={handleZoneComplete}
-                    isLocalSpaceMode={isLocalSpace}
-                    localSpaceOrigin={localSpaceOrigin}
-                    showLineLabels={visibility.showLineLabels}
-                    onSingleClick={handleGlobeSingleClick}
-                    onContextMenu={handleGlobeContextMenu}
-                    scoutMarkers={scoutMarkers}
-                    onScoutMarkerClick={handleCityClick}
-                    favoriteLocations={favoriteLocations}
-                    onFavoriteClick={handleCityClick}
+        {/* TimelineScrubber (desktop only) */}
+        {/* Removed TimelineScrubber for all devices */}
+        <div className="flex-1 flex flex-col min-h-0 relative">
+          <div className="flex-1 flex min-h-0 relative" data-tour="globe">
+            {/* City Search Bar - floating top-left */}
+            {/* Shows as "Enter your birthplace" when no valid birth data, otherwise as regular search */}
+            {/* Hidden on mobile when AI chat is open */}
+            {/* Hidden when valid birth data exists but lines are still calculating (prevents flicker) */}
+            {!(isMobile && showAstroChat) &&
+              (!hasValidBirthData || (astroResult?.planetaryLines && astroResult.planetaryLines.length > 0)) && (
+                <div className={`absolute z-40 ${isMobile ? 'top-3 left-3' : 'top-4 left-4'}`}>
+                  <CitySearchBar
+                    onCitySelect={handleCitySelect}
+                    onClear={handleClearCityLocation}
+                    isMobile={isMobile}
+                    mode={hasValidBirthData ? 'search' : 'birthplace'}
                   />
                 </div>
-              </ResizablePanel>
-              {panelStack.isOpen && (
-                <>
-                  <ResizableHandle withHandle />
-                  <ResizablePanel id="globe-right-panel" order={2} defaultSize={25} minSize={15} maxSize={45} className="overflow-hidden">
-                    <RightPanelStack
-                      stack={panelStack.stack}
-                      currentIndex={panelStack.currentIndex}
-                      onNavigateBack={panelStack.navigateBack}
-                      onNavigateForward={panelStack.navigateForward}
-                      onClose={panelStack.closeCurrent}
-                      onCloseAll={panelStack.closeAll}
-                      onSetCurrentIndex={panelStack.setCurrentIndex}
-                      renderLine={renderLinePanel}
-                      renderAnalysis={renderAnalysisPanel}
-                      renderCity={renderCityPanel}
-                      renderPerson={renderPersonPanel}
-                      renderCompatibility={renderCompatibilityPanel}
-                      renderRelocation={renderRelocationPanel}
-                      renderFavorites={renderFavoritesPanel}
-                      renderScout={renderScoutPanel}
-                      renderCharts={renderChartsPanel}
-                      footer={
-                        <a
-                          href="/"
-                          className="flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 transition-colors"
-                        >
-                          <FontAwesomeIcon icon={faHouse} className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-                          <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>halohome.app</span>
-                        </a>
-                      }
-                    />
-                  </ResizablePanel>
-                </>
               )}
-            </ResizablePanelGroup>
+
+            {isMobile ? (
+              <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{ transform: 'translateY(-5%)' }}>
+                <VastuGlobeMap
+                  ref={globeEl}
+                  locations={filteredLocations}
+                  migrations={filteredMigrations}
+                  onPersonClick={handlePersonClick}
+                  astroLines={showAstroLines ? effectiveAstroLines : []}
+                  aspectLines={showAstroLines && !isLocalSpace ? visibleAspectLines : []}
+                  paranLines={showAstroLines && !isLocalSpace ? visibleParanLines : []}
+                  zenithPoints={showAstroLines && !isLocalSpace ? visibleZenithPoints : []}
+                  onCoordinateSelect={handleCoordinateSelect}
+                  onLocationAnalyze={isLocalSpace ? undefined : handleLocationAnalyze}
+                  birthDataKey={birthLocationKey}
+                  onLineClick={handleLineClick}
+                  isMobile={true}
+                  analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
+                  cityLocation={cityLocation}
+                  zipCodeBounds={zipCodeBounds}
+                  zipCodeBoundary={zipCodeBoundary}
+                  currentZipCode={currentZipCode}
+                  zipSearchStatus={zipSearchStatus}
+                  relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
+                  hasBirthData={!!birthData}
+                  partnerLocation={partnerLocation}
+                  selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
+                  isDrawingZone={zoneDrawing.isDrawing}
+                  drawingMode={zoneDrawing.drawingMode}
+                  zoneDrawingPoints={zoneDrawing.drawingPoints}
+                  drawnZone={zoneDrawing.drawnZone}
+                  searchZone={zoneDrawing.searchZone}
+                  onZonePointAdd={handleZonePointAdd}
+                  onZoneComplete={handleZoneComplete}
+                  isLocalSpaceMode={isLocalSpace}
+                  localSpaceOrigin={localSpaceOrigin}
+                  showLineLabels={visibility.showLineLabels}
+                  onSingleClick={handleGlobeSingleClick}
+                  onContextMenu={handleGlobeContextMenu}
+                  scoutMarkers={scoutMarkers}
+                  onScoutMarkerClick={handleCityClick}
+                  onGlobeFallbackShowScout={() => setMobileScoutSheetOpen(true)}
+                  favoriteLocations={favoriteLocations}
+                  onFavoriteClick={handleCityClick}
+                  parcels={scoutParcels}
+                  selectedParcelId={selectedParcelId}
+                />
+              </div>
+            ) : (
+              <ResizablePanelGroup direction="horizontal" className="flex-1 overflow-hidden">
+                <ResizablePanel id="globe-map-panel" order={1} defaultSize={panelStack.isOpen ? 75 : 100} minSize={50}>
+                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <VastuGlobeMap
+                      ref={globeEl}
+                      locations={filteredLocations}
+                      migrations={filteredMigrations}
+                      onPersonClick={handlePersonClick}
+                      astroLines={showAstroLines ? effectiveAstroLines : []}
+                      aspectLines={showAstroLines && !isLocalSpace ? visibleAspectLines : []}
+                      paranLines={showAstroLines && !isLocalSpace ? visibleParanLines : []}
+                      zenithPoints={showAstroLines && !isLocalSpace ? visibleZenithPoints : []}
+                      onCoordinateSelect={handleCoordinateSelect}
+                      onLocationAnalyze={isLocalSpace ? undefined : handleLocationAnalyze}
+                      birthDataKey={birthLocationKey}
+                      onLineClick={handleLineClick}
+                      hasBirthData={!!birthData}
+                      analysisLocation={locationAnalysis ? { lat: locationAnalysis.latitude, lng: locationAnalysis.longitude } : null}
+                      cityLocation={cityLocation}
+                      zipCodeBounds={zipCodeBounds}
+                      zipCodeBoundary={zipCodeBoundary}
+                      currentZipCode={currentZipCode}
+                      zipSearchStatus={zipSearchStatus}
+                      parcels={scoutParcels}
+                      selectedParcelId={selectedParcelId}
+                      relocationLocation={isRelocated && relocationTarget ? { lat: relocationTarget.lat, lng: relocationTarget.lng, name: relocationTarget.name } : null}
+                      partnerLocation={partnerLocation}
+                      selectedParanLine={selectedLine?.type === 'paran' ? selectedLine : null}
+                      isDrawingZone={zoneDrawing.isDrawing}
+                      drawingMode={zoneDrawing.drawingMode}
+                      zoneDrawingPoints={zoneDrawing.drawingPoints}
+                      drawnZone={zoneDrawing.drawnZone}
+                      searchZone={zoneDrawing.searchZone}
+                      onZonePointAdd={handleZonePointAdd}
+                      onZoneComplete={handleZoneComplete}
+                      isLocalSpaceMode={isLocalSpace}
+                      localSpaceOrigin={localSpaceOrigin}
+                      showLineLabels={visibility.showLineLabels}
+                      onSingleClick={handleGlobeSingleClick}
+                      onContextMenu={handleGlobeContextMenu}
+                      scoutMarkers={scoutMarkers}
+                      onScoutMarkerClick={handleCityClick}
+                      favoriteLocations={favoriteLocations}
+                      onFavoriteClick={handleCityClick}
+                    />
+                  </div>
+                </ResizablePanel>
+                {panelStack.isOpen && (
+                  <>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel id="globe-right-panel" order={2} defaultSize={25} minSize={15} maxSize={45} className="overflow-hidden">
+                      <RightPanelStack
+                        stack={panelStack.stack}
+                        currentIndex={panelStack.currentIndex}
+                        onNavigateBack={panelStack.navigateBack}
+                        onNavigateForward={panelStack.navigateForward}
+                        onClose={panelStack.closeCurrent}
+                        onCloseAll={panelStack.closeAll}
+                        onSetCurrentIndex={panelStack.setCurrentIndex}
+                        renderLine={renderLinePanel}
+                        renderAnalysis={renderAnalysisPanel}
+                        renderCity={renderCityPanel}
+                        renderPerson={renderPersonPanel}
+                        renderCompatibility={renderCompatibilityPanel}
+                        renderRelocation={renderRelocationPanel}
+                        renderFavorites={renderFavoritesPanel}
+                        renderScout={renderScoutPanel}
+                        renderCharts={renderChartsPanel}
+                        footer={
+                          <a
+                            href="/"
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <img src="/logo.png" alt="Halo Home" className="w-4 h-4 rounded-sm" />
+                            <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm select-none tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>halohome.app</span>
+                          </a>
+                        }
+                      />
+                    </ResizablePanel>
+                  </>
+                )}
+              </ResizablePanelGroup>
+            )}
+          </div>
+
+          {isMobile && selectedPerson && ( // Use useIsMobile directly
+            <Dialog open={!!selectedPerson} onOpenChange={() => handleCloseCard()}>
+              <DialogContent showCloseButton={false} className="flex items-center justify-center p-0 max-w-md w-full rounded-2xl max-h-[90vh] overflow-y-auto">
+                <PersonCard person={selectedPerson} onClose={handleCloseCard} className="w-full" />
+              </DialogContent>
+            </Dialog>
           )}
+
+          {/* Mobile bottom sheet for Location Analysis */}
+          {isMobile && locationAnalysis && (
+            <MobileLocationAnalysisSheet
+              analysis={locationAnalysis}
+              onClose={handleCloseLocationAnalysis}
+            />
+          )}
+
+          {/* Mobile bottom sheet for Export Report Panel */}
+          {isMobile && showExportPanel && (
+            <MobileExportSheet
+              planetaryLines={visiblePlanetaryLines}
+              zenithPoints={visibleZenithPoints}
+              birthDate={firstPersonData?.birthDate || 'Unknown'}
+              birthTime={firstPersonData?.birthTime || 'Unknown'}
+              birthLocation={firstPersonData?.locations?.find(l => l.type === 'birth')?.place || 'Unknown'}
+              onClose={handleCloseExportPanel}
+            />
+          )}
+
+          {/* Mobile bottom sheet for Line Info Card */}
+          {isMobile && selectedLine && (
+            <MobileLineInfoSheet
+              line={selectedLine}
+              onClose={handleCloseLineInfo}
+              zenithPoint={selectedLineZenithPoint}
+              onCityClick={handleCityClick}
+            />
+          )}
+
+          {/* Mobile City Info Bottom Sheet */}
+          {isMobile && selectedCityForInfo && (
+            <MobileCityInfoSheet
+              city={selectedCityForInfo}
+              onClose={handleCloseCityInfo}
+              isFavorite={isFavorite(selectedCityForInfo.lat, selectedCityForInfo.lng)}
+              onToggleFavorite={handleToggleFavorite}
+              locationAnalysis={selectedCityAnalysis}
+            />
+          )}
+
         </div>
 
-        {isMobile && selectedPerson && ( // Use useIsMobile directly
-          <Dialog open={!!selectedPerson} onOpenChange={() => handleCloseCard()}>
-            <DialogContent showCloseButton={false} className="flex items-center justify-center p-0 max-w-md w-full rounded-2xl max-h-[90vh] overflow-y-auto">
-                <PersonCard person={selectedPerson} onClose={handleCloseCard} className="w-full" />
-            </DialogContent>
-          </Dialog>
-        )}
-
-        {/* Mobile bottom sheet for Location Analysis */}
-        {isMobile && locationAnalysis && (
-          <MobileLocationAnalysisSheet
-            analysis={locationAnalysis}
-            onClose={handleCloseLocationAnalysis}
+        {/* Compatibility Panel - Mobile: bottom sheet when compatibility is enabled */}
+        {isMobile && compatibility.isEnabled && birthData && (
+          <MobileCompatibilitySheet
+            analysis={compatibility.analysis}
+            mode={compatibility.mode}
+            onModeChange={(mode) => {
+              compatibility.setMode(mode);
+              compatibility.clearAnalysis();
+            }}
+            onLocationZoom={handleCompatibilityLocationZoom}
+            onLocationCityInfo={handleCompatibilityLocationCityInfo}
+            onClose={handleCloseCompatibility}
+            onEditPartner={handleEditPartner}
+            onClearPartner={handleClearPartner}
+            onSelectPartner={handleSelectPartnerFromChart}
+            savedCharts={savedCharts.filter(c => c.id !== currentChart?.id)}
+            currentPartnerId={compatibility.partnerChart?.id}
+            isLoading={compatibility.isCalculating || partnerAstroLoading}
+            person1Name={firstPersonData?.name || 'You'}
+            person2Name={compatibility.partnerChart?.name}
           />
         )}
 
-        {/* Mobile bottom sheet for Export Report Panel */}
-        {isMobile && showExportPanel && (
-          <MobileExportSheet
-            planetaryLines={visiblePlanetaryLines}
-            zenithPoints={visibleZenithPoints}
-            birthDate={firstPersonData?.birthDate || 'Unknown'}
-            birthTime={firstPersonData?.birthTime || 'Unknown'}
-            birthLocation={firstPersonData?.locations?.find(l => l.type === 'birth')?.place || 'Unknown'}
-            onClose={handleCloseExportPanel}
+        {/* Mobile Scout Sheet - bottom sheet for property scouting */}
+        {isMobile && mobileScoutSheetOpen && (
+          <MobileScoutSheet
+            prefillZipCode={
+              cityLocation?.name
+                ? (cityLocation.name.match(/\b\d{5}(-\d{4})?\b/)?.[0]?.split('-')[0] ?? null)
+                : null
+            }
+            onClose={() => {
+              setScoutMarkers([]); // legacy cleanup
+              setMobileScoutSheetOpen(false);
+            }}
           />
         )}
 
-        {/* Mobile bottom sheet for Line Info Card */}
-        {isMobile && selectedLine && (
-          <MobileLineInfoSheet
-            line={selectedLine}
-            onClose={handleCloseLineInfo}
-            zenithPoint={selectedLineZenithPoint}
-            onCityClick={handleCityClick}
+        {/* Mobile Charts Sheet - bottom sheet for saved birth charts */}
+        {isMobile && mobileChartsSheetOpen && (
+          <MobileChartsSheet
+            charts={savedCharts}
+            currentChart={currentChart}
+            loading={chartsLoading}
+            onSelectChart={(id) => {
+              selectChart(id);
+              setMobileChartsSheetOpen(false);
+            }}
+            onDeleteChart={deleteChart}
+            onUpdateChart={updateChart}
+            onSetDefault={setDefaultChart}
+            onSaveChart={saveChart}
+            onClose={() => setMobileChartsSheetOpen(false)}
           />
         )}
 
-        {/* Mobile City Info Bottom Sheet */}
-        {isMobile && selectedCityForInfo && (
-          <MobileCityInfoSheet
-            city={selectedCityForInfo}
-            onClose={handleCloseCityInfo}
-            isFavorite={isFavorite(selectedCityForInfo.lat, selectedCityForInfo.lng)}
-            onToggleFavorite={handleToggleFavorite}
-            locationAnalysis={selectedCityAnalysis}
+        {/* Mobile Favorites Sheet - bottom sheet for favorite cities */}
+        {isMobile && mobileFavoritesSheetOpen && (
+          <MobileFavoritesSheet
+            favorites={favorites}
+            loading={favoritesLoading}
+            onSelectFavorite={(lat, lng, name) => {
+              navigation.focusOnLocation(lat, lng);
+              setMobileFavoritesSheetOpen(false);
+            }}
+            onRemoveFavorite={(id, name) => {
+              removeFavorite(id);
+            }}
+            onUpdateNotes={updateFavoriteNotes}
+            onRemoveMultipleFavorites={removeMultipleFavorites}
+            onClose={() => setMobileFavoritesSheetOpen(false)}
           />
         )}
 
+        {/* Globe Location Tooltip - shows on single-click/tap */}
+        <GlobeLocationTooltip
+          x={clickTooltip.x}
+          y={clickTooltip.y}
+          lat={clickTooltip.lat}
+          lng={clickTooltip.lng}
+          cityName={clickTooltip.cityName}
+          isVisible={clickTooltip.isVisible}
+          onDismiss={handleDismissTooltip}
+        />
+
+        {/* Globe Context Menu - shows on right-click (desktop) / long-press (mobile) */}
+        <GlobeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          lat={contextMenu.lat}
+          lng={contextMenu.lng}
+          cityName={contextMenu.cityName}
+          isOpen={contextMenu.isOpen}
+          onClose={handleCloseContextMenu}
+          onAnalyzeLocation={handleContextAnalyze}
+          onAddToFavorites={handleContextAddToFavorites}
+          onAskAI={handleContextAskAI}
+          isFavorited={isFavorite(contextMenu.lat, contextMenu.lng)}
+        />
+
+        {/* Onboarding Tour - Desktop only */}
+        {!isMobile && (
+          <OnboardingTour
+            hasPropertySearch={!!cityLocation || !!zipCodeBounds}
+            forceShow={showTutorial}
+            forcePhase={tutorialPhase}
+            onComplete={() => setShowTutorial(false)}
+          />
+        )}
       </div>
-
-      {/* Compatibility Panel - Mobile: bottom sheet when compatibility is enabled */}
-      {isMobile && compatibility.isEnabled && birthData && (
-        <MobileCompatibilitySheet
-          analysis={compatibility.analysis}
-          mode={compatibility.mode}
-          onModeChange={(mode) => {
-            compatibility.setMode(mode);
-            compatibility.clearAnalysis();
-          }}
-          onLocationZoom={handleCompatibilityLocationZoom}
-          onLocationCityInfo={handleCompatibilityLocationCityInfo}
-          onClose={handleCloseCompatibility}
-          onEditPartner={handleEditPartner}
-          onClearPartner={handleClearPartner}
-          onSelectPartner={handleSelectPartnerFromChart}
-          savedCharts={savedCharts.filter(c => c.id !== currentChart?.id)}
-          currentPartnerId={compatibility.partnerChart?.id}
-          isLoading={compatibility.isCalculating || partnerAstroLoading}
-          person1Name={firstPersonData?.name || 'You'}
-          person2Name={compatibility.partnerChart?.name}
-        />
-      )}
-
-      {/* Mobile Scout Sheet - bottom sheet for property scouting */}
-      {isMobile && mobileScoutSheetOpen && (
-        <MobileScoutSheet
-          prefillZipCode={
-            cityLocation?.name
-              ? (cityLocation.name.match(/\b\d{5}(-\d{4})?\b/)?.[0]?.split('-')[0] ?? null)
-              : null
-          }
-          onClose={() => {
-            setScoutMarkers([]); // legacy cleanup
-            setMobileScoutSheetOpen(false);
-          }}
-        />
-      )}
-
-      {/* Mobile Charts Sheet - bottom sheet for saved birth charts */}
-      {isMobile && mobileChartsSheetOpen && (
-        <MobileChartsSheet
-          charts={savedCharts}
-          currentChart={currentChart}
-          loading={chartsLoading}
-          onSelectChart={(id) => {
-            selectChart(id);
-            setMobileChartsSheetOpen(false);
-          }}
-          onDeleteChart={deleteChart}
-          onUpdateChart={updateChart}
-          onSetDefault={setDefaultChart}
-          onSaveChart={saveChart}
-          onClose={() => setMobileChartsSheetOpen(false)}
-        />
-      )}
-
-      {/* Mobile Favorites Sheet - bottom sheet for favorite cities */}
-      {isMobile && mobileFavoritesSheetOpen && (
-        <MobileFavoritesSheet
-          favorites={favorites}
-          loading={favoritesLoading}
-          onSelectFavorite={(lat, lng, name) => {
-            navigation.focusOnLocation(lat, lng);
-            setMobileFavoritesSheetOpen(false);
-          }}
-          onRemoveFavorite={(id, name) => {
-            removeFavorite(id);
-          }}
-          onUpdateNotes={updateFavoriteNotes}
-          onRemoveMultipleFavorites={removeMultipleFavorites}
-          onClose={() => setMobileFavoritesSheetOpen(false)}
-        />
-      )}
-
-      {/* Globe Location Tooltip - shows on single-click/tap */}
-      <GlobeLocationTooltip
-        x={clickTooltip.x}
-        y={clickTooltip.y}
-        lat={clickTooltip.lat}
-        lng={clickTooltip.lng}
-        cityName={clickTooltip.cityName}
-        isVisible={clickTooltip.isVisible}
-        onDismiss={handleDismissTooltip}
-      />
-
-      {/* Globe Context Menu - shows on right-click (desktop) / long-press (mobile) */}
-      <GlobeContextMenu
-        x={contextMenu.x}
-        y={contextMenu.y}
-        lat={contextMenu.lat}
-        lng={contextMenu.lng}
-        cityName={contextMenu.cityName}
-        isOpen={contextMenu.isOpen}
-        onClose={handleCloseContextMenu}
-        onAnalyzeLocation={handleContextAnalyze}
-        onAddToFavorites={handleContextAddToFavorites}
-        onAskAI={handleContextAskAI}
-        isFavorited={isFavorite(contextMenu.lat, contextMenu.lng)}
-      />
-
-      {/* Onboarding Tour - Desktop only */}
-      {!isMobile && (
-        <OnboardingTour
-          hasPropertySearch={!!cityLocation || !!zipCodeBounds}
-          forceShow={showTutorial}
-          forcePhase={tutorialPhase}
-          onComplete={() => setShowTutorial(false)}
-        />
-      )}
-    </div>
     </GoogleMapsWrapper>
   );
 };

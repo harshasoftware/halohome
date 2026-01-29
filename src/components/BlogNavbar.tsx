@@ -36,7 +36,10 @@ const BlogNavbar: React.FC = () => {
   return (
     <nav className={`nav-fixed ${isScrolled ? 'nav-scrolled' : ''}`}>
       <div className="nav-container">
-        <Link to="/" className="nav-logo">HaloHome</Link>
+        <Link to="/" className="nav-logo flex items-center gap-2">
+          <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-md" />
+          HaloHome
+        </Link>
 
         {/* Desktop Nav */}
         <div className="nav-links hidden md:flex items-center">

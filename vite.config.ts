@@ -39,6 +39,18 @@ export default defineConfig(({ mode }) => ({
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',
     },
+    proxy: {
+      '/google-api': {
+        target: 'https://places.googleapis.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/google-api/, ''),
+      },
+      '/google-maps-api': {
+        target: 'https://maps.googleapis.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/google-maps-api/, ''),
+      },
+    },
   },
   // Worker configuration for WASM support
   worker: {

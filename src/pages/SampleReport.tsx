@@ -6,7 +6,7 @@ import {
     Navigation, Grid3X3, Scale, Star, Zap
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse } from '@fortawesome/free-solid-svg-icons';
+
 import Footer from '@/components/Footer';
 import { ScrollReveal } from '@/components/landing/ScrollReveal';
 import { SpotlightCard } from '@/components/landing/SpotlightCard';
@@ -227,8 +227,8 @@ export default function SampleReport() {
             {/* Navigation - Matching Landing Page */}
             <nav className="nav-fixed">
                 <div className="nav-container">
-                    <Link to="/" className="nav-logo">
-                        <FontAwesomeIcon icon={faHouse} className="mr-2" />
+                    <Link to="/" className="nav-logo flex items-center gap-2">
+                        <img src="/logo.png" alt="Halo Home" className="w-6 h-6 rounded-md" />
                         Halo Home
                     </Link>
 
@@ -455,23 +455,21 @@ export default function SampleReport() {
                                     <ScrollReveal key={remedy.id} delay={100}>
                                         <SpotlightCard className="remedy-card p-6">
                                             <div className="flex items-start gap-4">
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                                    remedy.priority === 'high' ? 'bg-red-500/20 text-red-600' :
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${remedy.priority === 'high' ? 'bg-red-500/20 text-red-600' :
                                                     remedy.priority === 'medium' ? 'bg-orange-500/20 text-orange-600' :
-                                                    'bg-amber-500/20 text-amber-600'
-                                                }`}>
+                                                        'bg-amber-500/20 text-amber-600'
+                                                    }`}>
                                                     {remedy.priority === 'high' ? <AlertTriangle className="w-6 h-6" /> :
-                                                     remedy.priority === 'medium' ? <Target className="w-6 h-6" /> :
-                                                     <Check className="w-6 h-6" />}
+                                                        remedy.priority === 'medium' ? <Target className="w-6 h-6" /> :
+                                                            <Check className="w-6 h-6" />}
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-3 mb-2">
                                                         <span className="text-xs font-semibold uppercase" style={{ color: 'var(--text-secondary, #52525B)' }}>{remedy.zone} Zone</span>
-                                                        <span className={`text-xs px-2 py-1 rounded ${
-                                                            remedy.priority === 'high' ? 'bg-red-500/20 text-red-600' :
+                                                        <span className={`text-xs px-2 py-1 rounded ${remedy.priority === 'high' ? 'bg-red-500/20 text-red-600' :
                                                             remedy.priority === 'medium' ? 'bg-orange-500/20 text-orange-600' :
-                                                            'bg-amber-500/20 text-amber-600'
-                                                        }`}>
+                                                                'bg-amber-500/20 text-amber-600'
+                                                            }`}>
                                                             {remedy.priority} Priority
                                                         </span>
                                                     </div>

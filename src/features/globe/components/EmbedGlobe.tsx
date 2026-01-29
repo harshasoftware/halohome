@@ -7,7 +7,7 @@
 
 import React, { useRef, useEffect, useMemo, useState, lazy, Suspense, memo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse } from '@fortawesome/free-solid-svg-icons';
+
 import type { GlobeMethods } from 'react-globe.gl';
 import type { PlanetaryLine, AspectLine, ZenithPoint } from '@/lib/astro-types';
 
@@ -287,9 +287,9 @@ export const EmbedGlobe = memo(({
         href="https://halohome.app"
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-2 right-2 px-2 py-1 text-xs text-white/70 bg-black/40 rounded hover:text-white hover:bg-black/60 transition-colors flex items-center gap-1"
+        className="absolute bottom-2 right-2 px-2 py-1 text-xs text-white/70 bg-black/40 rounded hover:text-white hover:bg-black/60 transition-colors flex items-center gap-2"
       >
-        <FontAwesomeIcon icon={faHouse} className="w-3 h-3" />
+        <img src="/logo.png" alt="Halo Home" className="w-4 h-4 rounded-sm" />
         halohome.app
       </a>
     </div>

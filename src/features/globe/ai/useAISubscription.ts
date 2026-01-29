@@ -17,7 +17,7 @@ export interface SubscriptionStatus {
   questionsRemaining: number;
   creditsBalance: number;
   hasSonarProAccess: boolean;
-  subscriptionStatus: 'active' | 'canceled' | 'past_due';
+  subscriptionStatus: 'active' | 'canceled' | 'past_due' | 'trialing';
   currentPeriodEnd: string | null;
 }
 
@@ -151,6 +151,35 @@ export function useAISubscription() {
     }
   }, [user]);
 
+  // Create subscription intent for embedded checkout
+  const createSubscriptionIntent = useCallback(async (planId: string) => {
+    if (!user) {
+      setError('You must be logged in to subscribe');
+      return null;
+    }
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('ai-subscription', {
+        body: {
+          action: 'createSubscriptionIntent',
+          userId: user.id,
+          plan: planId,
+          email: user.email,
+        },
+        headers: await getEdgeAuthHeaders(),
+      });
+
+      if (fnError) throw fnError;
+      return { clientSecret: data.clientSecret, subscriptionId: data.subscriptionId };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create subscription intent';
+      setError(message);
+      return null;
+    }
+  }, [user]);
+
+
+
   // Purchase credits
   const purchaseCredits = useCallback(async (packageId: string) => {
     if (!user) {
@@ -259,6 +288,7 @@ export function useAISubscription() {
     getSubscriptionInfo,
     canAskQuestion,
     getRemainingDisplay,
+    createSubscriptionIntent,
     clearError: () => setError(null),
   };
 }

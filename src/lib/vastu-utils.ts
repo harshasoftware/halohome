@@ -23,6 +23,7 @@ import type {
 
 // Re-export zone definitions
 export { VASTU_ZONES } from '@/stores/vastuStore';
+export type { VastuDirection, VastuAnalysis } from '@/stores/vastuStore';
 
 /**
  * Calculate the orientation of a property from true north
@@ -494,7 +495,7 @@ export function generateSummary(
   // Highlight best zone
   const bestZone = zones.reduce((best, zone) =>
     zone.score > best.score ? zone : best
-  , zones[0]);
+    , zones[0]);
   summaryParts.push(`The ${bestZone.direction} zone is your strongest area.`);
 
   return summaryParts.join(' ');

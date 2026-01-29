@@ -367,3 +367,28 @@ export function buildIdentifier(userId?: string | null, clientIp?: string): stri
   // For anonymous users, use IP address
   return `ip:${clientIp || 'unknown'}`;
 }
+
+/**
+ * Helper to add rate limit metadata to a response object
+ *
+ * @param data - The response data object
+ * @param rateLimit - The rate limit result
+ * @returns The data object with rate limit metadata added
+ */
+export function addRateLimitToBody<T extends object>(
+  data: T,
+  rateLimit: RateLimitResult
+): T & { meta: { rateLimit: { limit: number; remaining: number; resetAt: string } } } {
+  return {
+    ...data,
+    meta: {
+      rateLimit: {
+        limit: rateLimit.limit,
+        remaining: rateLimit.remaining,
+        resetAt: rateLimit.resetAt.toISOString(),
+      },
+    },
+  };
+}
+
+

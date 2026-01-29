@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
 import { ThemeProvider, useTheme } from "next-themes";
 import NotFound from "./pages/NotFound";
@@ -119,6 +119,25 @@ const DesktopOnlyAppGate = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const Login = lazy(() => import("./pages/Login"));
+
+// Protected Route Wrapper
+const RequireAuth = ({ children }: { children: JSX.Element }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <RouteLoader />;
+  }
+
+  // Check for authenticated AND non-anonymous user
+  if (!user || user.is_anonymous) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="dark" storageKey="themodernfamily-ui-theme">
     <ZoomPrevention>
@@ -129,113 +148,127 @@ const App = () => (
               <CopilotKitWithAuth>
                 <Toaster />
                 <GuestThemeEnforcer>
-                <DesktopOnlyAppGate>
-                  <ErrorBoundary componentName="Routes">
-                    <Suspense fallback={<RouteLoader />}>
-                      <Routes>
-                    {/* Landing page - eagerly loaded for fast initial paint */}
-                    <Route path="/" element={<Landing />} />
+                  <DesktopOnlyAppGate>
+                    <ErrorBoundary componentName="Routes">
+                      <Suspense fallback={<RouteLoader />}>
+                        <Routes>
+                          {/* Landing page - eagerly loaded for fast initial paint */}
+                          <Route path="/" element={<Landing />} />
 
-                    {/* Main app route - Workspace with 2D Map */}
-                    <Route path="/app" element={
-                      <LazyErrorBoundary componentName="Workspace">
-                        <Workspace />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/guest" element={
-                      <LazyErrorBoundary componentName="Workspace">
-                        <Workspace />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/payment/success" element={
-                      <LazyErrorBoundary componentName="PaymentSuccess">
-                        <PaymentSuccess />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/astro-payment-success" element={
-                      <LazyErrorBoundary componentName="AstroPaymentSuccess">
-                        <AstroPaymentSuccess />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/ai-subscription" element={
-                      <LazyErrorBoundary componentName="AISubscription">
-                        <AISubscription />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/blog" element={
-                      <LazyErrorBoundary componentName="BlogIndex">
-                        <BlogIndex />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/blog/scout-algorithm" element={
-                      <LazyErrorBoundary componentName="ScoutAlgorithmBlog">
-                        <ScoutAlgorithmBlog />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/blog/astrology-systems" element={
-                      <LazyErrorBoundary componentName="AstrologySystemsBlog">
-                        <AstrologySystemsBlog />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/blog/duo-mode" element={
-                      <LazyErrorBoundary componentName="DuoModeBlog">
-                        <DuoModeBlog />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/blog/planetary-precision" element={
-                      <LazyErrorBoundary componentName="PlanetaryPrecisionBlog">
-                        <PlanetaryPrecisionBlog />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/blog/methodology" element={
-                      <LazyErrorBoundary componentName="MethodologyBlog">
-                        <MethodologyBlog />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/sample-report" element={
-                      <LazyErrorBoundary componentName="SampleReport">
-                        <SampleReport />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/benchmark" element={
-                      <LazyErrorBoundary componentName="Benchmark">
-                        <Benchmark />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/update-password" element={<Navigate to="/" replace />} />
-                    <Route path="/share/:shareId" element={
-                      <LazyErrorBoundary componentName="SharePage">
-                        <SharePage />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/s/:shortCode" element={
-                      <LazyErrorBoundary componentName="SharedGlobePage">
-                        <SharedGlobePage />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/embed/:shortCode" element={
-                      <LazyErrorBoundary componentName="EmbedPage">
-                        <EmbedPage />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/project/:projectId" element={
-                      <LazyErrorBoundary componentName="Workspace">
-                        <Workspace defaultView="map" />
-                      </LazyErrorBoundary>
-                    } />
-                    <Route path="/project/:projectId/map" element={
-                      <LazyErrorBoundary componentName="Workspace">
-                        <Workspace defaultView="map" />
-                      </LazyErrorBoundary>
-                    } />
+                          {/* Public Login Route */}
+                          <Route path="/login" element={
+                            <LazyErrorBoundary componentName="Login">
+                              <Login />
+                            </LazyErrorBoundary>
+                          } />
 
-                    {/* Error routes - eagerly loaded */}
-                    <Route path="/project/:projectId/settings" element={<NotFound />} />
-                    <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </Suspense>
-                  </ErrorBoundary>
-                </DesktopOnlyAppGate>
+                          {/* Main app route - Protected */}
+                          <Route path="/app" element={
+                            <RequireAuth>
+                              <LazyErrorBoundary componentName="Workspace">
+                                <Workspace />
+                              </LazyErrorBoundary>
+                            </RequireAuth>
+                          } />
+
+                          {/* Guest route - Public */}
+                          <Route path="/guest" element={
+                            <LazyErrorBoundary componentName="Workspace">
+                              <Workspace />
+                            </LazyErrorBoundary>
+                          } />
+
+                          <Route path="/payment/success" element={
+                            <LazyErrorBoundary componentName="PaymentSuccess">
+                              <PaymentSuccess />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/astro-payment-success" element={
+                            <LazyErrorBoundary componentName="AstroPaymentSuccess">
+                              <AstroPaymentSuccess />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/ai-subscription" element={
+                            <RequireAuth>
+                              <LazyErrorBoundary componentName="AISubscription">
+                                <AISubscription />
+                              </LazyErrorBoundary>
+                            </RequireAuth>
+                          } />
+                          <Route path="/blog" element={
+                            <LazyErrorBoundary componentName="BlogIndex">
+                              <BlogIndex />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/blog/scout-algorithm" element={
+                            <LazyErrorBoundary componentName="ScoutAlgorithmBlog">
+                              <ScoutAlgorithmBlog />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/blog/astrology-systems" element={
+                            <LazyErrorBoundary componentName="AstrologySystemsBlog">
+                              <AstrologySystemsBlog />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/blog/duo-mode" element={
+                            <LazyErrorBoundary componentName="DuoModeBlog">
+                              <DuoModeBlog />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/blog/planetary-precision" element={
+                            <LazyErrorBoundary componentName="PlanetaryPrecisionBlog">
+                              <PlanetaryPrecisionBlog />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/blog/methodology" element={
+                            <LazyErrorBoundary componentName="MethodologyBlog">
+                              <MethodologyBlog />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/sample-report" element={
+                            <LazyErrorBoundary componentName="SampleReport">
+                              <SampleReport />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/benchmark" element={
+                            <LazyErrorBoundary componentName="Benchmark">
+                              <Benchmark />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/update-password" element={<Navigate to="/" replace />} />
+                          <Route path="/share/:shareId" element={
+                            <LazyErrorBoundary componentName="SharePage">
+                              <SharePage />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/s/:shortCode" element={
+                            <LazyErrorBoundary componentName="SharedGlobePage">
+                              <SharedGlobePage />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/embed/:shortCode" element={
+                            <LazyErrorBoundary componentName="EmbedPage">
+                              <EmbedPage />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/project/:projectId" element={
+                            <LazyErrorBoundary componentName="Workspace">
+                              <Workspace defaultView="map" />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/project/:projectId/map" element={
+                            <LazyErrorBoundary componentName="Workspace">
+                              <Workspace defaultView="map" />
+                            </LazyErrorBoundary>
+                          } />
+
+                          {/* Error routes - eagerly loaded */}
+                          <Route path="/project/:projectId/settings" element={<NotFound />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </DesktopOnlyAppGate>
                 </GuestThemeEnforcer>
               </CopilotKitWithAuth>
             </AuthProvider>

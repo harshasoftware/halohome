@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Instagram, Twitter, Mail, ExternalLink, Download } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse } from '@fortawesome/free-solid-svg-icons';
+
 import CookiePolicy from '@/components/legal/CookiePolicy';
 import PrivacyPolicy from '@/components/legal/PrivacyPolicy';
 import TermsOfService from '@/components/legal/TermsOfService';
@@ -28,8 +28,8 @@ const Footer: React.FC<FooterProps> = ({ onInstall, showInstallButton = true }) 
             <div className="footer-content">
                 {/* Brand Column */}
                 <div className="footer-brand">
-                    <h4 className="text-zinc-900 flex items-center">
-                        <FontAwesomeIcon icon={faHouse} className="mr-2" />
+                    <h4 className="text-zinc-900 flex items-center gap-2">
+                        <img src="/logo.png" alt="Halo Home" className="w-6 h-6 rounded-md" />
                         Halo Home
                     </h4>
                     <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">

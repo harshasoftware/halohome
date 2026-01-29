@@ -23,7 +23,7 @@ import { getGeocode, getLatLng } from 'use-places-autocomplete';
 
 export interface BuildingFootprint extends Polygon {
   id: string;
-  source: 'regrid' | 'manual';
+  source: 'regrid' | 'manual' | 'google';
   shape: 'square' | 'rectangle' | 'irregular' | 'L-shaped' | 'triangular';
   confidence: number;
   address?: string;
@@ -81,14 +81,18 @@ export interface SearchOptions {
   onProgress?: (phase: string, percent: number) => void;
   /** GeoJSON polygon for accurate ZIP boundary queries (preferred over bounds) */
   geojson?: GeoJSON.Polygon | GeoJSON.MultiPolygon;
+  /** Limit the number of tiles to process (for tile-based searches) */
+  maxTiles?: number;
 }
 
-const DEFAULT_OPTIONS: Required<Omit<SearchOptions, 'onProgress'>> & { onProgress?: SearchOptions['onProgress'] } = {
+const DEFAULT_OPTIONS: Required<Omit<SearchOptions, 'onProgress' | 'geojson'>> & { onProgress?: SearchOptions['onProgress']; geojson?: SearchOptions['geojson'] } = {
   extractPlots: true,
   extractBuildings: false,
   maxResults: 10, // Trial account limit
   minConfidence: 0.4,
+  maxTiles: 20,
   onProgress: undefined,
+  geojson: undefined,
 };
 
 // Cache for extracted footprints
@@ -122,7 +126,7 @@ function getTileProgress(bounds: BoundingBox, type: 'plot' | 'building'): TilePr
 
     const allProgress: TileProgress[] = JSON.parse(stored);
     const boundsKey = getCacheKey(bounds);
-    
+
     // Find matching progress (same bounds and type)
     const progress = allProgress.find(
       p => p.boundsKey === boundsKey && p.type === type && Date.now() - p.timestamp < TILE_PROGRESS_EXPIRY
@@ -246,10 +250,10 @@ export async function searchByZipCode(
 
   try {
     const { getZipBoundaryGeoJSON, getZipBoundaryBounds } = await import('@/lib/zip-boundaries/zip-boundary-service');
-    
+
     // Fetch actual ZIP boundary polygon
     zipBoundaryGeoJSON = await getZipBoundaryGeoJSON(zipCode);
-    
+
     if (zipBoundaryGeoJSON) {
       // Get bounds for map fitting
       bounds = await getZipBoundaryBounds(zipCode);
@@ -280,14 +284,14 @@ export async function searchByZipCode(
   }
 
   // Use searchByBounds with geojson if available
-  const result = await searchByBounds(bounds, { 
-    ...opts, 
+  const result = await searchByBounds(bounds, {
+    ...opts,
     geojson: zipBoundaryGeoJSON || undefined,
     onProgress: (phase, percent) => {
       opts.onProgress?.(phase, 10 + percent * 0.90);
     }
   });
-  
+
   // Include ZIP boundary in result for display
   return {
     ...result,
@@ -334,7 +338,7 @@ export async function searchByBounds(
   // Fetch SFH parcels from Regrid
   if (opts.extractPlots) {
     opts.onProgress?.('Fetching SFH parcels from Regrid', 20);
-    
+
     try {
       const { parcels: regridParcels, buildings: regridBuildings } = await searchSFHParcels({
         bounds,
@@ -347,44 +351,45 @@ export async function searchByBounds(
       });
 
       // Convert Regrid parcels to BuildingFootprint format
+      // Convert Regrid parcels to BuildingFootprint format
       plots = regridParcels
         .map((parcel) => {
-        const footprint = regridParcelToFootprint(parcel);
-        if (!isValidRing(footprint.coordinates)) return null;
-        
-        // Determine shape from coordinates
-        const shape = determineShape(footprint.coordinates);
-        
-        return {
-          ...footprint,
-          source: 'regrid' as const,
-          shape,
-          confidence: 1.0, // Regrid data is authoritative
-          address: footprint.address,
-          regridId: footprint.regridId,
-          owner: footprint.owner,
-          type: 'plot' as const,
-        };
-      })
-      .filter((x): x is BuildingFootprint => !!x);
-
-      // Convert matched buildings (if requested and available in bundle)
-      if (opts.extractBuildings && regridBuildings.length > 0) {
-        buildings = regridBuildings
-          .map((b) => {
-          const footprint = regridBuildingToFootprint(b);
+          const footprint = regridParcelToFootprint(parcel);
           if (!isValidRing(footprint.coordinates)) return null;
+
+          // Determine shape from coordinates
           const shape = determineShape(footprint.coordinates);
 
           return {
             ...footprint,
             source: 'regrid' as const,
             shape,
-            confidence: 1.0,
-            type: 'building' as const,
-          };
+            confidence: 1.0, // Regrid data is authoritative
+            address: footprint.address,
+            regridId: footprint.regridId,
+            owner: footprint.owner,
+            type: 'plot' as const,
+          } as BuildingFootprint;
         })
         .filter((x): x is BuildingFootprint => !!x);
+
+      // Convert matched buildings (if requested and available in bundle)
+      if (opts.extractBuildings && regridBuildings.length > 0) {
+        buildings = regridBuildings
+          .map((b) => {
+            const footprint = regridBuildingToFootprint(b);
+            if (!isValidRing(footprint.coordinates)) return null;
+            const shape = determineShape(footprint.coordinates);
+
+            return {
+              ...footprint,
+              source: 'regrid' as const,
+              shape,
+              confidence: 1.0,
+              type: 'building' as const,
+            } as BuildingFootprint;
+          })
+          .filter((x): x is BuildingFootprint => !!x);
       } else {
         buildings = [];
       }
@@ -430,7 +435,7 @@ export async function searchByBounds(
  */
 function determineShape(coordinates: LatLng[]): BuildingFootprint['shape'] {
   if (coordinates.length < 3) return 'irregular';
-  
+
   // Simple heuristic: check if it's roughly square/rectangular
   const bounds = calculateBounds(coordinates);
   const width = haversineDistance(
@@ -441,9 +446,9 @@ function determineShape(coordinates: LatLng[]): BuildingFootprint['shape'] {
     { lat: bounds.south, lng: bounds.west },
     { lat: bounds.north, lng: bounds.west }
   );
-  
+
   const aspectRatio = Math.max(width, height) / Math.min(width, height);
-  
+
   if (aspectRatio < 1.2) {
     return 'square';
   } else if (aspectRatio < 2.0) {
@@ -461,14 +466,14 @@ function calculateBounds(coordinates: LatLng[]): BoundingBox {
   let south = 90;
   let east = -180;
   let west = 180;
-  
+
   for (const coord of coordinates) {
     north = Math.max(north, coord.lat);
     south = Math.min(south, coord.lat);
     east = Math.max(east, coord.lng);
     west = Math.min(west, coord.lng);
   }
-  
+
   return { north, south, east, west };
 }
 
@@ -521,12 +526,12 @@ export async function segmentAtPoint(
   try {
     // Create small bounds around the click point (200m radius)
     const bounds = getZipCodeBounds(lat, lng, 0.2);
-    
+
     // Fetch parcels from Regrid
     const { parcels: regridParcels } = await searchSFHParcels({
       bounds,
       limit: 10, // Get up to 10 parcels, then find closest
-      onProgress: () => {}, // Silent for point clicks
+      onProgress: () => { }, // Silent for point clicks
     });
 
     if (regridParcels.length === 0) {
@@ -554,7 +559,7 @@ export async function segmentAtPoint(
     // Convert to BuildingFootprint
     const footprint = regridParcelToFootprint(closest);
     const shape = determineShape(footprint.coordinates);
-    
+
     return {
       ...footprint,
       source: 'regrid' as const,

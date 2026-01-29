@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from '@/components/ui/separator';
 import { Plus, LogIn, LogOut, Crown, Edit3, FolderPlus, Trash2, Share2, Download, Upload, Users, Sparkles, Settings, Moon, Sun, SlidersHorizontal, FileDown, MapPin, User, Hexagon, X, Check, CircleUserRound, MessageSquare, Compass, Heart, Loader2, CircleDot, LayoutGrid, Navigation, Telescope, Menu, Smartphone } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse } from '@fortawesome/free-solid-svg-icons';
+
 import { MobileDrawerMenu } from './MobileDrawerMenu';
 import { AccountMenu } from './AccountMenu';
 import { LeftActionBar } from './LeftActionBar';
@@ -315,7 +315,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
       const { data, error } = await supabase.functions.invoke('get-price');
       if (error) throw error;
       if (data.error) throw new Error(data.error);
-      
+
       const { amount, currency } = data;
       const getLocaleForCurrency = (currency: string) => {
         const currencyLocaleMap: { [key: string]: string } = {
@@ -371,7 +371,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
       if (error) throw new Error(error.message);
       if (data.error) throw new Error(data.error);
-      
+
       setShareUrl(data.shareUrl);
       setShowShareModal(true);
     } catch (error: unknown) {
@@ -461,7 +461,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             <Menu className="w-5 h-5" />
           </button>
           <a href="/" className="flex items-center gap-2 select-none" style={{ textDecoration: 'none' }}>
-            <FontAwesomeIcon icon={faHouse} className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <img src="/logo.png" alt="Halo Home" className="w-5 h-5 rounded-sm" />
             <span className="font-bold text-slate-800 dark:text-zinc-200 text-lg" style={{ letterSpacing: '-0.02em' }}>Halo Home</span>
           </a>
           {/* Account Menu - simplified on mobile (charts/favorites in drawer) */}
@@ -483,13 +483,12 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                   onClick={() => {
                     if (onToggleAIChat) onToggleAIChat();
                   }}
-                  className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
-                    hasBirthData
-                      ? isAIChatOpen
-                        ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
-                        : 'text-slate-600 dark:text-zinc-400 active:text-[#d4a5a5] dark:active:text-[#d4a5a5]'
-                      : 'text-slate-300 dark:text-zinc-600'
-                  }`}
+                  className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${hasBirthData
+                    ? isAIChatOpen
+                      ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
+                      : 'text-slate-600 dark:text-zinc-400 active:text-[#d4a5a5] dark:active:text-[#d4a5a5]'
+                    : 'text-slate-300 dark:text-zinc-600'
+                    }`}
                 >
                   <MessageSquare className="w-5 h-5" />
                   <span className="text-[10px] font-medium">AI</span>
@@ -529,46 +528,44 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="3"
-                        className="text-[#d4a5a5]/40 dark:text-[#d4a5a5]/20"
-                      />
-                      {/* Progress circle */}
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="29"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        className="text-[#d4a5a5]"
-                        strokeDasharray={`${2 * Math.PI * 29}`}
+                          className="text-[#d4a5a5]/40 dark:text-[#d4a5a5]/20"
+                        />
+                        {/* Progress circle */}
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="29"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          className="text-[#d4a5a5]"
+                          strokeDasharray={`${2 * Math.PI * 29}`}
                           strokeDashoffset={`${2 * Math.PI * 29 * (1 - scoutProgress.percent / 100)}`}
                           transform="rotate(-90 32 32)"
                           style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
                         />
                       </svg>
                     )}
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors ${
-                      scoutProgress?.phase === 'computing'
-                        ? 'bg-[#d4a5a5]/80'
-                        : mobileScoutSheetOpen
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors ${scoutProgress?.phase === 'computing'
+                      ? 'bg-[#d4a5a5]/80'
+                      : mobileScoutSheetOpen
+                        ? 'bg-[#d4a5a5] active:bg-[#c49595]'
+                        : hasBirthData
                           ? 'bg-[#d4a5a5] active:bg-[#c49595]'
-                          : hasBirthData
-                            ? 'bg-[#d4a5a5] active:bg-[#c49595]'
-                            : 'bg-slate-400 active:bg-slate-500'
-                    }`}>
+                          : 'bg-slate-400 active:bg-slate-500'
+                      }`}>
                       <Telescope className={`w-7 h-7 text-white ${scoutProgress?.phase === 'computing' ? 'animate-pulse' : ''}`} />
                     </div>
                   </div>
-                  <span className={`text-[10px] font-medium tabular-nums ${
-                    scoutProgress?.phase === 'computing'
+                  <span className={`text-[10px] font-medium tabular-nums ${scoutProgress?.phase === 'computing'
+                    ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
+                    : mobileScoutSheetOpen
                       ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
-                      : mobileScoutSheetOpen
+                      : hasBirthData
                         ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
-                        : hasBirthData
-                          ? 'text-[#d4a5a5] dark:text-[#d4a5a5]'
-                          : 'text-slate-500 dark:text-zinc-400'
-                  }`}>
+                        : 'text-slate-500 dark:text-zinc-400'
+                    }`}>
                     {scoutProgress?.phase === 'computing' ? `${Math.round(scoutProgress.percent)}%` : 'Scout'}
                   </span>
                 </button>
@@ -583,13 +580,12 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                       toast.info('Enter your birthplace in the search bar first');
                     }
                   }}
-                  className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
-                    hasBirthData
-                      ? !isLegendMinimized
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-slate-600 dark:text-zinc-400 active:text-blue-600 dark:active:text-blue-400'
-                      : 'text-slate-300 dark:text-zinc-600'
-                  }`}
+                  className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${hasBirthData
+                    ? !isLegendMinimized
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-slate-600 dark:text-zinc-400 active:text-blue-600 dark:active:text-blue-400'
+                    : 'text-slate-300 dark:text-zinc-600'
+                    }`}
                 >
                   <SlidersHorizontal className="w-5 h-5" />
                   <span className="text-[10px] font-medium">Filter</span>
@@ -730,7 +726,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         {/* Left: Logo and chart name */}
         <div className="flex items-center gap-3">
           <a href="/" className="flex items-center gap-2 select-none" style={{ textDecoration: 'none' }}>
-            <FontAwesomeIcon icon={faHouse} className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <img src="/logo.png" alt="Halo Home" className="w-6 h-6 rounded-md" />
             {/* Show brand name when no birth data */}
             {!hasBirthData && (
               <span className="text-lg font-bold text-slate-800 dark:text-zinc-200" style={{ letterSpacing: '-0.02em' }}>
