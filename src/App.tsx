@@ -25,6 +25,7 @@ const SharePage = lazy(() => import("./pages/Share"));
 const SharedGlobePage = lazy(() => import("./pages/SharedGlobe"));
 const EmbedPage = lazy(() => import("./pages/Embed"));
 const AISubscription = lazy(() => import("./pages/AISubscription"));
+const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 const ScoutAlgorithmBlog = lazy(() => import("./pages/ScoutAlgorithmBlog"));
 const AstrologySystemsBlog = lazy(() => import("./pages/AstrologySystemsBlog"));
 const DuoModeBlog = lazy(() => import("./pages/DuoModeBlog"));
@@ -110,7 +111,8 @@ const DesktopOnlyAppGate = ({ children }: { children: React.ReactNode }) => {
     location.pathname === "/app" ||
     location.pathname === "/guest" ||
     location.pathname.startsWith("/project/") ||
-    location.pathname === "/ai-subscription";
+    location.pathname === "/ai-subscription" ||
+    location.pathname === "/choose-plan";
 
   useEffect(() => {
     if (!isMobile || !blocked) return;
@@ -190,6 +192,13 @@ const App = () => (
                             <LazyErrorBoundary componentName="AstroPaymentSuccess">
                               <AstroPaymentSuccess />
                             </LazyErrorBoundary>
+                          } />
+                          <Route path="/choose-plan" element={
+                            <RequireAuth>
+                              <LazyErrorBoundary componentName="ChoosePlan">
+                                <ChoosePlan />
+                              </LazyErrorBoundary>
+                            </RequireAuth>
                           } />
                           <Route path="/ai-subscription" element={
                             <RequireAuth>

@@ -31,7 +31,7 @@ export default function Login() {
     const fromLocation = (location.state as any)?.from;
     const from = fromLocation
         ? `${fromLocation.pathname}${fromLocation.search}`
-        : '/app';
+        : '/choose-plan';
 
     React.useEffect(() => {
         if (user && !user.is_anonymous) {
@@ -192,7 +192,7 @@ export default function Login() {
                                     },
                                 }}
                                 providers={['google']}
-                                redirectTo={`${window.location.origin}/app`}
+                                redirectTo={`${window.location.origin}/choose-plan`}
                                 onlyThirdPartyProviders={false}
                                 view="magic_link"
                                 magicLink={true}

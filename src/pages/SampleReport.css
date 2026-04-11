@@ -46,6 +46,13 @@
     height: 100px;
 }
 
+/* Ensure CTA button text stays white on dark background, overriding section-wide !important rules */
+.bg-section-beige button[type="submit"],
+.bg-section-beige button[type="submit"] span,
+.bg-section-beige button[type="submit"] svg {
+    color: #FFFFFF !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .report-header-content {

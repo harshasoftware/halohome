@@ -972,11 +972,11 @@ const Pricing = () => {
                         <Star className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" />
                         <div>
                             <div className="flex items-baseline gap-3">
-                                <h3 className="text-lg font-semibold text-slate-900">Free</h3>
-                                <span className="text-slate-600 font-medium">$0</span>
+                                <h3 className="text-lg font-semibold text-slate-900">Free Trial</h3>
+                                <span className="text-slate-600 font-medium">$0 for 7 days</span>
                             </div>
                             <p className="text-sm text-slate-600 mt-1">
-                                Analyze one property end-to-end. Basic Vastu scores & Mandala grid.
+                                Explore the full platform free for 7 days. No credit card required.
                             </p>
                         </div>
                     </div>
@@ -985,7 +985,7 @@ const Pricing = () => {
                         className="plan-btn text-center md:mt-0"
                         style={{ textDecoration: 'none' }}
                     >
-                        Try Free
+                        Start 7-Day Trial
                     </a>
                 </div>
             </ScrollReveal>

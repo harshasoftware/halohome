@@ -181,7 +181,7 @@ export function useAuthActions() {
     // and the error redirect happens before we can fall back to regular OAuth.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/guest` },
+      options: { redirectTo: `${window.location.origin}/choose-plan` },
     });
     return { error };
   };

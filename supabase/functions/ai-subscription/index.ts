@@ -764,7 +764,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       await supabase
         .from('ai_subscriptions')
         .update({
-          subscription_status: subscription.status === 'active' ? 'active' :
+          subscription_status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' :
             subscription.status === 'canceled' ? 'canceled' : 'past_due',
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         })
