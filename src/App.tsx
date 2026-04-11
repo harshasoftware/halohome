@@ -30,9 +30,12 @@ const AstrologySystemsBlog = lazy(() => import("./pages/AstrologySystemsBlog"));
 const DuoModeBlog = lazy(() => import("./pages/DuoModeBlog"));
 const PlanetaryPrecisionBlog = lazy(() => import("./pages/PlanetaryPrecisionBlog"));
 const MethodologyBlog = lazy(() => import("./pages/MethodologyBlog"));
+const HarmonyScoreBlog = lazy(() => import("./pages/HarmonyScoreBlog"));
 const SampleReport = lazy(() => import("./pages/SampleReport"));
 const BlogIndex = lazy(() => import("./pages/BlogIndex"));
 const Benchmark = lazy(() => import("./pages/Benchmark"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 
 // CopilotKit runtime URL - Supabase Edge Function with AG-UI protocol
 const COPILOT_RUNTIME_URL = "https://eypsystctqwvphvcrmxb.supabase.co/functions/v1/copilot-runtime";
@@ -225,9 +228,24 @@ const App = () => (
                               <MethodologyBlog />
                             </LazyErrorBoundary>
                           } />
+                          <Route path="/blog/what-is-harmony-score" element={
+                            <LazyErrorBoundary componentName="HarmonyScoreBlog">
+                              <HarmonyScoreBlog />
+                            </LazyErrorBoundary>
+                          } />
                           <Route path="/sample-report" element={
                             <LazyErrorBoundary componentName="SampleReport">
                               <SampleReport />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/terms" element={
+                            <LazyErrorBoundary componentName="Terms">
+                              <Terms />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/privacy" element={
+                            <LazyErrorBoundary componentName="Privacy">
+                              <Privacy />
                             </LazyErrorBoundary>
                           } />
                           <Route path="/benchmark" element={

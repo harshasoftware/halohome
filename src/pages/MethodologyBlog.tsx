@@ -19,10 +19,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
+import { buildArticleSchema, buildFaqSchema, buildPersonSchema } from '@/lib/seo';
 import { ScrollReveal } from '@/components/landing/ScrollReveal';
 import { SpotlightCard } from '@/components/landing/SpotlightCard';
 import './MethodologyBlog.css';
 import './Landing.css';
+
+const LAST_UPDATED = 'February 4, 2026';
+const PUBLISHED_DATE = '2026-02-04';
+const AUTHOR_NAME = 'Halo Home Team';
+const DESCRIPTION =
+  "A step-by-step look at Halo Home's methodology: how Scout evaluates properties and how the Scan app maps interiors with LiDAR.";
+
+const FAQS = [
+  {
+    question: 'What does Halo Home analyze in a property?',
+    answer:
+      'Halo Home analyzes boundary geometry, orientation, entrance direction, and eight-direction Vastu zones to produce a Harmony Score and remedies.',
+  },
+  {
+    question: 'What is the difference between Scout and Scan?',
+    answer:
+      'Scout evaluates properties or ZIP codes using satellite and parcel data in your browser. Scan uses iPhone LiDAR to map interiors and apply the same zone logic indoors.',
+  },
+  {
+    question: 'How is the Harmony Score calculated?',
+    answer:
+      'The score is a weighted combination of zone alignment, entrance direction, property shape, and element balance, then summarized into a 0-100 rating.',
+  },
+  {
+    question: 'Do I need special hardware?',
+    answer:
+      'No for Scout. For interior analysis, the Scan app uses LiDAR on supported iPhone Pro models.',
+  },
+];
 
 // ============================================================================
 // Process Steps Data
@@ -510,8 +541,27 @@ const MethodologyBlog: React.FC = () => {
     }, 300); // Increased timeout to ensure page has loaded
   };
 
+  const structuredData = [
+    buildArticleSchema({
+      title: 'How Does Halo Home Work? The Methodology',
+      description: DESCRIPTION,
+      path: '/blog/methodology',
+      datePublished: PUBLISHED_DATE,
+      dateModified: PUBLISHED_DATE,
+      authorName: AUTHOR_NAME,
+    }),
+    buildFaqSchema(FAQS),
+    buildPersonSchema(AUTHOR_NAME, 'Research Team'),
+  ];
+
   return (
     <div className="page-root">
+      <SEO
+        title="How Does Halo Home Work? The Methodology"
+        description={DESCRIPTION}
+        type="article"
+        structuredData={structuredData}
+      />
       <div className="bg-noise" />
 
       {/* Navigation - Matching Landing Page */}
@@ -544,11 +594,49 @@ const MethodologyBlog: React.FC = () => {
                   Methodology
                 </span>
                 <h1 className="text-4xl md:text-6xl font-serif mb-6" style={{ color: 'var(--text-primary, #18181B)' }}>
-                  How Halo Home Works
+                  How Does Halo Home Work?
                 </h1>
                 <p className="text-lg max-w-3xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
                   Two powerful processes for property harmony analysis: Scouting for property search and ZIP code analysis, and Scan App for detailed interior analysis using LiDAR technology.
                 </p>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+
+        {/* TL;DR + Definitions */}
+        <div className="bg-section-white section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center mb-10">
+                <h2 className="text-2xl md:text-3xl font-serif mb-4" style={{ color: 'var(--text-primary, #18181B)' }}>
+                  TL;DR
+                </h2>
+                <p className="text-lg max-w-3xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  Halo Home evaluates properties with Scout (satellite + parcel data) and interiors with
+                  the Scan app (LiDAR). Both map Vastu zones, detect entrances, and produce a 0-100
+                  Harmony Score with remedies.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <SpotlightCard className="p-6 rounded-2xl">
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    Scout
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                    Scout analyzes properties or ZIP codes using boundary detection, orientation,
+                    and eight-direction Vastu zones to recommend the best locations.
+                  </p>
+                </SpotlightCard>
+                <SpotlightCard className="p-6 rounded-2xl">
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                    Scan App
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                    The Scan app uses iPhone LiDAR to map interiors, apply Vastu zones indoors,
+                    and provide room-level remedies and layout guidance.
+                  </p>
+                </SpotlightCard>
               </div>
             </ScrollReveal>
           </div>
@@ -798,6 +886,41 @@ const MethodologyBlog: React.FC = () => {
                     iPhone Pro LiDAR sensors for precise 3D interior scanning and layout generation
                   </p>
                 </SpotlightCard>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+
+        {/* FAQ + Author */}
+        <div className="bg-section-white section-block">
+          <div className="section-wrapper">
+            <ScrollReveal>
+              <div className="text-center mb-10">
+                <h2 className="text-3xl md:text-4xl font-serif mb-4" style={{ color: 'var(--text-primary, #18181B)' }}>
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-lg" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  Quick answers to the most common methodology questions.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {FAQS.map((faq) => (
+                  <SpotlightCard key={faq.question} className="p-6">
+                    <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                      {faq.question}
+                    </h3>
+                    <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                      {faq.answer}
+                    </p>
+                  </SpotlightCard>
+                ))}
+              </div>
+              <div className="mt-10 text-center">
+                <p className="text-sm" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                  <strong>Author:</strong> {AUTHOR_NAME}. We build Vastu analysis tools that blend
+                  satellite, parcel, and LiDAR data into clear, actionable recommendations.
+                  Last updated: {LAST_UPDATED}.
+                </p>
               </div>
             </ScrollReveal>
           </div>

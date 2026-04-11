@@ -14,16 +14,66 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import BlogNavbar from '@/components/BlogNavbar';
+import SEO from '@/components/SEO';
+import { buildArticleSchema, buildFaqSchema, buildPersonSchema } from '@/lib/seo';
 import './ScoutAlgorithmBlog.css';
 import './Landing.css';
+
+const LAST_UPDATED = 'February 4, 2026';
+const PUBLISHED_DATE = '2026-02-04';
+const AUTHOR_NAME = 'Halo Home Team';
+const DESCRIPTION =
+  'Why planetary line accuracy is hard, how small errors shift lines by hundreds of kilometers, and what rigorous astrocartography tools do differently.';
+
+const FAQS = [
+  {
+    question: 'Why does planetary accuracy matter in astrocartography?',
+    answer:
+      'Astrocartography lines are derived directly from planetary positions. Even small position errors can shift lines by large distances on Earth.',
+  },
+  {
+    question: 'What causes inaccurate planetary positions?',
+    answer:
+      'Common causes include improper time conversions, low-precision ephemeris data, and using simplified calculations for bodies like the Moon.',
+  },
+  {
+    question: 'How can I tell if a tool is precise?',
+    answer:
+      'Look for documentation about ephemeris sources, time conversions, and whether positions can be validated against Swiss Ephemeris or JPL Horizons.',
+  },
+  {
+    question: 'Does Halo Home use high-precision ephemeris data?',
+    answer:
+      'Halo Home prioritizes precise astronomical calculations, including accurate time conversions and body-specific methods, to keep lines reliable.',
+  },
+];
 
 const PlanetaryPrecisionBlog: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const structuredData = [
+    buildArticleSchema({
+      title: 'Why Is Planetary Line Accuracy So Hard?',
+      description: DESCRIPTION,
+      path: '/blog/planetary-precision',
+      datePublished: PUBLISHED_DATE,
+      dateModified: PUBLISHED_DATE,
+      authorName: AUTHOR_NAME,
+    }),
+    buildFaqSchema(FAQS),
+    buildPersonSchema(AUTHOR_NAME, 'Research Team'),
+  ];
+
   return (
     <div className="blog-page">
+      <SEO
+        title="Why Is Planetary Line Accuracy So Hard?"
+        description={DESCRIPTION}
+        type="article"
+        structuredData={structuredData}
+      />
       <div className="blog-noise" />
 
       {/* Navigation */}
@@ -36,7 +86,7 @@ const PlanetaryPrecisionBlog: React.FC = () => {
           <span>Technical Deep-Dive</span>
         </div>
         <h1 className="blog-title">
-          The Hidden Science Behind<br />Planetary Line Accuracy
+          Why Is Planetary Line Accuracy<br />So Hard?
         </h1>
         <p className="blog-subtitle">
           Why calculating where planets actually are is surprisingly hard —
@@ -45,12 +95,43 @@ const PlanetaryPrecisionBlog: React.FC = () => {
         <div className="blog-meta">
           <span>8 min read</span>
           <span className="blog-meta-dot">•</span>
-          <span>Last updated: December 2024</span>
+          <span>Last updated: {LAST_UPDATED}</span>
         </div>
       </header>
 
       {/* Content */}
       <article className="blog-content">
+        {/* TL;DR - GEO: summary at top for AI extraction */}
+        <section className="blog-section blog-summary" aria-label="Summary">
+          <h2>TL;DR</h2>
+          <p>
+            Astrocartography accuracy depends on precise planetary positions and correct
+            time conversions. Small errors compound into large line shifts on Earth. High‑quality
+            tools document their ephemeris sources and verification methods.
+          </p>
+        </section>
+
+        {/* Definitions - GEO: clear, extractable definitions */}
+        <section className="blog-section">
+          <h2>Key Definitions</h2>
+          <div className="info-box" style={{ marginBottom: '1.5rem' }}>
+            <h3>Ephemeris</h3>
+            <p>
+              An <strong>ephemeris</strong> is a dataset of precise planetary positions
+              used to calculate astrocartography lines. Higher‑quality ephemerides
+              produce more accurate results.
+            </p>
+          </div>
+          <div className="info-box">
+            <h3>Time Conversion</h3>
+            <p>
+              <strong>Time conversion</strong> accounts for time zones, daylight savings,
+              and astronomical standards (UT/TT). Errors here can shift planetary
+              lines significantly.
+            </p>
+          </div>
+        </section>
+
         {/* Introduction */}
         <section className="blog-section">
           <h2>When Fractions of a Degree Matter</h2>
@@ -466,6 +547,25 @@ const PlanetaryPrecisionBlog: React.FC = () => {
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
+        </section>
+
+        {/* FAQ - GEO: 3-5 Q&A for AI and users */}
+        <section className="blog-section" aria-label="Frequently asked questions">
+          <h2>Frequently Asked Questions</h2>
+          {FAQS.map((faq) => (
+            <div key={faq.question} className="info-box" style={{ marginBottom: '1rem' }}>
+              <h3>{faq.question}</h3>
+              <p>{faq.answer}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Author - GEO: credentials for authority */}
+        <section className="blog-section" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem', marginTop: '2rem' }}>
+          <p className="blog-meta" style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+            <strong>Author:</strong> {AUTHOR_NAME}. We build tools that prioritize
+            astronomical precision for trustworthy astrocartography. Last updated: {LAST_UPDATED}.
+          </p>
         </section>
 
         {/* Related Posts */}

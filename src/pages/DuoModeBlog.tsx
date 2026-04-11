@@ -13,16 +13,66 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import BlogNavbar from '@/components/BlogNavbar';
+import SEO from '@/components/SEO';
+import { buildArticleSchema, buildFaqSchema, buildPersonSchema } from '@/lib/seo';
 import './ScoutAlgorithmBlog.css';
 import './Landing.css';
+
+const LAST_UPDATED = 'February 4, 2026';
+const PUBLISHED_DATE = '2026-02-04';
+const AUTHOR_NAME = 'Halo Home Team';
+const DESCRIPTION =
+  'How Duo Mode finds shared astrocartography hotspots for two people by scoring line intersections, overlap bonuses, and mode weighting.';
+
+const FAQS = [
+  {
+    question: 'What is Duo Mode?',
+    answer:
+      "Duo Mode is Halo Home's compatibility feature that analyzes two birth charts at once to find locations where both people benefit.",
+  },
+  {
+    question: 'How are shared locations scored?',
+    answer:
+      'Locations are scored using individual benefits for each person, overlap bonuses when lines intersect closely, and clustering of nearby intersections into hotspots.',
+  },
+  {
+    question: 'What are the four Duo Mode types?',
+    answer:
+      'Duo Mode includes Honeymoon, Relocation, Travel, and Business, each with different planetary weightings based on the goal.',
+  },
+  {
+    question: 'How close do lines need to be?',
+    answer:
+      'Duo Mode flags intersections when lines come within a few hundred kilometers, then rewards tighter overlap zones as stronger shared hotspots.',
+  },
+];
 
 const DuoModeBlog: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const structuredData = [
+    buildArticleSchema({
+      title: 'How Does Duo Mode Find Shared Locations for Two People?',
+      description: DESCRIPTION,
+      path: '/blog/duo-mode',
+      datePublished: PUBLISHED_DATE,
+      dateModified: PUBLISHED_DATE,
+      authorName: AUTHOR_NAME,
+    }),
+    buildFaqSchema(FAQS),
+    buildPersonSchema(AUTHOR_NAME, 'Research Team'),
+  ];
+
   return (
     <div className="blog-page">
+      <SEO
+        title="How Does Duo Mode Find Shared Locations for Two People?"
+        description={DESCRIPTION}
+        type="article"
+        structuredData={structuredData}
+      />
       <div className="blog-noise" />
 
       {/* Navigation */}
@@ -35,7 +85,7 @@ const DuoModeBlog: React.FC = () => {
           <span>Feature Guide</span>
         </div>
         <h1 className="blog-title">
-          Duo Mode: Where<br />Two Worlds Align
+          How Does Duo Mode Find<br />Shared Locations for Two People?
         </h1>
         <p className="blog-subtitle">
           Discover how we find the perfect locations for couples, travel partners,
@@ -44,12 +94,49 @@ const DuoModeBlog: React.FC = () => {
         <div className="blog-meta">
           <span>8 min read</span>
           <span className="blog-meta-dot">•</span>
-          <span>Last updated: December 2024</span>
+          <span>Last updated: {LAST_UPDATED}</span>
         </div>
       </header>
 
       {/* Content */}
       <article className="blog-content">
+        {/* TL;DR - GEO: summary at top for AI extraction */}
+        <section className="blog-section blog-summary" aria-label="Summary">
+          <h2>TL;DR</h2>
+          <p>
+            Duo Mode overlays two astrocartography charts to find shared hotspots.
+            It scores intersections by individual benefit, overlap proximity, and
+            mode-specific planetary weighting to recommend places where both people thrive.
+          </p>
+        </section>
+
+        {/* Definitions - GEO: clear, extractable definitions */}
+        <section className="blog-section">
+          <h2>Key Definitions</h2>
+          <div className="info-box" style={{ marginBottom: '1.5rem' }}>
+            <h3>Duo Mode</h3>
+            <p>
+              <strong>Duo Mode</strong> is Halo Home's compatibility analysis that
+              evaluates two charts simultaneously to find locations with shared
+              supportive planetary influences.
+            </p>
+          </div>
+          <div className="info-box" style={{ marginBottom: '1.5rem' }}>
+            <h3>Overlap Bonus</h3>
+            <p>
+              <strong>Overlap bonus</strong> is extra scoring awarded when two lines
+              intersect within a tight distance threshold, indicating a strong shared zone.
+            </p>
+          </div>
+          <div className="info-box">
+            <h3>Hotspot Clustering</h3>
+            <p>
+              <strong>Hotspot clustering</strong> groups nearby intersections into a
+              single recommended area so you can choose a practical destination.
+            </p>
+          </div>
+        </section>
+
         {/* Introduction */}
         <section className="blog-section">
           <h2>The Challenge of Shared Destinations</h2>
@@ -376,6 +463,25 @@ const DuoModeBlog: React.FC = () => {
               <span>Up to 20 top locations with city names and themes</span>
             </div>
           </div>
+        </section>
+
+        {/* FAQ - GEO: 3-5 Q&A for AI and users */}
+        <section className="blog-section" aria-label="Frequently asked questions">
+          <h2>Frequently Asked Questions</h2>
+          {FAQS.map((faq) => (
+            <div key={faq.question} className="info-box" style={{ marginBottom: '1rem' }}>
+              <h3>{faq.question}</h3>
+              <p>{faq.answer}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Author - GEO: credentials for authority */}
+        <section className="blog-section" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem', marginTop: '2rem' }}>
+          <p className="blog-meta" style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+            <strong>Author:</strong> {AUTHOR_NAME}. We build compatibility tools that
+            blend astrocartography with precision scoring. Last updated: {LAST_UPDATED}.
+          </p>
         </section>
 
         {/* CTA */}

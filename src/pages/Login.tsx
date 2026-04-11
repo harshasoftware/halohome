@@ -14,6 +14,7 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import GoogleOneTap from '@/components/auth/GoogleOneTap';
+import SEO from '@/components/SEO';
 import '@/pages/Landing.css'; // Reuse landing animations if possible
 
 export default function Login() {
@@ -63,6 +64,11 @@ export default function Login() {
 
     return (
         <div className="h-screen max-h-screen w-full flex bg-white text-slate-900 overflow-hidden font-['Plus_Jakarta_Sans']">
+            <SEO
+                title="Login | Halo Home"
+                description="Access your Halo Home account to view property analysis, Harmony Scores, and saved reports."
+                noindex
+            />
 
 
             {/* LEFT PANE - Marketing / Benefits - Light Theme */}

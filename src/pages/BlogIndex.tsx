@@ -4,14 +4,16 @@
  * Main blog landing page showing all available articles.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Target, Compass, Users, Orbit, Telescope,
+  Target, Compass, Users, Orbit, Telescope, TrendingUp,
   ChevronRight, BookOpen
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import BlogNavbar from '@/components/BlogNavbar';
+import SEO from '@/components/SEO';
+import { absoluteUrl } from '@/lib/seo';
 import './ScoutAlgorithmBlog.css';
 import './Landing.css';
 
@@ -26,8 +28,16 @@ interface BlogPost {
 
 const blogPosts: BlogPost[] = [
   {
+    slug: '/blog/what-is-harmony-score',
+    title: 'What Is a Harmony Score? How Halo Home Evaluates Properties',
+    description: 'A clear definition of the Harmony Score, how it\'s calculated, and how you can use it to find Vastu-aligned homes. Includes FAQ and key definitions.',
+    icon: <TrendingUp className="w-6 h-6" />,
+    badge: 'Guide',
+    readTime: '6 min read',
+  },
+  {
     slug: '/blog/methodology',
-    title: 'The Science Behind Your Stars',
+    title: 'How Does Halo Home Work? The Methodology',
     description: 'Professional-grade astrocartography powered by NASA-grade ephemeris data and ancient wisdom — our technical foundation explained.',
     icon: <Telescope className="w-6 h-6" />,
     badge: 'Methodology',
@@ -35,7 +45,7 @@ const blogPosts: BlogPost[] = [
   },
   {
     slug: '/blog/scout-algorithm',
-    title: 'How Our Scout Engine Achieves Unprecedented Accuracy',
+    title: "How Does Halo Home's Scout Engine Achieve Unprecedented Accuracy?",
     description: 'A transparent look at the science behind location scoring — why it matters, and how we built the most precise astrocartography engine available.',
     icon: <Target className="w-6 h-6" />,
     badge: 'Technical Deep-Dive',
@@ -43,7 +53,7 @@ const blogPosts: BlogPost[] = [
   },
   {
     slug: '/blog/planetary-precision',
-    title: 'The Hidden Science Behind Planetary Line Accuracy',
+    title: 'Why Is Planetary Line Accuracy So Hard?',
     description: 'Why calculating where planets actually are is surprisingly hard — and what separates precise astrocartography from guesswork.',
     icon: <Orbit className="w-6 h-6" />,
     badge: 'Technical Deep-Dive',
@@ -51,7 +61,7 @@ const blogPosts: BlogPost[] = [
   },
   {
     slug: '/blog/astrology-systems',
-    title: 'Every Planet. Every Line. Every System.',
+    title: 'Which Astrology Systems Does Halo Home Support?',
     description: 'Built for serious astrologers. Western or Vedic. Tropical or Sidereal. Eight house systems. All ten celestial bodies mapped with precision.',
     icon: <Compass className="w-6 h-6" />,
     badge: 'Professional Tools',
@@ -59,7 +69,7 @@ const blogPosts: BlogPost[] = [
   },
   {
     slug: '/blog/duo-mode',
-    title: 'Duo Mode: Where Two Worlds Align',
+    title: 'How Does Duo Mode Find Shared Locations for Two People?',
     description: 'Discover how we find the perfect locations for couples, travel partners, and business duos — where both people\'s astrocartography lines intersect.',
     icon: <Users className="w-6 h-6" />,
     badge: 'Feature Guide',
@@ -72,8 +82,24 @@ const BlogIndex: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const listSchema = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: blogPosts.map((post, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: absoluteUrl(post.slug),
+      name: post.title,
+    })),
+  }), []);
+
   return (
     <div className="blog-page">
+      <SEO
+        title="Halo Home Blog — Methodology, Scout Engine, and Vastu Guides"
+        description="Read Halo Home's deep dives on astrocartography accuracy, Vastu methodology, and product features. Clear explanations, definitions, and FAQs."
+        structuredData={[listSchema]}
+      />
       <div className="blog-noise" />
 
       {/* Navigation */}

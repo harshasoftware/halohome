@@ -15,6 +15,8 @@ import { useGSAP } from '@gsap/react';
 import { LandingConstellations } from './components/Constellations';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
+import SEO from '@/components/SEO';
+import { buildFaqSchema } from '@/lib/seo';
 
 // Error boundary for lazy-loaded demo components
 class DemoErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -67,6 +69,40 @@ import './Landing.css';
 
 
 // --- Components ---
+
+const LANDING_SEO = {
+    title: "Halo Home - AI-Powered Vastu Analysis & Harmony Score",
+    description:
+        "Discover Vastu-aligned homes with AI-powered analysis. Get a Harmony Score, entrance and zone insights, and practical remedies for any property.",
+};
+
+const FAQS = [
+    {
+        question: "What is a Harmony Score?",
+        answer:
+            "The Harmony Score is Halo Home's proprietary rating system that evaluates properties based on Vastu Shastra principles. It analyzes orientation, room placement, entrance direction, and energy flow to give you a clear picture of a property's spatial harmony.",
+    },
+    {
+        question: "How does ZIP code scanning work?",
+        answer:
+            "When you scan a ZIP code, Halo Home analyzes available properties in that area and ranks them by their Harmony Scores. This helps you quickly identify the best Vastu-aligned homes without visiting each one individually. Scout is currently available for U.S. ZIP codes only.",
+    },
+    {
+        question: "Do I need to be a Vastu expert to use this?",
+        answer:
+            "Not at all. Halo Home makes the ancient science of Vastu simple and accessible. Enter any address and get easy-to-understand insights with practical remedies you can implement right away.",
+    },
+    {
+        question: "Can I use this for my current home?",
+        answer:
+            "Yes. Even if your home wasn't built with Vastu in mind, Halo Home provides actionable remedies and adjustments to improve energy flow and create more harmony without major renovations.",
+    },
+    {
+        question: "How accurate is the analysis?",
+        answer:
+            "Halo Home combines authentic Vastu principles with parcel boundary data and directional analysis. Harmony Scores are based on structured evaluation and traditional Vastu guidelines.",
+    },
+];
 
 const Navbar = ({ onInstall }: { onInstall: () => void }) => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -428,6 +464,10 @@ const Hero = memo(() => {
                         alt=""
                         className="hero-houses-bg"
                         aria-hidden="true"
+                        width="910"
+                        height="800"
+                        loading="eager"
+                        decoding="async"
                     />
                 </picture>
             </div>
@@ -462,6 +502,11 @@ const Hero = memo(() => {
                                 src="/images/hero-houses.png"
                                 alt="Modern and traditional houses - 3D isometric view"
                                 className="hero-houses-image"
+                                width="910"
+                                height="800"
+                                loading="eager"
+                                decoding="async"
+                                fetchpriority="high"
                             />
                         </picture>
 
@@ -956,14 +1001,6 @@ const Pricing = () => {
 };
 
 const FAQ = () => {
-    const faqs = [
-        { q: "What is a Harmony Score?", a: "The Harmony Score is our proprietary rating system that evaluates properties based on Vastu Shastra principles. It analyzes orientation, room placement, entrance direction, and energy flow to give you a clear picture of a property's spatial harmony." },
-        { q: "How does ZIP code scanning work?", a: "When you scan a ZIP code, our AI analyzes all available properties in that area, ranking them by their harmony scores. This helps you quickly identify the best Vastu-aligned homes without visiting each one individually. Scout is currently available for U.S. ZIP codes only." },
-        { q: "Do I need to be a Vastu expert to use this?", a: "Not at all! We've made the ancient science of Vastu simple and accessible. Just enter any address and get instant, easy-to-understand insights with practical remedies you can implement right away." },
-        { q: "Can I use this for my current home?", a: "Yes! Even if your home wasn't built with Vastu in mind, our AI provides actionable remedies and adjustments to improve energy flow and create more harmony without major renovations." },
-        { q: "How accurate is the analysis?", a: "Our AI combines authentic Vastu principles with precise parcel boundary data and directional analysis. The harmony scores are based on thousands of property evaluations and traditional Vastu guidelines." },
-    ];
-
     return (
         <section id="faq" className="section-wrapper max-w-3xl">
             <ScrollReveal>
@@ -972,17 +1009,12 @@ const FAQ = () => {
                 </div>
             </ScrollReveal>
             <div className="flex flex-col gap-4">
-                {faqs.map((item, i) => (
+                {FAQS.map((item, i) => (
                     <ScrollReveal key={i} delay={i * 100}>
                         <SpotlightCard className="p-6 rounded-xl cursor-pointer hover:bg-white/5 transition-colors">
-                            <h4 className="text-lg font-medium mb-2 text-white">{item.q}</h4>
+                            <h4 className="text-lg font-medium mb-2 text-white">{item.question}</h4>
                             <p className="text-zinc-400 leading-relaxed">
-                                {item.a}
-                                {item.link && (
-                                    <a href={item.link} className="ml-2 text-purple-400 hover:text-purple-300 underline underline-offset-2">
-                                        Learn more →
-                                    </a>
-                                )}
+                                {item.answer}
                             </p>
                         </SpotlightCard>
                     </ScrollReveal>
@@ -1308,6 +1340,11 @@ export default function Landing() {
 
     return (
         <div className="page-root">
+            <SEO
+                title={LANDING_SEO.title}
+                description={LANDING_SEO.description}
+                structuredData={[buildFaqSchema(FAQS)]}
+            />
             <GoogleOneTap />
             <div className="bg-noise" />
             {/* <MysticalParticles /> */}

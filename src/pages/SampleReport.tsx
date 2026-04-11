@@ -1,17 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Building2, MapPin, Sparkles, Globe, ArrowRight,
     Home, Compass, Target, TrendingUp, Check, AlertTriangle,
-    Navigation, Grid3X3, Scale, Star, Zap
+    Navigation, Grid3X3, Scale, Star, Zap, Loader2, Mail
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 import { ScrollReveal } from '@/components/landing/ScrollReveal';
 import { SpotlightCard } from '@/components/landing/SpotlightCard';
+import { supabase } from '@/integrations/supabase/client';
 import './SampleReport.css';
 import './Landing.css';
+
+type SampleReportGateStatus = 'idle' | 'loading' | 'error';
+
+const SAMPLE_REPORT_UNLOCK_STORAGE_KEY = 'halohome.sample-report-email';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Sample Vastu property analysis data
 const SAMPLE_DATA = {
@@ -200,9 +207,66 @@ const SAMPLE_DATA = {
 };
 
 export default function SampleReport() {
+    const [email, setEmail] = useState(() => {
+        if (typeof window === 'undefined') return '';
+
+        const storedEmail = window.localStorage.getItem(SAMPLE_REPORT_UNLOCK_STORAGE_KEY)?.trim().toLowerCase() ?? '';
+        return EMAIL_REGEX.test(storedEmail) ? storedEmail : '';
+    });
+    const [hasUnlockedReport, setHasUnlockedReport] = useState(() => {
+        if (typeof window === 'undefined') return false;
+
+        const storedEmail = window.localStorage.getItem(SAMPLE_REPORT_UNLOCK_STORAGE_KEY)?.trim().toLowerCase() ?? '';
+        return EMAIL_REGEX.test(storedEmail);
+    });
+    const [gateStatus, setGateStatus] = useState<SampleReportGateStatus>('idle');
+    const [errorMsg, setErrorMsg] = useState('');
+
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    const unlockReport = useCallback((normalizedEmail: string) => {
+        setEmail(normalizedEmail);
+        setHasUnlockedReport(true);
+        setGateStatus('idle');
+        setErrorMsg('');
+
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(SAMPLE_REPORT_UNLOCK_STORAGE_KEY, normalizedEmail);
+            window.requestAnimationFrame(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }, []);
+
+    const handleUnlockSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const normalizedEmail = email.trim().toLowerCase();
+        if (!EMAIL_REGEX.test(normalizedEmail)) {
+            setErrorMsg('Please enter a valid email address.');
+            setGateStatus('error');
+            return;
+        }
+
+        setGateStatus('loading');
+        setErrorMsg('');
+
+        try {
+            const { error } = await supabase.from('sample_report_leads').insert({ email: normalizedEmail });
+
+            if (error && error.code !== '23505') {
+                throw error;
+            }
+
+            unlockReport(normalizedEmail);
+        } catch (error) {
+            console.error('[SampleReport] Lead capture failed:', error);
+            setErrorMsg('We could not unlock the report right now. Please try again.');
+            setGateStatus('error');
+        }
+    }, [email, unlockReport]);
 
     const getScoreColor = (score: number) => {
         if (score >= 90) return '#10b981'; // emerald
@@ -220,29 +284,201 @@ export default function SampleReport() {
         return styles[status as keyof typeof styles] || styles.moderate;
     };
 
+    const navigation = (
+        <nav className="nav-fixed">
+            <div className="nav-container">
+                <Link to="/" className="nav-logo flex items-center gap-2">
+                    <img src="/logo.png" alt="Halo Home" className="w-6 h-6 rounded-md" />
+                    Halo Home
+                </Link>
+
+                <div className="nav-links hidden md:flex items-center">
+                    <a href="/#features" className="nav-link">Features</a>
+                    <a href="/#pricing" className="nav-link">Pricing</a>
+                    <a href="/sample-report" className="nav-link">Sample Report</a>
+                    <a href="/blog/methodology" className="nav-link">Methodology</a>
+                    <a href="/guest" className="nav-link nav-link-install flex items-center gap-2 px-4 py-2 rounded-full font-medium shadow-sm hover:shadow-md transition-all" style={{ textDecoration: 'none' }}>
+                        Launch App
+                    </a>
+                </div>
+            </div>
+        </nav>
+    );
+
+    if (!hasUnlockedReport) {
+        return (
+            <div className="page-root">
+                <SEO
+                    title="Sample Vastu Report | Halo Home"
+                    description="Preview a sample Harmony Score report with zone analysis, entrance scoring, and practical Vastu remedies."
+                />
+                <div className="bg-noise" />
+                {navigation}
+
+                <main>
+                    <div className="bg-section-beige section-block">
+                        <div className="section-wrapper">
+                            <ScrollReveal>
+                                <div className="report-header-content text-center mb-12">
+                                    <span className="inline-block px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-600 text-xs font-semibold uppercase tracking-wider mb-4">
+                                        Sample Report
+                                    </span>
+                                    <h1 className="text-4xl md:text-5xl font-serif mb-4" style={{ color: 'var(--text-primary, #18181B)' }}>
+                                        Unlock the Sample Report
+                                    </h1>
+                                    <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                                        Enter your email to view the full sample Vastu property analysis and see exactly how Halo Home presents scoring, remedies, and recommendations.
+                                    </p>
+                                </div>
+
+                                <SpotlightCard className="report-property-card p-8 max-w-5xl mx-auto">
+                                    <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+                                        <div className="text-left">
+                                            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#D97706' }}>What you&apos;ll see inside</span>
+                                            <div className="mt-6 space-y-4">
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-12 h-12 rounded-full bg-orange-500/15 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                                        <Home className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h2 className="text-xl font-serif mb-1" style={{ color: 'var(--text-primary, #18181B)' }}>Complete property scorecard</h2>
+                                                        <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                                                            Review harmony scoring, orientation, entrance direction, and a polished summary card for the property.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-12 h-12 rounded-full bg-orange-500/15 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                                        <Compass className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h2 className="text-xl font-serif mb-1" style={{ color: 'var(--text-primary, #18181B)' }}>Zone-by-zone Vastu analysis</h2>
+                                                        <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                                                            See all eight directional zones, their scores, ideal room uses, and clear interpretation notes.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-4">
+                                                    <div className="w-12 h-12 rounded-full bg-orange-500/15 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                                        <TrendingUp className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h2 className="text-xl font-serif mb-1" style={{ color: 'var(--text-primary, #18181B)' }}>Remedies and comparisons</h2>
+                                                        <p style={{ color: 'var(--text-secondary, #52525B)' }}>
+                                                            Explore recommended fixes, entrance analysis, and neighborhood benchmarking in the same report experience users receive.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-8 p-5 rounded-3xl border border-black/5 bg-white/70">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div>
+                                                        <p className="text-xs uppercase tracking-[0.2em] mb-1" style={{ color: 'var(--text-secondary, #52525B)' }}>Sample property</p>
+                                                        <p className="font-semibold" style={{ color: 'var(--text-primary, #18181B)' }}>{SAMPLE_DATA.propertyAddress}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xs uppercase tracking-[0.2em] mb-1" style={{ color: 'var(--text-secondary, #52525B)' }}>Harmony score</p>
+                                                        <p className="text-3xl font-bold text-emerald-600">{SAMPLE_DATA.overallScore}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-sm">
+                                            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#D97706' }}>Email Unlock</span>
+                                            <h2 className="text-2xl font-serif mt-3 mb-2" style={{ color: 'var(--text-primary, #18181B)' }}>
+                                                View the full sample now
+                                            </h2>
+                                            <p className="mb-6" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                                                Submit your email and we&apos;ll unlock the report immediately in this browser.
+                                            </p>
+
+                                            <form onSubmit={handleUnlockSubmit} className="space-y-4">
+                                                <div>
+                                                    <label htmlFor="sample-report-email" className="text-sm font-medium" style={{ color: 'var(--text-primary, #18181B)' }}>
+                                                        Email address
+                                                    </label>
+                                                    <div className="relative mt-2">
+                                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+                                                        <input
+                                                            id="sample-report-email"
+                                                            type="email"
+                                                            name="sample-report-email"
+                                                            autoComplete="email"
+                                                            spellCheck={false}
+                                                            autoCapitalize="none"
+                                                            autoCorrect="off"
+                                                            value={email}
+                                                            onChange={(event) => {
+                                                                setEmail(event.target.value);
+                                                                if (gateStatus === 'error') {
+                                                                    setGateStatus('idle');
+                                                                    setErrorMsg('');
+                                                                }
+                                                            }}
+                                                            placeholder="you@company.com"
+                                                            className="w-full rounded-2xl border border-[#F3E8D7] bg-[#FFFDF9] py-3 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:border-[#D97706]/40 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    type="submit"
+                                                    disabled={gateStatus === 'loading'}
+                                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-70"
+                                                    style={{ backgroundColor: 'var(--text-primary, #18181B)' }}
+                                                >
+                                                    {gateStatus === 'loading' ? (
+                                                        <>
+                                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                                            Unlocking Report...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            View Sample Report
+                                                            <ArrowRight className="h-5 w-5" />
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </form>
+
+                                            {gateStatus === 'error' && (
+                                                <p className="mt-4 text-sm text-red-600" role="alert">
+                                                    {errorMsg}
+                                                </p>
+                                            )}
+
+                                            <div className="mt-6 rounded-2xl bg-orange-500/10 px-4 py-3">
+                                                <div className="flex items-start gap-3">
+                                                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-600" />
+                                                    <p className="text-sm" style={{ color: 'var(--text-secondary, #52525B)' }}>
+                                                        Your email is captured for Halo Home follow-up, and duplicate submissions will still reopen the report without blocking you.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SpotlightCard>
+                            </ScrollReveal>
+                        </div>
+                    </div>
+                </main>
+
+                <Footer showInstallButton={false} />
+            </div>
+        );
+    }
+
     return (
         <div className="page-root">
+            <SEO
+                title="Sample Vastu Report | Halo Home"
+                description="Preview a sample Harmony Score report with zone analysis, entrance scoring, and practical Vastu remedies."
+            />
             <div className="bg-noise" />
 
-            {/* Navigation - Matching Landing Page */}
-            <nav className="nav-fixed">
-                <div className="nav-container">
-                    <Link to="/" className="nav-logo flex items-center gap-2">
-                        <img src="/logo.png" alt="Halo Home" className="w-6 h-6 rounded-md" />
-                        Halo Home
-                    </Link>
-
-                    <div className="nav-links hidden md:flex items-center">
-                        <a href="/#features" className="nav-link">Features</a>
-                        <a href="/#pricing" className="nav-link">Pricing</a>
-                        <a href="/sample-report" className="nav-link">Sample Report</a>
-                        <a href="/blog/methodology" className="nav-link">Methodology</a>
-                        <a href="/guest" className="nav-link nav-link-install flex items-center gap-2 px-4 py-2 rounded-full font-medium shadow-sm hover:shadow-md transition-all" style={{ textDecoration: 'none' }}>
-                            Launch App
-                        </a>
-                    </div>
-                </div>
-            </nav>
+            {navigation}
 
             <main>
                 {/* Hero Section */}

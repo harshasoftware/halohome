@@ -14,16 +14,66 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import BlogNavbar from '@/components/BlogNavbar';
+import SEO from '@/components/SEO';
+import { buildArticleSchema, buildFaqSchema, buildPersonSchema } from '@/lib/seo';
 import './ScoutAlgorithmBlog.css';
 import './Landing.css';
+
+const LAST_UPDATED = 'February 4, 2026';
+const PUBLISHED_DATE = '2026-02-04';
+const AUTHOR_NAME = 'Halo Home Team';
+const DESCRIPTION =
+  'A professional breakdown of the astrology systems Halo Home supports — Western and Vedic zodiacs, eight house systems, and all major celestial bodies.';
+
+const FAQS = [
+  {
+    question: 'Which zodiac systems does Halo Home support?',
+    answer:
+      'Halo Home supports Western Tropical and Vedic Sidereal zodiacs, allowing you to compare interpretations across traditions.',
+  },
+  {
+    question: 'How many house systems are available?',
+    answer:
+      'Eight house systems are available, including Placidus, Whole Sign, Koch, Equal, Campanus, Regiomontanus, Porphyry, and Morinus.',
+  },
+  {
+    question: 'Does changing systems require recalculation?',
+    answer:
+      'System changes are designed to be fast, so you can compare lines and interpretations without long delays.',
+  },
+  {
+    question: 'Who is this level of detail for?',
+    answer:
+      'The depth is ideal for serious students, professional astrologers, and anyone who wants rigorous, transparent astrocartography.',
+  },
+];
 
 const AstrologySystemsBlog: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const structuredData = [
+    buildArticleSchema({
+      title: 'Which Astrology Systems Does Halo Home Support?',
+      description: DESCRIPTION,
+      path: '/blog/astrology-systems',
+      datePublished: PUBLISHED_DATE,
+      dateModified: PUBLISHED_DATE,
+      authorName: AUTHOR_NAME,
+    }),
+    buildFaqSchema(FAQS),
+    buildPersonSchema(AUTHOR_NAME, 'Research Team'),
+  ];
+
   return (
     <div className="blog-page">
+      <SEO
+        title="Which Astrology Systems Does Halo Home Support?"
+        description={DESCRIPTION}
+        type="article"
+        structuredData={structuredData}
+      />
       <div className="blog-noise" />
 
       {/* Navigation */}
@@ -36,7 +86,7 @@ const AstrologySystemsBlog: React.FC = () => {
           <span>Professional Tools</span>
         </div>
         <h1 className="blog-title">
-          Every Planet. Every Line.<br />Every System.
+          Which Astrology Systems<br />Does Halo Home Support?
         </h1>
         <p className="blog-subtitle">
           Built for serious astrologers. Western or Vedic. Tropical or Sidereal.
@@ -45,12 +95,43 @@ const AstrologySystemsBlog: React.FC = () => {
         <div className="blog-meta">
           <span>8 min read</span>
           <span className="blog-meta-dot">•</span>
-          <span>Last updated: December 2024</span>
+          <span>Last updated: {LAST_UPDATED}</span>
         </div>
       </header>
 
       {/* Content */}
       <article className="blog-content">
+        {/* TL;DR - GEO: summary at top for AI extraction */}
+        <section className="blog-section blog-summary" aria-label="Summary">
+          <h2>TL;DR</h2>
+          <p>
+            Halo Home supports both Western (Tropical) and Vedic (Sidereal) zodiacs,
+            eight house systems, and all major celestial bodies. You can compare
+            systems side by side without losing precision.
+          </p>
+        </section>
+
+        {/* Definitions - GEO: clear, extractable definitions */}
+        <section className="blog-section">
+          <h2>Key Definitions</h2>
+          <div className="info-box" style={{ marginBottom: '1.5rem' }}>
+            <h3>Tropical vs. Sidereal</h3>
+            <p>
+              <strong>Tropical</strong> astrology aligns signs to seasons, while
+              <strong> Sidereal</strong> aligns signs to fixed star positions. Both
+              systems are supported for accurate comparison.
+            </p>
+          </div>
+          <div className="info-box">
+            <h3>House Systems</h3>
+            <p>
+              <strong>House systems</strong> define how the sky is divided into 12
+              areas of life. Halo Home supports eight major systems so professionals
+              can choose the method they trust most.
+            </p>
+          </div>
+        </section>
+
         {/* Introduction */}
         <section className="blog-section">
           <h2>Why System Choice Matters</h2>
@@ -363,6 +444,25 @@ const AstrologySystemsBlog: React.FC = () => {
               <span>AI interpretations trained on both traditions</span>
             </div>
           </div>
+        </section>
+
+        {/* FAQ - GEO: 3-5 Q&A for AI and users */}
+        <section className="blog-section" aria-label="Frequently asked questions">
+          <h2>Frequently Asked Questions</h2>
+          {FAQS.map((faq) => (
+            <div key={faq.question} className="info-box" style={{ marginBottom: '1rem' }}>
+              <h3>{faq.question}</h3>
+              <p>{faq.answer}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Author - GEO: credentials for authority */}
+        <section className="blog-section" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem', marginTop: '2rem' }}>
+          <p className="blog-meta" style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+            <strong>Author:</strong> {AUTHOR_NAME}. We build professional-grade
+            astrocartography tools with rigorous ephemeris calculations. Last updated: {LAST_UPDATED}.
+          </p>
         </section>
 
         {/* CTA */}

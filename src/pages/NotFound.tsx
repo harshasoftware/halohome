@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createAvatar } from '@dicebear/core';
 import { bigSmile } from '@dicebear/collection';
+import SEO from '@/components/SEO';
 
 const AVATAR_SEEDS = [
   'avatar1', 'avatar2', 'avatar3', 'avatar4', 'avatar5'
@@ -33,6 +34,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 px-4">
+      <SEO title="404 | Halo Home" description="Page not found." noindex />
       <div className="text-center mb-8">
         <h1 className="text-7xl font-extrabold mb-2 text-orange-500 tracking-tight drop-shadow-lg">404</h1>
         <p className="text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-2">Page Not Found</p>

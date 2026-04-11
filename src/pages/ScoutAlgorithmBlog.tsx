@@ -13,16 +13,66 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import BlogNavbar from '@/components/BlogNavbar';
+import SEO from '@/components/SEO';
+import { buildArticleSchema, buildFaqSchema, buildPersonSchema } from '@/lib/seo';
 import './ScoutAlgorithmBlog.css';
 import './Landing.css';
+
+const LAST_UPDATED = 'February 4, 2026';
+const PUBLISHED_DATE = '2026-02-04';
+const AUTHOR_NAME = 'Halo Home Team';
+const DESCRIPTION =
+  "A transparent look at the science behind location scoring — why accuracy matters, and how Halo Home's Scout engine delivers precise astrocartography insights.";
+
+const FAQS = [
+  {
+    question: 'What is the Scout Engine?',
+    answer:
+      "The Scout Engine is Halo Home's location-scoring system for astrocartography. It evaluates planetary line proximity using spherical distance, continuous decay, and multi-factor scoring to rank the best locations.",
+  },
+  {
+    question: 'How does Scout improve distance accuracy?',
+    answer:
+      "Scout uses spherical cross-track distance instead of flat-map approximations. This produces true distances on Earth's curved surface and avoids large errors at higher latitudes.",
+  },
+  {
+    question: 'What do the three Scout scores mean?',
+    answer:
+      "Scout reports Benefit (how positive the influence is), Intensity (how strong you'll feel it), and Stability (how consistent it is). This prevents oversimplified “good/bad” ratings.",
+  },
+  {
+    question: 'Why not use a fixed cutoff like 500 km?',
+    answer:
+      'Fixed cutoffs create artificial cliff-edges. Scout uses continuous decay functions so influence gradually weakens with distance, which is more realistic and actionable.',
+  },
+];
 
 const ScoutAlgorithmBlog: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const structuredData = [
+    buildArticleSchema({
+      title: "How Does Halo Home's Scout Engine Achieve Unprecedented Accuracy?",
+      description: DESCRIPTION,
+      path: '/blog/scout-algorithm',
+      datePublished: PUBLISHED_DATE,
+      dateModified: PUBLISHED_DATE,
+      authorName: AUTHOR_NAME,
+    }),
+    buildFaqSchema(FAQS),
+    buildPersonSchema(AUTHOR_NAME, 'Research Team'),
+  ];
+
   return (
     <div className="blog-page">
+      <SEO
+        title="How Does Halo Home's Scout Engine Achieve Unprecedented Accuracy?"
+        description={DESCRIPTION}
+        type="article"
+        structuredData={structuredData}
+      />
       <div className="blog-noise" />
 
       {/* Navigation */}
@@ -35,7 +85,7 @@ const ScoutAlgorithmBlog: React.FC = () => {
           <span>Technical Deep-Dive</span>
         </div>
         <h1 className="blog-title">
-          How Our Scout Engine<br />Achieves Unprecedented Accuracy
+          How Does Halo Home's Scout Engine<br />Achieve Unprecedented Accuracy?
         </h1>
         <p className="blog-subtitle">
           A transparent look at the science behind location scoring — why it matters,
@@ -44,12 +94,52 @@ const ScoutAlgorithmBlog: React.FC = () => {
         <div className="blog-meta">
           <span>10 min read</span>
           <span className="blog-meta-dot">•</span>
-          <span>Last updated: December 2024</span>
+          <span>Last updated: {LAST_UPDATED}</span>
         </div>
       </header>
 
       {/* Content */}
       <article className="blog-content">
+        {/* TL;DR - GEO: summary at top for AI extraction */}
+        <section className="blog-section blog-summary" aria-label="Summary">
+          <h2>TL;DR</h2>
+          <p>
+            Halo Home's <strong>Scout Engine</strong> ranks locations using true spherical
+            distance, continuous influence decay, and multi-factor scoring (Benefit,
+            Intensity, Stability). This removes flat-map errors and arbitrary cutoffs,
+            producing more reliable astrocartography recommendations.
+          </p>
+        </section>
+
+        {/* Definitions - GEO: clear, extractable definitions */}
+        <section className="blog-section">
+          <h2>Key Definitions</h2>
+          <div className="info-box" style={{ marginBottom: '1.5rem' }}>
+            <h3>Scout Engine</h3>
+            <p>
+              The <strong>Scout Engine</strong> is Halo Home's location-scoring system for
+              astrocartography. It evaluates planetary line proximity with spherical
+              distance and continuous decay to rank locations by Benefit, Intensity,
+              and Stability.
+            </p>
+          </div>
+          <div className="info-box" style={{ marginBottom: '1.5rem' }}>
+            <h3>Spherical Cross-Track Distance</h3>
+            <p>
+              <strong>Spherical cross-track distance</strong> is the true shortest distance
+              from a point to a line on Earth's curved surface. It prevents large
+              errors that occur when flat-map geometry is used.
+            </p>
+          </div>
+          <div className="info-box">
+            <h3>Influence Decay</h3>
+            <p>
+              <strong>Influence decay</strong> models how planetary effects weaken gradually
+              with distance rather than ending abruptly at an arbitrary cutoff.
+            </p>
+          </div>
+        </section>
+
         {/* Introduction */}
         <section className="blog-section">
           <h2>The Problem with Traditional Astrocartography</h2>
@@ -346,6 +436,25 @@ const ScoutAlgorithmBlog: React.FC = () => {
               <span>Optimized for instant results across 3,000+ cities</span>
             </div>
           </div>
+        </section>
+
+        {/* FAQ - GEO: 3-5 Q&A for AI and users */}
+        <section className="blog-section" aria-label="Frequently asked questions">
+          <h2>Frequently Asked Questions</h2>
+          {FAQS.map((faq) => (
+            <div key={faq.question} className="info-box" style={{ marginBottom: '1rem' }}>
+              <h3>{faq.question}</h3>
+              <p>{faq.answer}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Author - GEO: credentials for authority */}
+        <section className="blog-section" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem', marginTop: '2rem' }}>
+          <p className="blog-meta" style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+            <strong>Author:</strong> {AUTHOR_NAME}. We build precision astrocartography tools
+            using modern geodesy and statistical modeling. Last updated: {LAST_UPDATED}.
+          </p>
         </section>
 
         {/* CTA */}
