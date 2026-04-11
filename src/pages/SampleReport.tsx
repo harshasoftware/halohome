@@ -417,7 +417,7 @@ export default function SampleReport() {
                                                                     setErrorMsg('');
                                                                 }
                                                             }}
-                                                            placeholder="you@company.com"
+                                                            placeholder="your@email.com"
                                                             className="w-full rounded-2xl border border-[#F3E8D7] bg-[#FFFDF9] py-3 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:border-[#D97706]/40 focus:outline-none"
                                                         />
                                                     </div>
@@ -427,7 +427,7 @@ export default function SampleReport() {
                                                     type="submit"
                                                     disabled={gateStatus === 'loading'}
                                                     className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-70"
-                                                    style={{ backgroundColor: 'var(--text-primary, #18181B)' }}
+                                                    style={{ backgroundColor: '#18181B', color: '#FFFFFF' }}
                                                 >
                                                     {gateStatus === 'loading' ? (
                                                         <>
