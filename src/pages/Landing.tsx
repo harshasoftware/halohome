@@ -14,7 +14,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { LandingConstellations } from './components/Constellations';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SEO from '@/components/SEO';
 import { buildFaqSchema } from '@/lib/seo';
 
@@ -128,6 +128,14 @@ const Navbar = ({ onInstall }: { onInstall: () => void }) => {
                     <a href="#pricing" className="nav-link">Pricing</a>
                     <a href="/sample-report" className="nav-link">Sample Report</a>
                     <a href="/blog/methodology" className="nav-link">Methodology</a>
+                    <Link to="/ios" className="nav-app-pill nav-app-pill--ios">
+                        <FontAwesomeIcon icon={faApple} className="w-3 h-3" />
+                        <span>iOS</span>
+                    </Link>
+                    <Link to="/android" className="nav-app-pill nav-app-pill--android">
+                        <FontAwesomeIcon icon={faAndroid} className="w-3 h-3" />
+                        <span>Android</span>
+                    </Link>
                     <a href="/guest" className="nav-link nav-link-install flex items-center gap-2 px-4 py-2 rounded-full font-medium shadow-sm hover:shadow-md transition-all" style={{ textDecoration: 'none' }}>
                         Launch App
                     </a>
@@ -475,7 +483,7 @@ const Hero = memo(() => {
                 {/* Left side - Content */}
                 <div className="hero-left">
                     <div className="hero-content-stack">
-                        <div className={`hero-text-content ${isSearchFocused ? 'hero-text-hidden' : ''}`}>
+<div className={`hero-text-content ${isSearchFocused ? 'hero-text-hidden' : ''}`}>
                             <h1 className="hero-title text-stone-900 relative z-10">
                                 <span ref={textRef} className="block whitespace-pre-wrap">
                                     {HERO_HEADLINES[index]}
@@ -890,6 +898,7 @@ const Pricing = () => {
                     <div className="pricing-card glass-card h-full">
                         <h3 className="text-xl font-medium text-white flex items-center gap-2"><Compass size={18} className="text-[#F0A6B3]" /> Explorer</h3>
                         <div className="price-amount">$49<span className="price-period">/mo</span></div>
+                        <p className="text-emerald-400 text-sm font-medium mb-1">7-day free trial included</p>
                         <p className="text-zinc-400 text-sm mb-4">Serious homeowner / small investor</p>
                         <ul className="feature-list flex-1">
                             <li className="feature-item"><Check className="check-icon" /> Analyze 5 properties / month</li>
@@ -919,6 +928,7 @@ const Pricing = () => {
                     >
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><MapPin size={18} className="text-[#F0A6B3]" /> Pioneer</h3>
                         <div className="price-amount">$89<span className="price-period">/mo</span></div>
+                        <p className="text-emerald-400 text-sm font-medium mb-1">7-day free trial included</p>
                         <p className="text-zinc-400 text-sm mb-4">Architects & Designers</p>
                         <ul className="feature-list flex-1">
                             <li className="feature-item"><Check className="check-icon" /> Analyze 25 properties / month</li>
@@ -947,6 +957,7 @@ const Pricing = () => {
                         </div>
                         <h3 className="text-xl font-medium text-zinc-300 flex items-center gap-2"><Briefcase size={18} className="text-[#F0A6B3]" /> Broker</h3>
                         <div className="price-amount">$179<span className="price-period">/mo</span></div>
+                        <p className="text-emerald-400 text-sm font-medium mb-1">7-day free trial included</p>
                         <p className="text-zinc-400 text-sm mb-4">Developers & Consultants</p>
                         <ul className="feature-list flex-1">
                             <li className="feature-item"><Check className="check-icon" /> Unlimited properties (fair use)</li>
@@ -964,31 +975,6 @@ const Pricing = () => {
                     </div>
                 </ScrollReveal>
             </div>
-
-            {/* Free plan (compact horizontal card below paid plans) */}
-            <ScrollReveal delay={450}>
-                <div className="glass-card mt-6 px-6 py-4 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                        <Star className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" />
-                        <div>
-                            <div className="flex items-baseline gap-3">
-                                <h3 className="text-lg font-semibold text-slate-900">Free Trial</h3>
-                                <span className="text-slate-600 font-medium">$0 for 7 days</span>
-                            </div>
-                            <p className="text-sm text-slate-600 mt-1">
-                                Explore the full platform free for 7 days. No credit card required.
-                            </p>
-                        </div>
-                    </div>
-                    <a
-                        href="/guest"
-                        className="plan-btn text-center md:mt-0"
-                        style={{ textDecoration: 'none' }}
-                    >
-                        Start 7-Day Trial
-                    </a>
-                </div>
-            </ScrollReveal>
 
             {/* Add-on pricing */}
             <div className="mt-8 text-center">
@@ -1407,7 +1393,7 @@ export default function Landing() {
                 <div className="bg-section-white section-block">
                     <DemoErrorBoundary>
                         <Suspense fallback={null}>
-                            <LandingScanDemo />
+                            <LandingScanDemo showPlatformLinks />
                         </Suspense>
                     </DemoErrorBoundary>
                 </div>

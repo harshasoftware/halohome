@@ -124,6 +124,8 @@ const DesktopOnlyAppGate = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const IOSLanding = lazy(() => import("./pages/IOSLanding"));
+const AndroidLanding = lazy(() => import("./pages/AndroidLanding"));
 const Login = lazy(() => import("./pages/Login"));
 
 // Protected Route Wrapper
@@ -159,6 +161,18 @@ const App = () => (
                         <Routes>
                           {/* Landing page - eagerly loaded for fast initial paint */}
                           <Route path="/" element={<Landing />} />
+
+                          {/* iOS & Android landing pages */}
+                          <Route path="/ios" element={
+                            <LazyErrorBoundary componentName="IOSLanding">
+                              <IOSLanding />
+                            </LazyErrorBoundary>
+                          } />
+                          <Route path="/android" element={
+                            <LazyErrorBoundary componentName="AndroidLanding">
+                              <AndroidLanding />
+                            </LazyErrorBoundary>
+                          } />
 
                           {/* Public Login Route */}
                           <Route path="/login" element={

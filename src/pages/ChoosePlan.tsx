@@ -133,7 +133,8 @@ export default function ChoosePlan() {
                 <span className="text-3xl font-bold text-slate-900">$49</span>
                 <span className="text-slate-500">/mo</span>
               </div>
-              <p className="text-sm text-slate-500 mt-2 font-medium">Homeowners & small investors</p>
+              <p className="text-sm text-emerald-600 mt-1 font-medium">7-day free trial included</p>
+              <p className="text-sm text-slate-500 mt-1 font-medium">Homeowners & small investors</p>
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
@@ -179,6 +180,7 @@ export default function ChoosePlan() {
                 <span className="text-3xl font-bold">$89</span>
                 <span className="text-zinc-400">/mo</span>
               </div>
+              <p className="text-sm text-emerald-600 mt-1 font-medium">7-day free trial included</p>
               <p className="text-sm text-zinc-400 mt-2 font-medium">Architects & Designers</p>
             </div>
 
@@ -226,6 +228,7 @@ export default function ChoosePlan() {
                 <span className="text-3xl font-bold text-slate-900">$179</span>
                 <span className="text-slate-500">/mo</span>
               </div>
+              <p className="text-sm text-emerald-600 mt-1 font-medium">7-day free trial included</p>
               <p className="text-sm text-slate-500 mt-2 font-medium">Developers & Consultants</p>
             </div>
 
@@ -267,7 +270,7 @@ export default function ChoosePlan() {
             onClick={handleSkip}
             className="text-sm text-slate-500 hover:text-slate-800 underline underline-offset-4 transition-colors"
           >
-            Continue with free tier
+            I'll decide later
           </button>
         </div>
       </main>

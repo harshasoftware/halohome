@@ -481,6 +481,36 @@ body {
     background: #F0A6B3;
 }
 
+.nav-app-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: transparent;
+    border: 1.5px solid #18181B;
+    color: #18181B;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-app-pill:hover {
+    background: #18181B;
+    color: #FFFFFF;
+}
+
+.nav-app-pill--android {
+    border-color: #166534;
+    color: #166534;
+}
+
+.nav-app-pill--android:hover {
+    background: #166534;
+    color: #FFFFFF;
+}
+
 /* --- Hero Section --- */
 .hero-wrapper {
     position: relative;
@@ -763,6 +793,68 @@ body {
     flex-shrink: 0;
 }
 
+.hero-coming-pill-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: auto;
+}
+
+.hero-coming-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(24, 24, 27, 0.10);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 14px 40px rgba(24, 24, 27, 0.08);
+    backdrop-filter: blur(16px);
+}
+
+.hero-coming-pill-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #92400E;
+    padding: 0 8px;
+}
+
+.hero-coming-pill-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    background: transparent;
+    color: #18181B;
+    border: 1.5px solid #18181B;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.hero-coming-pill-link:hover {
+    transform: translateY(-1px);
+    background: #18181B;
+    color: #FFFFFF;
+    box-shadow: 0 10px 24px rgba(24, 24, 27, 0.16);
+}
+
+.hero-coming-pill-link--android {
+    background: transparent;
+    color: #166534;
+    border-color: #166534;
+}
+
+.hero-coming-pill-link--android:hover {
+    background: #166534;
+    color: #FFFFFF;
+}
+
 .hero-text-content {
     display: flex;
     flex-direction: column;
@@ -829,6 +921,14 @@ body {
         min-height: 180px; /* Fixed height for mobile */
         width: 100%;
         transform-origin: center top !important; /* Center transform origin on mobile */
+    }
+
+    .hero-coming-pill-wrap {
+        justify-content: center;
+    }
+
+    .hero-coming-pill {
+        justify-content: center;
     }
 
     .hero-title {
@@ -6977,6 +7077,11 @@ body {
         max-width: 100%;
         text-align: center;
     }
+
+    .scan-platform-links,
+    .scan-cta-group {
+        justify-content: center;
+    }
 }
 
 .scan-demo-container {
@@ -7018,6 +7123,53 @@ body {
     color: var(--text-secondary);
     line-height: 1.7;
     margin-bottom: 24px;
+}
+
+.scan-platform-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.scan-platform-links-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #B45309;
+}
+
+.scan-platform-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(217, 119, 6, 0.18);
+    background: rgba(217, 119, 6, 0.08);
+    color: var(--text-primary);
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.scan-platform-link:hover {
+    transform: translateY(-1px);
+    border-color: rgba(217, 119, 6, 0.35);
+    background: rgba(217, 119, 6, 0.14);
+}
+
+.scan-platform-link--android {
+    border-color: rgba(22, 101, 52, 0.18);
+    background: rgba(22, 101, 52, 0.08);
+}
+
+.scan-platform-link--android:hover {
+    border-color: rgba(22, 101, 52, 0.35);
+    background: rgba(22, 101, 52, 0.14);
 }
 
 /* Stage buttons */

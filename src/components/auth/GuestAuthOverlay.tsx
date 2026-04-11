@@ -48,21 +48,6 @@ export const GuestAuthOverlay = () => {
 
     const plans = [
         {
-            name: "Free",
-            price: "$0",
-            period: "7 days",
-            color: "text-zinc-600",
-            highlight: false,
-            values: [
-                "Limited",
-                "Basic",
-                <X className="w-4 h-4 text-zinc-400" key="free-fp" />,
-                <X className="w-4 h-4 text-zinc-400" key="free-solar" />,
-                "1 Project",
-                <X className="w-4 h-4 text-zinc-400" key="free-export" />
-            ]
-        },
-        {
             name: "Explorer",
             price: "$49",
             period: "/mo",

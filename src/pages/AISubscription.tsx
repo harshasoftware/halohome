@@ -251,7 +251,8 @@ export default function AISubscription() {
                   <span className="text-3xl font-bold text-slate-900">$49</span>
                   <span className="text-slate-500">/mo</span>
                 </div>
-                <p className="text-sm text-slate-500 mt-2 font-medium">Serious homeowner / small investor</p>
+                <p className="text-sm text-emerald-600 mt-1 font-medium">7-day free trial included</p>
+                <p className="text-sm text-slate-500 mt-1 font-medium">Serious homeowner / small investor</p>
               </div>
 
               <ul className="space-y-3 mb-8 flex-1">
@@ -293,6 +294,7 @@ export default function AISubscription() {
                   <span className="text-3xl font-bold">$89</span>
                   <span className="text-zinc-400">/mo</span>
                 </div>
+                <p className="text-sm text-emerald-600 mt-1 font-medium">7-day free trial included</p>
                 <p className="text-sm text-zinc-400 mt-2 font-medium">Architects & Designers</p>
               </div>
 
@@ -336,6 +338,7 @@ export default function AISubscription() {
                   <span className="text-3xl font-bold text-slate-900">$179</span>
                   <span className="text-slate-500">/mo</span>
                 </div>
+                <p className="text-sm text-emerald-600 mt-1 font-medium">7-day free trial included</p>
                 <p className="text-sm text-slate-500 mt-2 font-medium">Developers & Consultants</p>
               </div>
 

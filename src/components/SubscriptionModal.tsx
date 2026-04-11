@@ -87,21 +87,6 @@ export const SubscriptionModal: React.FC = () => {
 
   const plans = [
     {
-      id: 'free' as const,
-      name: "Free",
-      price: "$0",
-      period: "7 days",
-      highlight: false,
-      values: [
-        "Limited",
-        "Basic",
-        <X className="w-4 h-4 text-zinc-400" key="free-fp" />,
-        <X className="w-4 h-4 text-zinc-400" key="free-solar" />,
-        "1 Project",
-        <X className="w-4 h-4 text-zinc-400" key="free-export" />,
-      ],
-    },
-    {
       id: 'explorer' as const,
       name: "Explorer",
       price: "$49",

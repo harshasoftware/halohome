@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { Smartphone, Scan, Box, Sparkles, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type ScanStage = 'scanning' | 'processing' | 'layout' | 'remedies';
 
@@ -217,7 +218,7 @@ const StageButton = memo(({
   </button>
 ));
 
-export const LandingScanDemo = memo(() => {
+export const LandingScanDemo = memo(({ showPlatformLinks = false }: { showPlatformLinks?: boolean }) => {
   const [activeStage, setActiveStage] = useState<ScanStage>('scanning');
   const [isInView, setIsInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -271,6 +272,20 @@ export const LandingScanDemo = memo(() => {
             Use your iPhone Pro's LiDAR to scan any room. We create an accurate 3D model
             and provide room-by-room harmony analysis with personalized interior design remedies.
           </p>
+
+          {showPlatformLinks && (
+            <div className="scan-platform-links">
+              <span className="scan-platform-links-label">Preview the mobile experience</span>
+              <Link to="/ios" className="scan-platform-link">
+                <span>iOS Page</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/android" className="scan-platform-link scan-platform-link--android">
+                <span>Android Page</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
 
           {/* Stage buttons */}
           <div className="scan-stage-buttons">
