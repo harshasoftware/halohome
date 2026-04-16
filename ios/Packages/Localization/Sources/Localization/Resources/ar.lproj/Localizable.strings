@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Arabic)
+  AstroCarto
+
+  Arabic (ar) translations — RTL language
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "خريطتك الكونية";
+"auth.signIn.apple" = "تسجيل الدخول بحساب Apple";
+"auth.signIn.google" = "المتابعة مع Google";
+"auth.useEmail" = "استخدام البريد الإلكتروني";
+"auth.signIn" = "تسجيل الدخول";
+"auth.createAccount" = "إنشاء حساب";
+"auth.forgotPassword" = "نسيت كلمة المرور؟";
+"auth.signOut" = "تسجيل الخروج";
+"auth.email" = "البريد الإلكتروني";
+"auth.password" = "كلمة المرور";
+"auth.confirmPassword" = "تأكيد كلمة المرور";
+"auth.legalDisclaimer" = "بالمتابعة، فإنك توافق على [الشروط](https://example.com) و[سياسة الخصوصية](https://example.com)";
+
+// MARK: - Chat
+"chat.placeholder" = "اكتب رسالة...";
+"chat.newChat" = "محادثة جديدة";
+"chat.history" = "سجل المحادثات";
+"chat.deleteChat" = "حذف المحادثة";
+"chat.deleteAll" = "حذف جميع المحادثات";
+"chat.emptyState" = "لا توجد رسائل بعد";
+"chat.emptyStateSubtitle" = "ابدأ محادثة لرؤية الرسائل هنا";
+"chat.thinking" = "جارٍ التفكير...";
+"chat.copy" = "نسخ";
+"chat.copied" = "تم النسخ!";
+"chat.retry" = "إعادة المحاولة";
+"chat.messagesRemaining %lld" = "%lld رسائل متبقية";
+"chat.today" = "اليوم";
+"chat.yesterday" = "أمس";
+
+// MARK: - Settings
+"settings.title" = "الإعدادات";
+"settings.appearance" = "المظهر";
+"settings.theme" = "السمة";
+"settings.notifications" = "الإشعارات";
+"settings.pushNotifications" = "إشعارات الدفع";
+"settings.privacy" = "الخصوصية";
+"settings.shareDiagnostics" = "مشاركة بيانات التشخيص";
+"settings.shareDiagnosticsSubtitle" = "ساعدنا في التحسين من خلال مشاركة تقارير الأعطال";
+"settings.account" = "الحساب";
+"settings.deleteAccount" = "حذف الحساب";
+"settings.legal" = "قانوني";
+"settings.termsOfService" = "شروط الخدمة";
+"settings.privacyPolicy" = "سياسة الخصوصية";
+"settings.about" = "حول التطبيق";
+"settings.version" = "الإصدار";
+"settings.language" = "اللغة";
+"settings.languageFooter" = "اختر لغة التطبيق. اختر \"النظام\" لاستخدام لغة جهازك.";
+
+// MARK: - Languages
+"language.system" = "النظام";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "النظام";
+"theme.light" = "فاتح";
+"theme.dark" = "داكن";
+"theme.aurora" = "الشفق";
+"theme.obsidian" = "الأوبسيديان";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "الترقية إلى Pro";
+"payments.restore" = "استعادة المشتريات";
+"payments.subscribe" = "اشترك";
+"payments.freeTrial" = "تجربة مجانية";
+"payments.perMonth" = "شهرياً";
+"payments.perYear" = "سنوياً";
+"payments.bestValue" = "أفضل قيمة";
+"payments.cancelAnytime" = "إلغاء في أي وقت";
+"payments.subscribed" = "مشترك";
+"payments.manageSubscription" = "إدارة الاشتراك";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "مرحباً";
+"onboarding.getStarted" = "ابدأ الآن";
+"onboarding.continue" = "متابعة";
+"onboarding.skip" = "تخطي";
+"onboarding.next" = "التالي";
+
+// MARK: - Profile
+"profile.title" = "الملف الشخصي";
+"profile.edit" = "تعديل الملف الشخصي";
+"profile.changePhoto" = "تغيير الصورة";
+"profile.displayName" = "اسم العرض";
+
+// MARK: - Common
+"common.ok" = "حسناً";
+"common.cancel" = "إلغاء";
+"common.done" = "تم";
+"common.save" = "حفظ";
+"common.delete" = "حذف";
+"common.edit" = "تعديل";
+"common.close" = "إغلاق";
+"common.loading" = "جارٍ التحميل...";
+"common.tryAgain" = "حاول مرة أخرى";
+"common.learnMore" = "اعرف المزيد";
+
+// MARK: - Errors
+"error.generic" = "حدث خطأ ما. يرجى المحاولة مرة أخرى.";
+"error.networkOffline" = "أنت غير متصل بالإنترنت. يرجى التحقق من اتصالك.";
+"error.timeout" = "انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.";
+"error.invalidEmail" = "يرجى إدخال عنوان بريد إلكتروني صالح";
+"error.passwordTooShort" = "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل";
+"error.passwordMismatch" = "كلمات المرور غير متطابقة";
+"error.authFailed" = "فشل المصادقة";
+"error.purchaseFailed" = "فشلت عملية الشراء";
+"error.loadFailed" = "فشل تحميل البيانات";
+"error.saveFailed" = "فشل حفظ التغييرات";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "إرسال رسالة";
+"a11y.sendMessageHint" = "انقر مرتين لإرسال رسالتك";
+"a11y.userMessage" = "رسالتك";
+"a11y.assistantMessage" = "رسالة من المساعد";
+"a11y.copyMessageHint" = "انقر مرتين لنسخ الرسالة";
+"a11y.themeSelector" = "اختيار السمة";
+"a11y.signInAppleHint" = "انقر مرتين لتسجيل الدخول بحساب Apple";
+"a11y.profilePhoto" = "صورة الملف الشخصي";
+"a11y.profilePhotoHint" = "انقر مرتين لتغيير صورة ملفك الشخصي";

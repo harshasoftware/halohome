@@ -1,0 +1,203 @@
+{
+  "identifier" : "7A8B9C0D",
+  "nonRenewingSubscriptions" : [
+    {
+      "displayPrice" : "149.99",
+      "familyShareable" : false,
+      "internalID" : "6470000005",
+      "localizations" : [
+        {
+          "description" : "One-time purchase for lifetime access to all AstroCarto features",
+          "displayName" : "AstroCarto Pro Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.cartostar.lifetime",
+      "referenceName" : "Lifetime",
+      "type" : "NonRenewingSubscription"
+    }  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21441743",
+      "localizations" : [
+        {
+          "description" : "AstroCarto Pro",
+          "displayName" : "AstroCarto Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "AstroCarto Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "12.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6470000001",
+          "introductoryOffer" : {
+            "internalID" : "6470000002",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Full access to all AstroCarto features, billed monthly",
+              "displayName" : "AstroCarto Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cartostar.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "AstroCarto Pro Monthly",
+          "subscriptionGroupID" : "21441743",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "99.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6470000003",
+          "introductoryOffer" : {
+            "internalID" : "6470000004",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Full access to all AstroCarto features. Save 36% vs monthly",
+              "displayName" : "AstroCarto Pro Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cartostar.pro.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "AstroCarto Pro Annual",
+          "subscriptionGroupID" : "21441743",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "14.99",
+          "familyShareable" : true,
+          "groupNumber" : 3,
+          "internalID" : "6470000011",
+          "introductoryOffer" : {
+            "internalID" : "6470000012",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "AstroCarto Pro with Duo mode for compatibility charts, billed monthly",
+              "displayName" : "AstroCarto Duo Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cartostar.duo.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "AstroCarto Duo Monthly",
+          "subscriptionGroupID" : "21441743",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "79.99",
+          "familyShareable" : true,
+          "groupNumber" : 3,
+          "internalID" : "6470000013",
+          "introductoryOffer" : {
+            "internalID" : "6470000014",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "AstroCarto Pro with Duo mode for compatibility charts. Best value for couples",
+              "displayName" : "AstroCarto Duo Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.cartostar.duo.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "AstroCarto Duo Annual",
+          "subscriptionGroupID" : "21441743",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

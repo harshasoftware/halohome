@@ -1,0 +1,114 @@
+name: Weekly Coverage Report
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  coverage:
+    name: Generate Full Coverage Report
+    runs-on: macos-14
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      
+    - name: Run all tests with coverage
+      run: |
+        xcodebuild \
+          -scheme AstroCarto \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
+          -derivedDataPath .build \
+          -enableCodeCoverage YES \
+          test
+    
+    - name: Generate detailed coverage report
+      run: |
+        xcrun xccov view --report .build/Logs/Test/*.xcresult > coverage-detailed.txt
+        xcrun xccov view --report --json .build/Logs/Test/*.xcresult > coverage.json
+    
+    - name: Generate HTML coverage report
+      run: |
+        xcrun xccov view --report .build/Logs/Test/*.xcresult | \
+        awk '
+        BEGIN {
+          print "<html><head><title>Coverage Report</title>"
+          print "<style>"
+          print "body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 40px; }"
+          print "table { border-collapse: collapse; width: 100%; }"
+          print "th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }"
+          print "th { background-color: #007AFF; color: white; }"
+          print ".high { color: #34C759; }"
+          print ".medium { color: #FF9500; }"
+          print ".low { color: #FF3B30; }"
+          print "</style></head><body>"
+          print "<h1>📊 Test Coverage Report</h1>"
+          print "<p>Generated: " strftime("%Y-%m-%d %H:%M:%S") "</p>"
+          print "<table><tr><th>Target</th><th>Coverage</th><th>Status</th></tr>"
+        }
+        /\.app|\.framework/ {
+          target = $1
+          coverage = $2
+          gsub(/%/, "", coverage)
+          status_class = coverage >= 85 ? "high" : coverage >= 70 ? "medium" : "low"
+          status_text = coverage >= 85 ? "✅ Good" : coverage >= 70 ? "⚠️  Medium" : "❌ Low"
+          print "<tr><td>" target "</td><td class=\"" status_class "\">" $2 "</td><td>" status_text "</td></tr>"
+        }
+        END {
+          print "</table></body></html>"
+        }
+        ' > coverage-report.html
+    
+    - name: Create coverage summary
+      run: |
+        echo "# Coverage Summary" > coverage-summary.md
+        echo "" >> coverage-summary.md
+        echo "Generated: $(date)" >> coverage-summary.md
+        echo "" >> coverage-summary.md
+        echo "## Overall Statistics" >> coverage-summary.md
+        echo "" >> coverage-summary.md
+        echo "\`\`\`" >> coverage-summary.md
+        xcrun xccov view --report .build/Logs/Test/*.xcresult | head -20 >> coverage-summary.md
+        echo "\`\`\`" >> coverage-summary.md
+        echo "" >> coverage-summary.md
+        echo "## Modules Below 85% Threshold" >> coverage-summary.md
+        echo "" >> coverage-summary.md
+        xcrun xccov view --report .build/Logs/Test/*.xcresult | \
+          awk '/\.app|\.framework/ { gsub(/%/, "", $2); if ($2 < 85) print "- " $1 ": " $2 "%" }' >> coverage-summary.md || true
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-reports
+        path: |
+          coverage-detailed.txt
+          coverage.json
+          coverage-report.html
+          coverage-summary.md
+    
+    - name: Create GitHub Issue if coverage is low
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('coverage-summary.md', 'utf8');
+          
+          // Check if there are modules below threshold
+          if (summary.includes('## Modules Below 85% Threshold') && 
+              !summary.includes('## Modules Below 85% Threshold\n\n##')) {
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Weekly Coverage Report: Modules Below Threshold',
+              body: summary,
+              labels: ['test', 'coverage', 'needs-attention']
+            });
+          }
+

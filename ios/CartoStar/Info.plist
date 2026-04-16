@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.842417808948-49tqq8jeh1edbtrrbai3t58h209ttnci</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>skyscanner</string>
+		<string>kayak</string>
+		<string>expedia</string>
+	</array>
+	<key>MBXAccessToken</key>
+	<string>$(MAPBOX_ACCESS_TOKEN)</string>
+<key>NSUserTrackingUsageDescription</key>
+	<string>This helps us understand how you discovered HaloHome so we can improve our app.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Required by a third-party SDK. HaloHome does not use background location.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Required by a third-party SDK. HaloHome does not use background location.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName~ipad</key>
+	<string>Launch Screen iPad</string>
+</dict>
+</plist>

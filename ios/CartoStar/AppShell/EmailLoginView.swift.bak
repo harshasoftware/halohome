@@ -1,0 +1,543 @@
+import SwiftUI
+import MapKit
+import Auth
+import Core
+import DesignSystem
+
+/// Email login screen with Liquid Glass UI and subtle globe background
+@available(iOS 17.0, *)
+struct EmailLoginView: View {
+
+    // MARK: - Properties
+
+    @State private var viewModel: EmailLoginViewModel
+    @FocusState private var focusedField: Field?
+
+    // Animation states
+    @State private var showBackground = false
+    @State private var showHeader = false
+    @State private var showCard = false
+    @State private var showFooter = false
+
+    // Globe state for background
+    @State private var mapPosition: MapCameraPosition = .automatic
+
+    private enum Field: Hashable {
+        case email, password
+    }
+
+    // MARK: - Initialization
+
+    init(
+        authClient: AuthClient,
+        onSuccess: @escaping () -> Void,
+        onSwitchToSignUp: @escaping () -> Void,
+        onForgotPassword: @escaping () -> Void
+    ) {
+        self.viewModel = EmailLoginViewModel(
+            authClient: authClient,
+            onSuccess: onSuccess,
+            onSwitchToSignUp: onSwitchToSignUp,
+            onForgotPassword: onForgotPassword
+        )
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                // 3D Globe background
+                globeBackground
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer()
+                            .frame(height: 40)
+
+                        // Header
+                        headerSection
+                            .padding(.bottom, 32)
+
+                        // Glass card with form
+                        formCard
+                            .padding(.horizontal, 24)
+
+                        Spacer()
+                            .frame(height: 24)
+
+                        // Switch to sign up
+                        switchToSignUpSection
+                    }
+                    .padding(.bottom, 40)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        viewModel.onSuccess()
+                    }
+                    .foregroundStyle(Color.acGlassTextSecondary)
+                }
+            }
+            .disabled(viewModel.isLoading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                focusedField = nil
+            }
+            .onAppear {
+                startEntranceAnimation()
+            }
+        }
+    }
+
+    // MARK: - Entrance Animation
+
+    private func startEntranceAnimation() {
+        withAnimation(.easeOut(duration: 0.6)) {
+            showBackground = true
+        }
+        withAnimation(ACSpring.smooth.delay(0.2)) {
+            showHeader = true
+        }
+        withAnimation(ACSpring.smooth.delay(0.35)) {
+            showCard = true
+        }
+        withAnimation(ACSpring.gentle.delay(0.5)) {
+            showFooter = true
+        }
+    }
+
+    // MARK: - Globe Background
+
+    private var globeBackground: some View {
+        ZStack {
+            // Dark base for space effect
+            Color.black
+
+            // MapKit 3D Globe
+            Map(position: $mapPosition) {}
+                .mapStyle(.imagery(elevation: .realistic))
+                .mapControlVisibility(.hidden)
+                .allowsHitTesting(false)
+                .scaleEffect(showBackground ? 1.15 : 0.9)
+                .opacity(showBackground ? 1 : 0)
+                .onAppear {
+                    mapPosition = .camera(MapCamera(
+                        centerCoordinate: CLLocationCoordinate2D(latitude: 40, longitude: -30),
+                        distance: 25_000_000,
+                        heading: 0,
+                        pitch: 0
+                    ))
+                }
+
+            // Top vignette for header readability
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.85),
+                    Color.black.opacity(0.4),
+                    Color.clear
+                ],
+                startPoint: .top,
+                endPoint: .center
+            )
+
+            // Bottom vignette for form card
+            LinearGradient(
+                colors: [
+                    Color.clear,
+                    Color.black.opacity(0.5),
+                    Color.black.opacity(0.9)
+                ],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+
+            // Ambient cosmic glow
+            RadialGradient(
+                colors: [
+                    Color.acAmber500.opacity(0.1),
+                    Color.clear
+                ],
+                center: .topLeading,
+                startRadius: 0,
+                endRadius: 350
+            )
+
+            RadialGradient(
+                colors: [
+                    Color.acCosmicPurple.opacity(0.08),
+                    Color.clear
+                ],
+                center: .bottomTrailing,
+                startRadius: 0,
+                endRadius: 300
+            )
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var headerSection: some View {
+        VStack(spacing: 12) {
+            // Icon with glass effect
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 80, height: 80)
+
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                Color.acAmber500.opacity(0.3),
+                                Color.clear
+                            ],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 40
+                        )
+                    )
+                    .frame(width: 70, height: 70)
+
+                Image(systemName: "envelope.fill")
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.acAmber300, Color.acAmber500],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+            .shadow(color: Color.acAmber500.opacity(0.3), radius: 20)
+            .opacity(showHeader ? 1 : 0)
+            .scaleEffect(showHeader ? 1 : 0.8)
+
+            Text("Welcome Back")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(Color.white)
+                .opacity(showHeader ? 1 : 0)
+                .offset(y: showHeader ? 0 : 10)
+
+            Text("Sign in to continue your journey")
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(Color.white.opacity(0.7))
+                .opacity(showHeader ? 1 : 0)
+                .offset(y: showHeader ? 0 : 10)
+        }
+    }
+
+    private var formCard: some View {
+        VStack(spacing: 20) {
+            // Error display
+            if let errorMessage = viewModel.errorMessage {
+                errorBanner(errorMessage)
+            }
+
+            // Email field
+            glassTextField(
+                title: "Email",
+                placeholder: "your@email.com",
+                text: $viewModel.email,
+                error: viewModel.emailError,
+                keyboardType: .emailAddress,
+                textContentType: .emailAddress,
+                isSecure: false,
+                field: .email
+            )
+
+            // Password field
+            glassTextField(
+                title: "Password",
+                placeholder: "Enter your password",
+                text: $viewModel.password,
+                error: viewModel.passwordError,
+                keyboardType: .default,
+                textContentType: .password,
+                isSecure: !viewModel.showPassword,
+                field: .password,
+                showToggle: true,
+                isToggled: $viewModel.showPassword
+            )
+
+            // Forgot password link
+            HStack {
+                Spacer()
+                Button {
+                    viewModel.forgotPassword()
+                } label: {
+                    Text("Forgot Password?")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color.acAmber500)
+                }
+            }
+            .padding(.top, -8)
+
+            // Login button
+            loginButton
+        }
+        .padding(24)
+        .acLiquidGlass(cornerRadius: ACRadius.glassSheet)
+        .shadow(color: Color.black.opacity(0.3), radius: 30, y: 15)
+        .opacity(showCard ? 1 : 0)
+        .offset(y: showCard ? 0 : 30)
+    }
+
+    private func glassTextField(
+        title: String,
+        placeholder: String,
+        text: Binding<String>,
+        error: String?,
+        keyboardType: UIKeyboardType,
+        textContentType: UITextContentType,
+        isSecure: Bool,
+        field: Field,
+        showToggle: Bool = false,
+        isToggled: Binding<Bool>? = nil
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.white)
+
+            HStack(spacing: 12) {
+                Group {
+                    if isSecure {
+                        SecureField(placeholder, text: text)
+                    } else {
+                        TextField(placeholder, text: text)
+                    }
+                }
+                .font(.system(size: 16))
+                .foregroundStyle(Color.black)
+                .textContentType(textContentType)
+                .keyboardType(keyboardType)
+                .autocapitalization(.none)
+                .autocorrectionDisabled()
+                .focused($focusedField, equals: field)
+                .submitLabel(field == .email ? .next : .done)
+                .onSubmit {
+                    if field == .email {
+                        focusedField = .password
+                    } else {
+                        Task { await viewModel.signIn() }
+                    }
+                }
+
+                if showToggle, let toggle = isToggled {
+                    Button {
+                        toggle.wrappedValue.toggle()
+                    } label: {
+                        Image(systemName: toggle.wrappedValue ? "eye.slash.fill" : "eye.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Color.gray)
+                    }
+                }
+            }
+            .padding(16)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: ACRadius.glassInput, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: ACRadius.glassInput)
+                    .strokeBorder(
+                        error != nil ? Color.acDestructive : Color.clear,
+                        lineWidth: 2
+                    )
+            )
+
+            if let error = error {
+                Text(error)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Color.acDestructive)
+            }
+        }
+    }
+
+    private var loginButton: some View {
+        Button {
+            Task { await viewModel.signIn() }
+        } label: {
+            HStack(spacing: 10) {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .tint(.black)
+                        .scaleEffect(0.9)
+                }
+                Text(viewModel.isLoading ? "Signing in..." : "Sign In")
+                    .font(.system(size: 17, weight: .semibold))
+            }
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(
+                viewModel.isFormValid
+                    ? Color.white
+                    : Color.white.opacity(0.5)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: ACRadius.glassDefault, style: .continuous))
+        }
+        .disabled(!viewModel.isFormValid || viewModel.isLoading)
+        .acPressable(scale: 0.98)
+        .padding(.top, 8)
+    }
+
+    private var switchToSignUpSection: some View {
+        HStack(spacing: 6) {
+            Text("Don't have an account?")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(Color.white.opacity(0.7))
+
+            Button {
+                viewModel.switchToSignUp()
+            } label: {
+                Text("Sign Up")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.acAmber500)
+            }
+        }
+        .opacity(showFooter ? 1 : 0)
+        .offset(y: showFooter ? 0 : 10)
+    }
+
+    private func errorBanner(_ message: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(Color.red)
+
+            Text(message)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color.white)
+                .multilineTextAlignment(.leading)
+
+            Spacer()
+
+            Button {
+                withAnimation(ACSpring.quick) {
+                    viewModel.errorMessage = nil
+                }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Color.white.opacity(0.6))
+            }
+        }
+        .padding(16)
+        .background(Color.red.opacity(0.2))
+        .clipShape(RoundedRectangle(cornerRadius: ACRadius.glassSmall, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: ACRadius.glassSmall, style: .continuous)
+                .strokeBorder(Color.red.opacity(0.5), lineWidth: 1)
+        )
+        .transition(.scale(scale: 0.95).combined(with: .opacity))
+    }
+}
+
+// MARK: - ViewModel
+
+@available(iOS 17.0, *)
+@Observable
+final class EmailLoginViewModel {
+
+    var email = "" {
+        didSet { emailError = nil; errorMessage = nil }
+    }
+    var password = "" {
+        didSet { passwordError = nil; errorMessage = nil }
+    }
+    var showPassword = false
+
+    var isLoading = false
+    var errorMessage: String?
+
+    // Validation errors
+    var emailError: String?
+    var passwordError: String?
+
+    var isFormValid: Bool {
+        !email.isEmpty &&
+        !password.isEmpty &&
+        emailError == nil &&
+        passwordError == nil
+    }
+
+    private let authClient: AuthClient
+    let onSuccess: () -> Void
+    private let onSwitchToSignUp: () -> Void
+    private let onForgotPassword: () -> Void
+
+    init(
+        authClient: AuthClient,
+        onSuccess: @escaping () -> Void,
+        onSwitchToSignUp: @escaping () -> Void,
+        onForgotPassword: @escaping () -> Void
+    ) {
+        self.authClient = authClient
+        self.onSuccess = onSuccess
+        self.onSwitchToSignUp = onSwitchToSignUp
+        self.onForgotPassword = onForgotPassword
+    }
+
+    @MainActor
+    func signIn() async {
+        emailError = nil
+        passwordError = nil
+        errorMessage = nil
+
+        guard validate() else { return }
+
+        isLoading = true
+
+        do {
+            _ = try await authClient.signInWithEmail(email: email, password: password)
+            AppLogger.info("User signed in successfully", category: AppLogger.auth)
+            onSuccess()
+        } catch let authError as AuthError {
+            AppLogger.error("Sign in failed: \(authError)", category: AppLogger.auth)
+            errorMessage = authError.asAppError().userMessage
+        } catch {
+            AppLogger.error("Sign in failed: \(error.localizedDescription)", category: AppLogger.auth)
+            errorMessage = AppError.from(error).userMessage
+        }
+
+        isLoading = false
+    }
+
+    func switchToSignUp() {
+        onSwitchToSignUp()
+    }
+
+    func forgotPassword() {
+        onForgotPassword()
+    }
+
+    private func validate() -> Bool {
+        var isValid = true
+
+        if email.isEmpty {
+            emailError = "Email is required"
+            isValid = false
+        } else if !email.isValidEmail {
+            emailError = "Invalid email address"
+            isValid = false
+        }
+
+        if password.isEmpty {
+            passwordError = "Password is required"
+            isValid = false
+        }
+
+        return isValid
+    }
+}
+
+private extension String {
+    var isValidEmail: Bool {
+        let emailRegex = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}$"
+        let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: self)
+    }
+}

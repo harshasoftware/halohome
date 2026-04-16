@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Messages Remaining Counter -->
+    <!-- Arabic has 6 plural categories: zero, one, two, few, many, other -->
+    <key>chat.messagesRemaining %lld</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>lld</string>
+            <key>zero</key>
+            <string>لا رسائل متبقية</string>
+            <key>one</key>
+            <string>رسالة واحدة متبقية</string>
+            <key>two</key>
+            <string>رسالتان متبقيتان</string>
+            <key>few</key>
+            <string>%lld رسائل متبقية</string>
+            <key>many</key>
+            <string>%lld رسالة متبقية</string>
+            <key>other</key>
+            <string>%lld رسالة متبقية</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Russian)
+  AstroCarto
+
+  Russian (ru) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "Ваша космическая карта";
+"auth.signIn.apple" = "Войти через Apple";
+"auth.signIn.google" = "Продолжить с Google";
+"auth.useEmail" = "Использовать e-mail";
+"auth.signIn" = "Войти";
+"auth.createAccount" = "Создать аккаунт";
+"auth.forgotPassword" = "Забыли пароль?";
+"auth.signOut" = "Выйти";
+"auth.email" = "Электронная почта";
+"auth.password" = "Пароль";
+"auth.confirmPassword" = "Подтвердить пароль";
+"auth.legalDisclaimer" = "Продолжая, вы соглашаетесь с [Условиями](https://example.com) и [Политикой конфиденциальности](https://example.com)";
+
+// MARK: - Chat
+"chat.placeholder" = "Введите сообщение...";
+"chat.newChat" = "Новый чат";
+"chat.history" = "История чатов";
+"chat.deleteChat" = "Удалить чат";
+"chat.deleteAll" = "Удалить все чаты";
+"chat.emptyState" = "Сообщений пока нет";
+"chat.emptyStateSubtitle" = "Начните разговор, чтобы увидеть сообщения здесь";
+"chat.thinking" = "Думаю...";
+"chat.copy" = "Копировать";
+"chat.copied" = "Скопировано!";
+"chat.retry" = "Повторить";
+"chat.messagesRemaining %lld" = "Осталось %lld сообщений";
+"chat.today" = "Сегодня";
+"chat.yesterday" = "Вчера";
+
+// MARK: - Settings
+"settings.title" = "Настройки";
+"settings.appearance" = "Внешний вид";
+"settings.theme" = "Тема";
+"settings.notifications" = "Уведомления";
+"settings.pushNotifications" = "Push-уведомления";
+"settings.privacy" = "Конфиденциальность";
+"settings.shareDiagnostics" = "Отправлять диагностику";
+"settings.shareDiagnosticsSubtitle" = "Помогите нам улучшить приложение, отправляя отчёты об ошибках";
+"settings.account" = "Аккаунт";
+"settings.deleteAccount" = "Удалить аккаунт";
+"settings.legal" = "Правовая информация";
+"settings.termsOfService" = "Условия использования";
+"settings.privacyPolicy" = "Политика конфиденциальности";
+"settings.about" = "О приложении";
+"settings.version" = "Версия";
+"settings.language" = "Язык";
+"settings.languageFooter" = "Выберите язык приложения. Выберите «Система», чтобы использовать язык устройства.";
+
+// MARK: - Languages
+"language.system" = "Система";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "Система";
+"theme.light" = "Светлая";
+"theme.dark" = "Тёмная";
+"theme.aurora" = "Аврора";
+"theme.obsidian" = "Обсидиан";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Перейти на Pro";
+"payments.restore" = "Восстановить покупки";
+"payments.subscribe" = "Подписаться";
+"payments.freeTrial" = "Бесплатная пробная версия";
+"payments.perMonth" = "в месяц";
+"payments.perYear" = "в год";
+"payments.bestValue" = "Лучшее предложение";
+"payments.cancelAnytime" = "Отмена в любое время";
+"payments.subscribed" = "Подписка активна";
+"payments.manageSubscription" = "Управление подпиской";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "Добро пожаловать";
+"onboarding.getStarted" = "Начать";
+"onboarding.continue" = "Продолжить";
+"onboarding.skip" = "Пропустить";
+"onboarding.next" = "Далее";
+
+// MARK: - Profile
+"profile.title" = "Профиль";
+"profile.edit" = "Редактировать профиль";
+"profile.changePhoto" = "Изменить фото";
+"profile.displayName" = "Отображаемое имя";
+
+// MARK: - Common
+"common.ok" = "OK";
+"common.cancel" = "Отмена";
+"common.done" = "Готово";
+"common.save" = "Сохранить";
+"common.delete" = "Удалить";
+"common.edit" = "Редактировать";
+"common.close" = "Закрыть";
+"common.loading" = "Загрузка...";
+"common.tryAgain" = "Попробовать снова";
+"common.learnMore" = "Подробнее";
+
+// MARK: - Errors
+"error.generic" = "Что-то пошло не так. Пожалуйста, попробуйте ещё раз.";
+"error.networkOffline" = "Вы не в сети. Проверьте подключение к интернету.";
+"error.timeout" = "Время ожидания истекло. Попробуйте ещё раз.";
+"error.invalidEmail" = "Введите действительный адрес электронной почты";
+"error.passwordTooShort" = "Пароль должен содержать не менее 8 символов";
+"error.passwordMismatch" = "Пароли не совпадают";
+"error.authFailed" = "Ошибка аутентификации";
+"error.purchaseFailed" = "Ошибка покупки";
+"error.loadFailed" = "Не удалось загрузить данные";
+"error.saveFailed" = "Не удалось сохранить изменения";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "Отправить сообщение";
+"a11y.sendMessageHint" = "Коснитесь дважды, чтобы отправить сообщение";
+"a11y.userMessage" = "Ваше сообщение";
+"a11y.assistantMessage" = "Сообщение от ассистента";
+"a11y.copyMessageHint" = "Коснитесь дважды, чтобы скопировать сообщение";
+"a11y.themeSelector" = "Выбор темы";
+"a11y.signInAppleHint" = "Коснитесь дважды, чтобы войти через Apple ID";
+"a11y.profilePhoto" = "Фото профиля";
+"a11y.profilePhotoHint" = "Коснитесь дважды, чтобы изменить фото профиля";

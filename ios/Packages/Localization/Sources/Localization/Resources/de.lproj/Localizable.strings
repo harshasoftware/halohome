@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (German)
+  AstroCarto
+
+  German (de) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "Deine kosmische Karte";
+"auth.signIn.apple" = "Mit Apple anmelden";
+"auth.signIn.google" = "Mit Google fortfahren";
+"auth.useEmail" = "E-Mail verwenden";
+"auth.signIn" = "Anmelden";
+"auth.createAccount" = "Konto erstellen";
+"auth.forgotPassword" = "Passwort vergessen?";
+"auth.signOut" = "Abmelden";
+"auth.email" = "E-Mail";
+"auth.password" = "Passwort";
+"auth.confirmPassword" = "Passwort bestätigen";
+"auth.legalDisclaimer" = "Durch Fortfahren stimmst du unseren [AGB](https://example.com) und der [Datenschutzrichtlinie](https://example.com) zu";
+
+// MARK: - Chat
+"chat.placeholder" = "Nachricht eingeben...";
+"chat.newChat" = "Neuer Chat";
+"chat.history" = "Chatverlauf";
+"chat.deleteChat" = "Chat löschen";
+"chat.deleteAll" = "Alle Chats löschen";
+"chat.emptyState" = "Noch keine Nachrichten";
+"chat.emptyStateSubtitle" = "Starte eine Unterhaltung, um Nachrichten hier zu sehen";
+"chat.thinking" = "Denkt nach...";
+"chat.copy" = "Kopieren";
+"chat.copied" = "Kopiert!";
+"chat.retry" = "Erneut versuchen";
+"chat.messagesRemaining %lld" = "%lld Nachrichten übrig";
+"chat.today" = "Heute";
+"chat.yesterday" = "Gestern";
+
+// MARK: - Settings
+"settings.title" = "Einstellungen";
+"settings.appearance" = "Darstellung";
+"settings.theme" = "Design";
+"settings.notifications" = "Benachrichtigungen";
+"settings.pushNotifications" = "Push-Benachrichtigungen";
+"settings.privacy" = "Datenschutz";
+"settings.shareDiagnostics" = "Diagnosedaten teilen";
+"settings.shareDiagnosticsSubtitle" = "Hilf uns durch das Teilen von Absturzberichten";
+"settings.account" = "Konto";
+"settings.deleteAccount" = "Konto löschen";
+"settings.legal" = "Rechtliches";
+"settings.termsOfService" = "Nutzungsbedingungen";
+"settings.privacyPolicy" = "Datenschutzrichtlinie";
+"settings.about" = "Über";
+"settings.version" = "Version";
+"settings.language" = "Sprache";
+"settings.languageFooter" = "Wähle die App-Sprache. Wähle „System", um die Gerätesprache zu verwenden.";
+
+// MARK: - Languages
+"language.system" = "System";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "System";
+"theme.light" = "Hell";
+"theme.dark" = "Dunkel";
+"theme.aurora" = "Aurora";
+"theme.obsidian" = "Obsidian";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Auf Pro upgraden";
+"payments.restore" = "Käufe wiederherstellen";
+"payments.subscribe" = "Abonnieren";
+"payments.freeTrial" = "Kostenlos testen";
+"payments.perMonth" = "pro Monat";
+"payments.perYear" = "pro Jahr";
+"payments.bestValue" = "Bestes Angebot";
+"payments.cancelAnytime" = "Jederzeit kündbar";
+"payments.subscribed" = "Abonniert";
+"payments.manageSubscription" = "Abo verwalten";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "Willkommen";
+"onboarding.getStarted" = "Los geht's";
+"onboarding.continue" = "Weiter";
+"onboarding.skip" = "Überspringen";
+"onboarding.next" = "Weiter";
+
+// MARK: - Profile
+"profile.title" = "Profil";
+"profile.edit" = "Profil bearbeiten";
+"profile.changePhoto" = "Foto ändern";
+"profile.displayName" = "Anzeigename";
+
+// MARK: - Common
+"common.ok" = "OK";
+"common.cancel" = "Abbrechen";
+"common.done" = "Fertig";
+"common.save" = "Speichern";
+"common.delete" = "Löschen";
+"common.edit" = "Bearbeiten";
+"common.close" = "Schließen";
+"common.loading" = "Laden...";
+"common.tryAgain" = "Erneut versuchen";
+"common.learnMore" = "Mehr erfahren";
+
+// MARK: - Errors
+"error.generic" = "Etwas ist schiefgelaufen. Bitte versuche es erneut.";
+"error.networkOffline" = "Du bist offline. Bitte überprüfe deine Internetverbindung.";
+"error.timeout" = "Zeitüberschreitung. Bitte versuche es erneut.";
+"error.invalidEmail" = "Bitte gib eine gültige E-Mail-Adresse ein";
+"error.passwordTooShort" = "Das Passwort muss mindestens 8 Zeichen lang sein";
+"error.passwordMismatch" = "Die Passwörter stimmen nicht überein";
+"error.authFailed" = "Anmeldung fehlgeschlagen";
+"error.purchaseFailed" = "Kauf fehlgeschlagen";
+"error.loadFailed" = "Daten konnten nicht geladen werden";
+"error.saveFailed" = "Änderungen konnten nicht gespeichert werden";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "Nachricht senden";
+"a11y.sendMessageHint" = "Doppeltippen, um die Nachricht zu senden";
+"a11y.userMessage" = "Deine Nachricht";
+"a11y.assistantMessage" = "Nachricht vom Assistenten";
+"a11y.copyMessageHint" = "Doppeltippen, um die Nachricht zu kopieren";
+"a11y.themeSelector" = "Designauswahl";
+"a11y.signInAppleHint" = "Doppeltippen, um dich mit deiner Apple-ID anzumelden";
+"a11y.profilePhoto" = "Profilfoto";
+"a11y.profilePhotoHint" = "Doppeltippen, um dein Profilfoto zu ändern";

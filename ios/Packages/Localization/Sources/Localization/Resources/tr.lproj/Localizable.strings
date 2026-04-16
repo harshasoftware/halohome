@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Turkish)
+  AstroCarto
+
+  Turkish (tr) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "Kozmik Haritanız";
+"auth.signIn.apple" = "Apple ile giriş yap";
+"auth.signIn.google" = "Google ile devam et";
+"auth.useEmail" = "E-posta kullan";
+"auth.signIn" = "Giriş Yap";
+"auth.createAccount" = "Hesap Oluştur";
+"auth.forgotPassword" = "Şifrenizi mi unuttunuz?";
+"auth.signOut" = "Çıkış Yap";
+"auth.email" = "E-posta";
+"auth.password" = "Şifre";
+"auth.confirmPassword" = "Şifreyi Onayla";
+"auth.legalDisclaimer" = "Devam ederek [Kullanım Koşulları](https://example.com) ve [Gizlilik Politikası](https://example.com)'nı kabul etmiş olursunuz";
+
+// MARK: - Chat
+"chat.placeholder" = "Bir mesaj yazın...";
+"chat.newChat" = "Yeni Sohbet";
+"chat.history" = "Sohbet Geçmişi";
+"chat.deleteChat" = "Sohbeti Sil";
+"chat.deleteAll" = "Tüm sohbetleri sil";
+"chat.emptyState" = "Henüz mesaj yok";
+"chat.emptyStateSubtitle" = "Mesajları görmek için bir sohbet başlatın";
+"chat.thinking" = "Düşünüyor...";
+"chat.copy" = "Kopyala";
+"chat.copied" = "Kopyalandı!";
+"chat.retry" = "Tekrar Dene";
+"chat.messagesRemaining %lld" = "%lld mesaj kaldı";
+"chat.today" = "Bugün";
+"chat.yesterday" = "Dün";
+
+// MARK: - Settings
+"settings.title" = "Ayarlar";
+"settings.appearance" = "Görünüm";
+"settings.theme" = "Tema";
+"settings.notifications" = "Bildirimler";
+"settings.pushNotifications" = "Anlık Bildirimler";
+"settings.privacy" = "Gizlilik";
+"settings.shareDiagnostics" = "Tanılama Verilerini Paylaş";
+"settings.shareDiagnosticsSubtitle" = "Çökme raporlarını paylaşarak iyileştirmemize yardımcı olun";
+"settings.account" = "Hesap";
+"settings.deleteAccount" = "Hesabı Sil";
+"settings.legal" = "Yasal";
+"settings.termsOfService" = "Kullanım Koşulları";
+"settings.privacyPolicy" = "Gizlilik Politikası";
+"settings.about" = "Hakkında";
+"settings.version" = "Sürüm";
+"settings.language" = "Dil";
+"settings.languageFooter" = "Uygulama dilini seçin. Cihaz dilini kullanmak için 'Sistem'i seçin.";
+
+// MARK: - Languages
+"language.system" = "Sistem";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "Sistem";
+"theme.light" = "Açık";
+"theme.dark" = "Koyu";
+"theme.aurora" = "Aurora";
+"theme.obsidian" = "Obsidyen";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Pro'ya Yükselt";
+"payments.restore" = "Satın Alımları Geri Yükle";
+"payments.subscribe" = "Abone Ol";
+"payments.freeTrial" = "Ücretsiz Deneme";
+"payments.perMonth" = "aylık";
+"payments.perYear" = "yıllık";
+"payments.bestValue" = "En İyi Değer";
+"payments.cancelAnytime" = "İstediğiniz zaman iptal edin";
+"payments.subscribed" = "Abone";
+"payments.manageSubscription" = "Aboneliği Yönet";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "Hoş Geldiniz";
+"onboarding.getStarted" = "Başlayın";
+"onboarding.continue" = "Devam";
+"onboarding.skip" = "Atla";
+"onboarding.next" = "İleri";
+
+// MARK: - Profile
+"profile.title" = "Profil";
+"profile.edit" = "Profili Düzenle";
+"profile.changePhoto" = "Fotoğrafı Değiştir";
+"profile.displayName" = "Görünen Ad";
+
+// MARK: - Common
+"common.ok" = "Tamam";
+"common.cancel" = "İptal";
+"common.done" = "Bitti";
+"common.save" = "Kaydet";
+"common.delete" = "Sil";
+"common.edit" = "Düzenle";
+"common.close" = "Kapat";
+"common.loading" = "Yükleniyor...";
+"common.tryAgain" = "Tekrar Dene";
+"common.learnMore" = "Daha Fazla";
+
+// MARK: - Errors
+"error.generic" = "Bir şeyler ters gitti. Lütfen tekrar deneyin.";
+"error.networkOffline" = "Çevrimdışısınız. Lütfen internet bağlantınızı kontrol edin.";
+"error.timeout" = "İstek zaman aşımına uğradı. Lütfen tekrar deneyin.";
+"error.invalidEmail" = "Lütfen geçerli bir e-posta adresi girin";
+"error.passwordTooShort" = "Şifre en az 8 karakter olmalıdır";
+"error.passwordMismatch" = "Şifreler eşleşmiyor";
+"error.authFailed" = "Kimlik doğrulama başarısız";
+"error.purchaseFailed" = "Satın alma başarısız";
+"error.loadFailed" = "Veriler yüklenemedi";
+"error.saveFailed" = "Değişiklikler kaydedilemedi";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "Mesaj gönder";
+"a11y.sendMessageHint" = "Mesajınızı göndermek için çift dokunun";
+"a11y.userMessage" = "Sizin mesajınız";
+"a11y.assistantMessage" = "Asistanın mesajı";
+"a11y.copyMessageHint" = "Mesajı kopyalamak için çift dokunun";
+"a11y.themeSelector" = "Tema seçici";
+"a11y.signInAppleHint" = "Apple ID ile giriş yapmak için çift dokunun";
+"a11y.profilePhoto" = "Profil fotoğrafı";
+"a11y.profilePhotoHint" = "Profil fotoğrafınızı değiştirmek için çift dokunun";

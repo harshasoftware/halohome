@@ -1,0 +1,146 @@
+/*
+  Localizable.strings (Traditional Chinese)
+  AstroCarto
+
+  Traditional Chinese (zh-Hant) translations
+  Audience: Taiwan, Hong Kong, Macau, diaspora
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "你的星象地圖";
+"auth.signIn.apple" = "透過 Apple 登入";
+"auth.signIn.google" = "透過 Google 繼續";
+"auth.useEmail" = "使用電子郵件";
+"auth.signIn" = "登入";
+"auth.createAccount" = "建立帳號";
+"auth.forgotPassword" = "忘記密碼？";
+"auth.signOut" = "登出";
+"auth.email" = "電子郵件";
+"auth.password" = "密碼";
+"auth.confirmPassword" = "確認密碼";
+"auth.legalDisclaimer" = "繼續即表示您同意我們的[服務條款](https://example.com)和[隱私權政策](https://example.com)";
+
+// MARK: - Chat
+"chat.placeholder" = "輸入訊息...";
+"chat.newChat" = "新對話";
+"chat.history" = "對話記錄";
+"chat.deleteChat" = "刪除對話";
+"chat.deleteAll" = "刪除所有對話";
+"chat.emptyState" = "尚無訊息";
+"chat.emptyStateSubtitle" = "開始對話後訊息將顯示在這裡";
+"chat.thinking" = "思考中...";
+"chat.copy" = "複製";
+"chat.copied" = "已複製！";
+"chat.retry" = "重試";
+"chat.messagesRemaining %lld" = "剩餘 %lld 則訊息";
+"chat.today" = "今天";
+"chat.yesterday" = "昨天";
+
+// MARK: - Settings
+"settings.title" = "設定";
+"settings.appearance" = "外觀";
+"settings.theme" = "主題";
+"settings.notifications" = "通知";
+"settings.pushNotifications" = "推播通知";
+"settings.privacy" = "隱私";
+"settings.shareDiagnostics" = "分享診斷資料";
+"settings.shareDiagnosticsSubtitle" = "透過分享當機報告來協助我們改善應用程式";
+"settings.account" = "帳號";
+"settings.deleteAccount" = "刪除帳號";
+"settings.legal" = "法律資訊";
+"settings.termsOfService" = "服務條款";
+"settings.privacyPolicy" = "隱私權政策";
+"settings.about" = "關於";
+"settings.version" = "版本";
+"settings.language" = "語言";
+"settings.languageFooter" = "選擇應用程式語言。選擇「系統」以使用裝置語言。";
+
+// MARK: - Languages
+"language.system" = "系統";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "系統";
+"theme.light" = "淺色";
+"theme.dark" = "深色";
+"theme.aurora" = "極光";
+"theme.obsidian" = "黑曜石";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "升級至 Pro";
+"payments.restore" = "恢復購買";
+"payments.subscribe" = "訂閱";
+"payments.freeTrial" = "免費試用";
+"payments.perMonth" = "每月";
+"payments.perYear" = "每年";
+"payments.bestValue" = "最超值";
+"payments.cancelAnytime" = "隨時取消";
+"payments.subscribed" = "已訂閱";
+"payments.manageSubscription" = "管理訂閱";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "歡迎";
+"onboarding.getStarted" = "開始使用";
+"onboarding.continue" = "繼續";
+"onboarding.skip" = "略過";
+"onboarding.next" = "下一步";
+
+// MARK: - Profile
+"profile.title" = "個人資料";
+"profile.edit" = "編輯資料";
+"profile.changePhoto" = "更換照片";
+"profile.displayName" = "顯示名稱";
+
+// MARK: - Common
+"common.ok" = "好";
+"common.cancel" = "取消";
+"common.done" = "完成";
+"common.save" = "儲存";
+"common.delete" = "刪除";
+"common.edit" = "編輯";
+"common.close" = "關閉";
+"common.loading" = "載入中...";
+"common.tryAgain" = "重試";
+"common.learnMore" = "瞭解更多";
+
+// MARK: - Errors
+"error.generic" = "發生錯誤，請重試。";
+"error.networkOffline" = "您已離線，請檢查網路連線。";
+"error.timeout" = "請求逾時，請重試。";
+"error.invalidEmail" = "請輸入有效的電子郵件地址";
+"error.passwordTooShort" = "密碼至少需要8個字元";
+"error.passwordMismatch" = "密碼不一致";
+"error.authFailed" = "驗證失敗";
+"error.purchaseFailed" = "購買失敗";
+"error.loadFailed" = "資料載入失敗";
+"error.saveFailed" = "儲存變更失敗";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "傳送訊息";
+"a11y.sendMessageHint" = "點兩下傳送您的訊息";
+"a11y.userMessage" = "您的訊息";
+"a11y.assistantMessage" = "助理的訊息";
+"a11y.copyMessageHint" = "點兩下複製訊息";
+"a11y.themeSelector" = "主題選擇";
+"a11y.signInAppleHint" = "點兩下使用 Apple ID 登入";
+"a11y.profilePhoto" = "大頭照";
+"a11y.profilePhotoHint" = "點兩下更換大頭照";

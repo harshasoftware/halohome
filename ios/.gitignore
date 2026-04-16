@@ -1,0 +1,62 @@
+# XCFramework binaries (too large for GitHub, rebuild with scripts/build-rust-xcframework.sh)
+**/*.xcframework/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+DerivedData/
+build/
+*.xccheckout
+*.xcscmblueprint
+*.xcuserstate
+*.xcuserdatad/
+*.moved-aside
+*.ipa
+*.dSYM.zip
+*.dSYM
+xcuserdata/
+
+# Swift / SwiftPM
+.swiftpm/
+.build/
+# Note: Packages/ contains our source code modules, not SPM dependencies
+# SPM dependencies are in .build/ which is already ignored
+# Keep the dependency lockfile
+!Package.resolved
+
+# SPM package checkouts (stored outside DerivedData for stability)
+../.spm-packages/
+
+# Fastlane (if you add later)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Config / Secrets
+Config/Secrets.xcconfig
+.env
+.env.*
+
+# Config / Secrets - Configuration.swift is committed with placeholders for clone-and-run
+# Run 'bash scripts/update-config.sh' after filling in Secrets.xcconfig to update it with real values
+
+# Backend proxies (choose what you use)
+BackendProxy/**/node_modules/
+BackendProxy/**/.wrangler/
+BackendProxy/**/.venv/
+BackendProxy/**/__pycache__/
+BackendProxy/**/.python-version
+
+# Editor cruft
+*.orig
+*.swp
+.idea/
+.vscode/
+
+# Rust XCFramework (built locally via build-rust-xcframework.sh)
+Packages/CartoStarCore/CartoStarCoreFFI.xcframework/
+Packages/CartoStarCore/CartoStarCoreFFI.xcframework/

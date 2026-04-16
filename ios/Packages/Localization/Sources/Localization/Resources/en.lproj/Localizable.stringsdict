@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- 
+    Pluralization Rules (stringsdict)
+    
+    This file handles plural forms for languages that have complex pluralization rules.
+    
+    ## How to Add New Pluralized Strings:
+    1. Add a new key matching your Localizable.strings key
+    2. Define NSStringLocalizedFormatKey with the format specifier
+    3. Add NSStringFormatSpecTypeKey and NSStringFormatValueTypeKey
+    4. Define plural categories: zero, one, two, few, many, other
+    
+    ## Plural Categories by Language:
+    - English: one, other
+    - Russian: one, few, many, other
+    - Arabic: zero, one, two, few, many, other
+    - Japanese: other (no plurals)
+    
+    See: https://unicode-org.github.io/cldr-staging/charts/latest/supplemental/language_plural_rules.html
+    -->
+    
+    <!-- Messages Remaining Counter -->
+    <key>chat.messagesRemaining %lld</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>lld</string>
+            <key>zero</key>
+            <string>No messages remaining</string>
+            <key>one</key>
+            <string>1 message remaining</string>
+            <key>other</key>
+            <string>%lld messages remaining</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

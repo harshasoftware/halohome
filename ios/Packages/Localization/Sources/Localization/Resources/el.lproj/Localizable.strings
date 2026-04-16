@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Greek)
+  AstroCarto
+
+  Greek (el) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "Ο Κοσμικός σου Χάρτης";
+"auth.signIn.apple" = "Σύνδεση με Apple";
+"auth.signIn.google" = "Συνέχεια με Google";
+"auth.useEmail" = "Χρήση email";
+"auth.signIn" = "Σύνδεση";
+"auth.createAccount" = "Δημιουργία Λογαριασμού";
+"auth.forgotPassword" = "Ξεχάσατε τον κωδικό;";
+"auth.signOut" = "Αποσύνδεση";
+"auth.email" = "Email";
+"auth.password" = "Κωδικός";
+"auth.confirmPassword" = "Επιβεβαίωση Κωδικού";
+"auth.legalDisclaimer" = "Συνεχίζοντας, αποδέχεστε τους [Όρους Χρήσης](https://example.com) και την [Πολιτική Απορρήτου](https://example.com) μας";
+
+// MARK: - Chat
+"chat.placeholder" = "Πληκτρολογήστε μήνυμα...";
+"chat.newChat" = "Νέα Συνομιλία";
+"chat.history" = "Ιστορικό Συνομιλιών";
+"chat.deleteChat" = "Διαγραφή Συνομιλίας";
+"chat.deleteAll" = "Διαγραφή όλων των συνομιλιών";
+"chat.emptyState" = "Δεν υπάρχουν μηνύματα ακόμα";
+"chat.emptyStateSubtitle" = "Ξεκινήστε μια συνομιλία για να δείτε μηνύματα εδώ";
+"chat.thinking" = "Σκέφτεται...";
+"chat.copy" = "Αντιγραφή";
+"chat.copied" = "Αντιγράφηκε!";
+"chat.retry" = "Δοκιμάστε ξανά";
+"chat.messagesRemaining %lld" = "Απομένουν %lld μηνύματα";
+"chat.today" = "Σήμερα";
+"chat.yesterday" = "Χθες";
+
+// MARK: - Settings
+"settings.title" = "Ρυθμίσεις";
+"settings.appearance" = "Εμφάνιση";
+"settings.theme" = "Θέμα";
+"settings.notifications" = "Ειδοποιήσεις";
+"settings.pushNotifications" = "Push Ειδοποιήσεις";
+"settings.privacy" = "Απόρρητο";
+"settings.shareDiagnostics" = "Κοινοποίηση Διαγνωστικών";
+"settings.shareDiagnosticsSubtitle" = "Βοηθήστε μας να βελτιώσουμε την εφαρμογή μοιράζοντας αναφορές σφαλμάτων";
+"settings.account" = "Λογαριασμός";
+"settings.deleteAccount" = "Διαγραφή Λογαριασμού";
+"settings.legal" = "Νομικά";
+"settings.termsOfService" = "Όροι Χρήσης";
+"settings.privacyPolicy" = "Πολιτική Απορρήτου";
+"settings.about" = "Σχετικά";
+"settings.version" = "Έκδοση";
+"settings.language" = "Γλώσσα";
+"settings.languageFooter" = "Επιλέξτε τη γλώσσα της εφαρμογής. Επιλέξτε «Σύστημα» για να χρησιμοποιήσετε τη γλώσσα της συσκευής.";
+
+// MARK: - Languages
+"language.system" = "Σύστημα";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "Σύστημα";
+"theme.light" = "Φωτεινό";
+"theme.dark" = "Σκοτεινό";
+"theme.aurora" = "Αυγή";
+"theme.obsidian" = "Οψιδιανός";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Αναβάθμιση σε Pro";
+"payments.restore" = "Επαναφορά Αγορών";
+"payments.subscribe" = "Εγγραφή";
+"payments.freeTrial" = "Δωρεάν Δοκιμή";
+"payments.perMonth" = "ανά μήνα";
+"payments.perYear" = "ανά έτος";
+"payments.bestValue" = "Καλύτερη Αξία";
+"payments.cancelAnytime" = "Ακύρωση οποτεδήποτε";
+"payments.subscribed" = "Εγγεγραμμένος";
+"payments.manageSubscription" = "Διαχείριση Συνδρομής";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "Καλώς ήρθατε";
+"onboarding.getStarted" = "Ξεκινήστε";
+"onboarding.continue" = "Συνέχεια";
+"onboarding.skip" = "Παράλειψη";
+"onboarding.next" = "Επόμενο";
+
+// MARK: - Profile
+"profile.title" = "Προφίλ";
+"profile.edit" = "Επεξεργασία Προφίλ";
+"profile.changePhoto" = "Αλλαγή Φωτογραφίας";
+"profile.displayName" = "Εμφανιζόμενο Όνομα";
+
+// MARK: - Common
+"common.ok" = "OK";
+"common.cancel" = "Ακύρωση";
+"common.done" = "Τέλος";
+"common.save" = "Αποθήκευση";
+"common.delete" = "Διαγραφή";
+"common.edit" = "Επεξεργασία";
+"common.close" = "Κλείσιμο";
+"common.loading" = "Φόρτωση...";
+"common.tryAgain" = "Δοκιμάστε ξανά";
+"common.learnMore" = "Μάθετε Περισσότερα";
+
+// MARK: - Errors
+"error.generic" = "Κάτι πήγε στραβά. Δοκιμάστε ξανά.";
+"error.networkOffline" = "Είστε εκτός σύνδεσης. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο.";
+"error.timeout" = "Η αίτηση έληξε. Δοκιμάστε ξανά.";
+"error.invalidEmail" = "Εισαγάγετε μια έγκυρη διεύθυνση email";
+"error.passwordTooShort" = "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες";
+"error.passwordMismatch" = "Οι κωδικοί δεν ταιριάζουν";
+"error.authFailed" = "Η ταυτοποίηση απέτυχε";
+"error.purchaseFailed" = "Η αγορά απέτυχε";
+"error.loadFailed" = "Αποτυχία φόρτωσης δεδομένων";
+"error.saveFailed" = "Αποτυχία αποθήκευσης αλλαγών";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "Αποστολή μηνύματος";
+"a11y.sendMessageHint" = "Πατήστε δύο φορές για αποστολή μηνύματος";
+"a11y.userMessage" = "Το μήνυμά σας";
+"a11y.assistantMessage" = "Μήνυμα βοηθού";
+"a11y.copyMessageHint" = "Πατήστε δύο φορές για αντιγραφή μηνύματος";
+"a11y.themeSelector" = "Επιλογέας θέματος";
+"a11y.signInAppleHint" = "Πατήστε δύο φορές για σύνδεση με Apple ID";
+"a11y.profilePhoto" = "Φωτογραφία προφίλ";
+"a11y.profilePhotoHint" = "Πατήστε δύο φορές για αλλαγή φωτογραφίας προφίλ";

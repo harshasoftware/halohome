@@ -1,0 +1,1006 @@
+import SwiftUI
+import MapKit
+import SceneKit
+import AuthenticationServices
+import DesignSystem
+import Auth
+import Core
+
+/// Premium sign-in screen featuring a rotating 3D globe background
+/// with iOS 26 Liquid Glass UI overlays for an immersive astrocartography preview
+@MainActor
+@available(iOS 17.0, *)
+struct SignInView: View {
+
+    @State private var viewModel: SignInViewModel
+    @State private var showEmailLogin = false
+    @State private var showEmailSignUp = false
+    @State private var showForgotPassword = false
+
+    // Animation states for staggered entrance
+    @State private var showGlobe = false
+    @State private var showOverlay = false
+    @State private var showTitle = false
+    @State private var showAuthCard = false
+    @State private var showFeaturePills = false
+    @State private var showLegal = false
+
+    // SceneKit globe scene (created once)
+    @State private var globeScene: SCNScene?
+
+    // Marquee animation
+    @State private var marqueeOffset: CGFloat = 0
+
+    // Rotating headlines & subheadlines (matching web landing page)
+    @State private var currentTaglineIndex: Int = 0
+    private let headlines: [String] = [
+        "Navigate Your Cosmic Destiny",
+        "Find Where You Belong",
+        "Map Your Life Path",
+        "Discover Your Power Places"
+    ]
+    private let subheadlines: [String] = [
+        "Discover where you belong in the universe.",
+        "Map your planetary lines for love and career.",
+        "Find your power places with AI astrology.",
+        "Real-time astrocartography for your life path."
+    ]
+
+    init(authClient: AuthClient) {
+        self._viewModel = State(initialValue: SignInViewModel(authClient: authClient))
+    }
+
+    var body: some View {
+        NavigationStack {
+            GeometryReader { geometry in
+                ZStack {
+                    // Dark cosmic background
+                    globeBackground
+                        .ignoresSafeArea()
+
+                    // Main layout
+                    VStack(spacing: 0) {
+                        // Feature pills at top
+                        featurePreviewSection
+                            .padding(.top, 50)
+                            .padding(.bottom, 12)
+
+                        // Large orrery with title centered inside
+                        GeometryReader { orreryGeo in
+                            let orrerySize = geometry.size.width * 1.4
+
+                            ZStack {
+                                // Orrery - planetary system (centered, bleeds edges)
+                                orreryHeroView(size: geometry.size)
+                                    .position(x: orreryGeo.size.width / 2, y: orreryGeo.size.height / 2 - 20)
+
+                                // Title centered in the middle of the orbits
+                                VStack(spacing: 12) {
+                                    // Rotating headline (larger, like web hero)
+                                    Text(headlines[currentTaglineIndex])
+                                        .font(.system(size: 28, weight: .bold))
+                                        .foregroundStyle(Color.acForeground)
+                                        .multilineTextAlignment(.center)
+                                        .shadow(color: .black.opacity(0.9), radius: 15)
+                                        .shadow(color: .black.opacity(0.6), radius: 5)
+                                        .id("headline-\(currentTaglineIndex)")
+                                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+
+                                    // Rotating subheadline
+                                    Text(subheadlines[currentTaglineIndex])
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(Color.acMutedForeground)
+                                        .multilineTextAlignment(.center)
+                                        .tracking(0.3)
+                                        .shadow(color: .black.opacity(0.8), radius: 10)
+                                        .id("subheadline-\(currentTaglineIndex)")
+                                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                }
+                                .animation(.easeInOut(duration: 0.5), value: currentTaglineIndex)
+                                .position(x: orreryGeo.size.width / 2, y: orreryGeo.size.height / 2 - 20)
+                            }
+                        }
+                        .frame(height: geometry.size.height * 0.42)
+                        .clipped()
+
+                        Spacer(minLength: 8)
+
+                        // Bottom: Auth card
+                        authCard
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 6)
+
+                        // Legal footer
+                        legalSection
+                            .padding(.bottom, 16)
+                            .safeAreaPadding(.bottom)
+                    }
+                }
+            }
+            .onAppear {
+                startEntranceAnimation()
+                setupGlobeScene()
+            }
+            .sheet(isPresented: $showEmailLogin) {
+                EmailLoginView(
+                    authClient: viewModel.authClient,
+                    onSuccess: { showEmailLogin = false },
+                    onSwitchToSignUp: {
+                        showEmailLogin = false
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showEmailSignUp = true
+                        }
+                    },
+                    onForgotPassword: {
+                        showEmailLogin = false
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showForgotPassword = true
+                        }
+                    }
+                )
+                .preferredColorScheme(.dark)
+            }
+            .sheet(isPresented: $showEmailSignUp) {
+                EmailSignUpView(
+                    authClient: viewModel.authClient,
+                    onSuccess: { showEmailSignUp = false },
+                    onSwitchToLogin: {
+                        showEmailSignUp = false
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showEmailLogin = true
+                        }
+                    }
+                )
+                .preferredColorScheme(.dark)
+            }
+            .sheet(isPresented: $showForgotPassword) {
+                ForgotPasswordView(
+                    authClient: viewModel.authClient,
+                    onBackToLogin: {
+                        showForgotPassword = false
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            showEmailLogin = true
+                        }
+                    }
+                )
+                .preferredColorScheme(.dark)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    // MARK: - Entrance Animation
+
+    private func startEntranceAnimation() {
+        // Set all to true immediately to debug rendering
+        showGlobe = true
+        showOverlay = true
+        showTitle = true
+        showFeaturePills = true
+        showAuthCard = true
+        showLegal = true
+
+        // Start rotating taglines
+        startTaglineRotation()
+    }
+
+    private func startTaglineRotation() {
+        Task {
+            while true {
+                try? await Task.sleep(nanoseconds: 4_000_000_000) // 4 seconds (matching web timing)
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        currentTaglineIndex = (currentTaglineIndex + 1) % headlines.count
+                    }
+                }
+            }
+        }
+    }
+
+    private func setupGlobeScene() {
+        guard globeScene == nil else { return }
+
+        let scene = SCNScene()
+        scene.background.contents = UIColor.clear
+
+        // Planet data - NO SUN, orbits sized so title fits in center
+        // Innermost orbit at 0.55 leaves room for title in center
+        // (name, orbitRadius, orbitDuration, planetSize, hasRing, orbitColor)
+        let planets: [(String, Float, Double, Float, Bool, UIColor)] = [
+            ("moon", 0.55, 10, 0.050, false, UIColor(red: 0.8, green: 0.8, blue: 0.9, alpha: 1.0)),
+            ("venus", 0.72, 14, 0.060, false, UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)),
+            ("mars", 0.90, 18, 0.055, false, UIColor(red: 1.0, green: 0.3, blue: 0.4, alpha: 1.0)),
+            ("jupiter", 1.10, 24, 0.085, false, UIColor(red: 1.0, green: 0.7, blue: 0.5, alpha: 1.0)),
+            ("saturn", 1.32, 32, 0.070, true, UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0)),
+            ("neptune", 1.56, 42, 0.060, false, UIColor(red: 0.4, green: 0.7, blue: 1.0, alpha: 1.0)),
+        ]
+
+        // Create orbital rings FIRST (rendered behind planets)
+        for (name, orbitRadius, _, _, _, _) in planets {
+            let ring = SCNTorus(ringRadius: CGFloat(orbitRadius), pipeRadius: 0.005)
+            let ringMaterial = SCNMaterial()
+            ringMaterial.diffuse.contents = UIColor.white.withAlphaComponent(0.18)
+            ringMaterial.emission.contents = UIColor.white.withAlphaComponent(0.1)
+            ringMaterial.lightingModel = .constant
+            ring.materials = [ringMaterial]
+            let ringNode = SCNNode(geometry: ring)
+            ringNode.name = "\(name)_ring" // Name for glow targeting
+            ringNode.renderingOrder = 0 // Render first (behind)
+            scene.rootNode.addChildNode(ringNode)
+        }
+
+        // Create planets AFTER orbits (rendered on top)
+        for (name, orbitRadius, orbitDuration, planetSize, hasRing, _) in planets {
+            let planetNode = createStyledPlanet(name: name, radius: planetSize, hasRing: hasRing)
+            planetNode.renderingOrder = 10 // Render after orbits (on top)
+
+            // Create orbit pivot for animation
+            let orbitNode = SCNNode()
+            orbitNode.name = "\(name)_orbit"
+            // Position planet slightly ABOVE the orbit plane for z-ordering
+            planetNode.position = SCNVector3(orbitRadius, 0.02, 0)
+            orbitNode.addChildNode(planetNode)
+            scene.rootNode.addChildNode(orbitNode)
+
+            // Orbit animation
+            let rotation = CABasicAnimation(keyPath: "rotation")
+            rotation.toValue = NSValue(scnVector4: SCNVector4(0, 1, 0, Float.pi * 2))
+            rotation.duration = orbitDuration
+            rotation.repeatCount = .infinity
+            orbitNode.addAnimation(rotation, forKey: "orbit")
+
+            // Self rotation
+            let selfRotation = CABasicAnimation(keyPath: "rotation")
+            selfRotation.toValue = NSValue(scnVector4: SCNVector4(0, 1, 0, Float.pi * 2))
+            selfRotation.duration = 4
+            selfRotation.repeatCount = .infinity
+            planetNode.addAnimation(selfRotation, forKey: "spin")
+        }
+
+        // Ambient light
+        let ambientLight = SCNNode()
+        ambientLight.light = SCNLight()
+        ambientLight.light?.type = .ambient
+        ambientLight.light?.color = UIColor(white: 0.6, alpha: 1.0)
+        scene.rootNode.addChildNode(ambientLight)
+
+        // Camera - straight top-down view like web hero section
+        let cameraNode = SCNNode()
+        cameraNode.camera = SCNCamera()
+        cameraNode.camera?.usesOrthographicProjection = true
+        cameraNode.camera?.orthographicScale = 2.0
+        cameraNode.position = SCNVector3(0, 5, 0)
+        cameraNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
+        scene.rootNode.addChildNode(cameraNode)
+
+        globeScene = scene
+    }
+
+    /// Creates a styled planet node using the 2D PNG images from web assets
+    /// Uses billboard planes so planets always face the camera (like web version)
+    private func createStyledPlanet(name: String, radius: Float, hasRing: Bool) -> SCNNode {
+        let planetNode = SCNNode()
+        planetNode.name = name
+
+        // Try to load the planet image from assets
+        let imageName = "planet-\(name)"
+        let planetSize = CGFloat(radius * 2.2) // Scale up for visibility
+
+        if let planetImage = UIImage(named: imageName) {
+            // Use SCNPlane with the 2D image texture
+            let plane = SCNPlane(width: planetSize, height: planetSize)
+            let material = SCNMaterial()
+            material.diffuse.contents = planetImage
+            material.isDoubleSided = true
+            material.lightingModel = .constant // No lighting, show image as-is
+            material.writesToDepthBuffer = true
+            material.readsFromDepthBuffer = true
+            plane.materials = [material]
+
+            let imageNode = SCNNode(geometry: plane)
+            // Rotate to face up (since camera looks down)
+            imageNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
+            planetNode.addChildNode(imageNode)
+        } else {
+            // Fallback colored sphere if image not found
+            let sphere = SCNSphere(radius: CGFloat(radius))
+            sphere.segmentCount = 32
+            let material = SCNMaterial()
+            material.diffuse.contents = fallbackColor(for: name)
+            material.emission.contents = fallbackColor(for: name).withAlphaComponent(0.4)
+            material.lightingModel = .constant
+            sphere.materials = [material]
+            let sphereNode = SCNNode(geometry: sphere)
+            planetNode.addChildNode(sphereNode)
+        }
+
+        return planetNode
+    }
+
+    /// Creates a radial glow image for the sun
+    /// Fallback colors for planets if images aren't loaded
+    private func fallbackColor(for planet: String) -> UIColor {
+        switch planet {
+        case "moon": return UIColor(red: 0.7, green: 0.7, blue: 0.72, alpha: 1.0)
+        case "venus": return UIColor(red: 0.95, green: 0.65, blue: 0.15, alpha: 1.0)
+        case "mars": return UIColor(red: 0.9, green: 0.25, blue: 0.35, alpha: 1.0)
+        case "jupiter": return UIColor(red: 0.92, green: 0.65, blue: 0.5, alpha: 1.0)
+        case "saturn": return UIColor(red: 0.9, green: 0.72, blue: 0.3, alpha: 1.0)
+        case "neptune": return UIColor(red: 0.3, green: 0.6, blue: 0.9, alpha: 1.0)
+        default: return UIColor.gray
+        }
+    }
+
+    // MARK: - Dark Cosmic Background
+
+    // MARK: - Dark Cosmic Background
+
+    private var globeBackground: some View {
+        CosmicBackground()
+    }
+
+    // MARK: - Gradient Overlays
+
+    private var gradientOverlays: some View {
+        ZStack {
+            // Top vignette
+            LinearGradient(
+                colors: [
+                    Color.black.opacity(0.9),
+                    Color.black.opacity(0.4),
+                    Color.clear
+                ],
+                startPoint: .top,
+                endPoint: .center
+            )
+
+            // Bottom vignette for auth card
+            LinearGradient(
+                colors: [
+                    Color.clear,
+                    Color.black.opacity(0.6),
+                    Color.black.opacity(0.95)
+                ],
+                startPoint: .center,
+                endPoint: .bottom
+            )
+
+            // Ambient cosmic glow
+            RadialGradient(
+                colors: [
+                    Color.acAmber500.opacity(0.08),
+                    Color.clear
+                ],
+                center: .top,
+                startRadius: 0,
+                endRadius: 400
+            )
+
+            RadialGradient(
+                colors: [
+                    Color.acCosmicPurple.opacity(0.06),
+                    Color.clear
+                ],
+                center: .bottomLeading,
+                startRadius: 0,
+                endRadius: 350
+            )
+        }
+    }
+
+    // MARK: - Feature Preview Pills (Marquee)
+
+    private let featurePillsData: [(icon: String, label: String, color: Color)] = [
+        ("globe.americas.fill", "Astro Lines", .acPlanetSun),
+        ("binoculars.fill", "Scout Cities", .acPlanetJupiter),
+        ("person.2.fill", "Duo Mode", .acPlanetVenus),
+        ("sparkles", "AI Insights", .white),
+        ("map.fill", "Relocation", .acPlanetMars),
+        ("chart.xyaxis.line", "Natal Chart", .acPlanetMoon),
+    ]
+
+    private var featurePreviewSection: some View {
+        let spacing: CGFloat = 12
+
+        // Use TimelineView for truly seamless infinite scrolling
+        return TimelineView(.animation) { timeline in
+            let now = timeline.date.timeIntervalSinceReferenceDate
+            // Complete loop every 25 seconds
+            let totalWidth: CGFloat = 942 // 6 pills × 145 + 6 × 12 spacing
+            let progress = now.truncatingRemainder(dividingBy: 25) / 25
+            let offset = -totalWidth * progress
+
+            HStack(spacing: spacing) {
+                // Double the pills for seamless looping
+                ForEach(0..<2, id: \.self) { setIndex in
+                    ForEach(featurePillsData.indices, id: \.self) { index in
+                        let pill = featurePillsData[index]
+                        featurePill(icon: pill.icon, label: pill.label, color: pill.color)
+                    }
+                }
+            }
+            .offset(x: offset)
+        }
+        .frame(height: 44)
+        // No background - fully transparent to show orbits behind
+    }
+
+    private func featurePill(icon: String, label: String, color: Color) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(color)
+
+            Text(label)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.white)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(
+            Capsule()
+                .fill(Color.black.opacity(0.5))
+        )
+        .overlay(
+            Capsule()
+                .strokeBorder(Color.white.opacity(0.25), lineWidth: 0.5)
+        )
+    }
+
+    // MARK: - Orrery Hero View
+
+    private func orreryHeroView(size: CGSize) -> some View {
+        // Make orrery big - bleed past screen edges
+        let orrerySize = size.width * 1.4
+
+        return ZStack(alignment: .center) {
+            // Ambient base glow
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color.acAmber500.opacity(0.10),
+                            Color.acCosmicPurple.opacity(0.05),
+                            Color.clear
+                        ],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: orrerySize * 0.45
+                    )
+                )
+                .frame(width: orrerySize, height: orrerySize)
+
+            // 3D SceneKit orrery with orbit glow on tap
+            if let scene = globeScene {
+                SceneKitGlobeView(scene: scene, onOrbitTap: handleOrbitTap)
+                    .frame(width: orrerySize, height: orrerySize)
+            } else {
+                // Loading placeholder
+                Circle()
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    .frame(width: orrerySize * 0.6, height: orrerySize * 0.6)
+            }
+        }
+        .frame(width: orrerySize, height: orrerySize)
+    }
+
+    /// Handle orbit tap - glow the orbit ring in SceneKit
+    private func handleOrbitTap(_ planetName: String) {
+        guard let scene = globeScene,
+              let ringNode = scene.rootNode.childNode(withName: "\(planetName)_ring", recursively: false),
+              let torus = ringNode.geometry as? SCNTorus else { return }
+
+        // Get the glow color for this planet's orbit
+        let glowColor = orbitGlowColor(for: planetName)
+
+        // Store original material
+        let originalMaterial = torus.materials.first?.copy() as? SCNMaterial
+
+        // Create intensely glowing material - brighter emission for more vibrant glow
+        let glowMaterial = SCNMaterial()
+        glowMaterial.diffuse.contents = glowColor.withAlphaComponent(0.9)
+        glowMaterial.emission.contents = glowColor
+        glowMaterial.emission.intensity = 2.0 // Boost emission for brighter glow
+        glowMaterial.lightingModel = .constant
+        glowMaterial.blendMode = .add // Additive blending for ethereal glow effect
+
+        // Make the ring thicker when glowing
+        let originalPipeRadius = torus.pipeRadius
+
+        // Animate to glow state
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 0.15
+        torus.materials = [glowMaterial]
+        torus.pipeRadius = originalPipeRadius * 3.0
+        SCNTransaction.commit()
+
+        // Fade back after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 0.5
+            if let original = originalMaterial {
+                torus.materials = [original]
+            }
+            torus.pipeRadius = originalPipeRadius
+            SCNTransaction.commit()
+        }
+    }
+
+    /// Get glow color for each planet's orbit - matching web hero section
+    /// Web uses: purple (#9370DB), cornflower blue (#6495ED), pink (#FFB6C1) alternating
+    private func orbitGlowColor(for planet: String) -> UIColor {
+        // Amethyst purple - more vibrant: rgba(147, 112, 219)
+        let purple = UIColor(red: 147/255, green: 112/255, blue: 219/255, alpha: 1.0)
+        // Cornflower blue - vibrant: rgba(100, 149, 237)
+        let blue = UIColor(red: 100/255, green: 149/255, blue: 237/255, alpha: 1.0)
+        // Light pink - soft: rgba(255, 182, 193)
+        let pink = UIColor(red: 255/255, green: 182/255, blue: 193/255, alpha: 1.0)
+
+        // Alternating pattern matching web CSS nth-child rules
+        switch planet {
+        case "moon": return purple    // Orbit 1 (default) - purple
+        case "venus": return blue     // Orbit 2 - cornflower blue
+        case "mars": return purple    // Orbit 3 - purple
+        case "jupiter": return pink   // Orbit 4 - pink
+        case "saturn": return purple  // Orbit 5 - purple
+        case "neptune": return blue   // Orbit 6 - cornflower blue
+        default: return purple
+        }
+    }
+
+    // MARK: - Auth Card
+
+    private var authCard: some View {
+        VStack(spacing: 14) {
+            // Error message
+            if let msg = viewModel.errorMessage {
+                errorBanner(msg)
+            }
+
+            // Apple Sign In
+            appleSignInButton
+
+            // Google Sign In
+            googleSignInButton
+
+            // Divider
+            orDivider
+
+            // Email option
+            emailButton
+
+            #if DEBUG
+            debugButton
+            #endif
+        }
+        .padding(20)
+        // Glassmorphism style - transparent with blur like web navbar
+        .background(
+            RoundedRectangle(cornerRadius: ACRadius.glassSheet, style: .continuous)
+                .fill(Color.white.opacity(0.08))
+                .background(
+                    RoundedRectangle(cornerRadius: ACRadius.glassSheet, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .opacity(0.5)
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: ACRadius.glassSheet, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: ACRadius.glassSheet, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Auth Buttons
+
+    private var appleSignInButton: some View {
+        Button {
+            Task { await viewModel.signInWithApple() }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "apple.logo")
+                    .font(.system(size: 18, weight: .medium))
+
+                Text(viewModel.isLoading && viewModel.loadingMethod == .apple
+                     ? "Signing in..."
+                     : "Continue with Apple")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .disabled(viewModel.isLoading)
+        .opacity(viewModel.isLoading && viewModel.loadingMethod == .apple ? 0.7 : 1.0)
+        .overlay {
+            if viewModel.isLoading && viewModel.loadingMethod == .apple {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay { ProgressView().tint(.black) }
+            }
+        }
+        .acPressable(scale: 0.98)
+        .accessibilityLabel("Continue with Apple")
+    }
+
+    private var googleSignInButton: some View {
+        Button {
+            Task { await viewModel.signInWithGoogle() }
+        } label: {
+            HStack(spacing: 12) {
+                googleLogo
+                    .frame(width: 18, height: 18)
+
+                Text(viewModel.isLoading && viewModel.loadingMethod == .google
+                     ? "Signing in..."
+                     : "Continue with Google")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Color(white: 0.2))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .disabled(viewModel.isLoading)
+        .opacity(viewModel.isLoading && viewModel.loadingMethod == .google ? 0.7 : 1.0)
+        .overlay {
+            if viewModel.isLoading && viewModel.loadingMethod == .google {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay { ProgressView().tint(.black) }
+            }
+        }
+        .acPressable(scale: 0.98)
+        .accessibilityLabel("Continue with Google")
+    }
+
+    private var googleLogo: some View {
+        let blue = Color(red: 66/255, green: 133/255, blue: 244/255)
+        let red = Color(red: 234/255, green: 67/255, blue: 53/255)
+        let yellow = Color(red: 251/255, green: 188/255, blue: 5/255)
+        let green = Color(red: 52/255, green: 168/255, blue: 83/255)
+
+        return Canvas { context, size in
+            let s = min(size.width, size.height)
+            let center = CGPoint(x: s / 2, y: s / 2)
+            let radius = s * 0.40
+            let thickness = s * 0.20
+
+            func arc(start: Double, end: Double) -> Path {
+                var p = Path()
+                p.addArc(center: center, radius: radius,
+                        startAngle: .degrees(start), endAngle: .degrees(end),
+                        clockwise: false)
+                return p
+            }
+
+            context.stroke(arc(start: 215, end: 330), with: .color(red), lineWidth: thickness)
+            context.stroke(arc(start: 330, end: 360), with: .color(blue), lineWidth: thickness)
+            context.stroke(arc(start: 25, end: 145), with: .color(green), lineWidth: thickness)
+            context.stroke(arc(start: 145, end: 215), with: .color(yellow), lineWidth: thickness)
+
+            let barH = thickness
+            let barW = s * 0.28
+            let barRect = CGRect(x: center.x - barW * 0.08, y: center.y - barH / 2, width: barW, height: barH)
+            context.fill(Path(barRect), with: .color(blue))
+
+            let connectorRect = CGRect(x: center.x + barW * 0.7, y: center.y - barH / 2, width: thickness * 0.5, height: barH)
+            context.fill(Path(connectorRect), with: .color(blue))
+        }
+        .aspectRatio(1, contentMode: .fit)
+    }
+
+    private var orDivider: some View {
+        HStack(spacing: 16) {
+            Rectangle()
+                .fill(Color.acGlassBorderThemed)
+                .frame(height: 1)
+
+            Text("or")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Color.acGlassTextSecondary)
+
+            Rectangle()
+                .fill(Color.acGlassBorderThemed)
+                .frame(height: 1)
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var emailButton: some View {
+        Button { showEmailLogin = true } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "envelope.fill")
+                    .font(.system(size: 16, weight: .medium))
+
+                Text("Continue with Email")
+                    .font(.system(size: 15, weight: .semibold))
+            }
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .disabled(viewModel.isLoading)
+        .acPressable(scale: 0.98)
+        .accessibilityLabel("Continue with Email")
+    }
+
+    #if DEBUG
+    private var debugButton: some View {
+        Button { viewModel.continueInDebug() } label: {
+            Text("Debug: Mock Sign In")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.acMutedForeground.opacity(0.5))
+        }
+        .padding(.top, 6)
+    }
+    #endif
+
+    // MARK: - Error Banner
+
+    private func errorBanner(_ message: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(Color.acDestructive)
+
+            Text(message)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Color.acGlassTextPrimary)
+                .multilineTextAlignment(.leading)
+
+            Spacer()
+
+            Button {
+                withAnimation(ACSpring.quick) {
+                    viewModel.errorMessage = nil
+                }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color.acGlassTextSecondary)
+            }
+        }
+        .padding(14)
+        .acLiquidGlass(tint: Color.acDestructive.opacity(0.15), cornerRadius: ACRadius.glassSmall)
+        .overlay(
+            RoundedRectangle(cornerRadius: ACRadius.glassSmall, style: .continuous)
+                .strokeBorder(Color.acDestructive.opacity(0.3), lineWidth: 1)
+        )
+        .transition(.asymmetric(
+            insertion: .scale(scale: 0.95).combined(with: .opacity),
+            removal: .scale(scale: 0.95).combined(with: .opacity)
+        ))
+    }
+
+    // MARK: - Legal Section
+
+    private var legalSection: some View {
+        VStack(spacing: 8) {
+            Text("By continuing, you agree to our")
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(Color.acMutedForeground.opacity(0.6))
+
+            HStack(spacing: 12) {
+                Button { /* Open terms */ } label: {
+                    Text("Terms of Service")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.acGlassTextAccent.opacity(0.8))
+                }
+
+                Text("•")
+                    .foregroundStyle(Color.acMutedForeground.opacity(0.3))
+
+                Button { /* Open privacy */ } label: {
+                    Text("Privacy Policy")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.acGlassTextAccent.opacity(0.8))
+                }
+            }
+        }
+        .opacity(showLegal ? 1 : 0)
+        .offset(y: showLegal ? 0 : 10)
+    }
+}
+
+// MARK: - ViewModel
+
+@MainActor
+@Observable
+final class SignInViewModel {
+    enum AuthMethodType {
+        case apple, google, email
+    }
+
+    var isLoading: Bool = false
+    var loadingMethod: AuthMethodType? = nil
+    var errorMessage: String?
+
+    fileprivate let authClient: AuthClient
+
+    init(authClient: AuthClient) {
+        self.authClient = authClient
+    }
+
+    func signInWithApple() async {
+        isLoading = true
+        loadingMethod = .apple
+        errorMessage = nil
+
+        defer {
+            isLoading = false
+            loadingMethod = nil
+        }
+
+        do {
+            _ = try await authClient.signInWithApple()
+            AppLogger.info("Apple sign in successful", category: AppLogger.ui)
+        } catch {
+            let appError = AppError.from(error)
+            errorMessage = appError.userMessage
+            AppLogger.error("Apple sign in failed: \(error)", category: AppLogger.ui)
+            autoDismissError(appError.userMessage)
+        }
+    }
+
+    func signInWithGoogle() async {
+        isLoading = true
+        loadingMethod = .google
+        errorMessage = nil
+
+        defer {
+            isLoading = false
+            loadingMethod = nil
+        }
+
+        do {
+            _ = try await authClient.signInWithGoogle()
+            AppLogger.info("Google sign in successful", category: AppLogger.ui)
+        } catch {
+            let appError = AppError.from(error)
+            errorMessage = appError.userMessage
+            AppLogger.error("Google sign in failed: \(error)", category: AppLogger.ui)
+            autoDismissError(appError.userMessage)
+        }
+    }
+
+    private func autoDismissError(_ message: String) {
+        Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if self.errorMessage == message {
+                self.errorMessage = nil
+            }
+        }
+    }
+
+    #if DEBUG
+    func continueInDebug() {
+        Task {
+            AppLogger.info("Debug sign-in started", category: AppLogger.auth)
+            if type(of: authClient) == Auth.MockAuthClient.self {
+                do {
+                    let user = try await authClient.signInWithApple()
+                    AppLogger.info("Debug sign-in successful: \(user.id)", category: AppLogger.auth)
+                } catch {
+                    AppLogger.error("Debug sign-in failed: \(error)", category: AppLogger.auth)
+                }
+            } else {
+                errorMessage = "Debug mode not enabled. Set AUTH_BYPASS=1 in scheme."
+            }
+        }
+    }
+    #endif
+}
+
+// MARK: - SceneKit Globe View
+
+/// A UIViewRepresentable wrapper for SCNView to display a 3D orrery with orbit tap support
+@available(iOS 17.0, *)
+private struct SceneKitGlobeView: UIViewRepresentable {
+    let scene: SCNScene
+    var onOrbitTap: ((String) -> Void)?
+
+    init(scene: SCNScene, onOrbitTap: ((String) -> Void)? = nil) {
+        self.scene = scene
+        self.onOrbitTap = onOrbitTap
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onOrbitTap: onOrbitTap)
+    }
+
+    func makeUIView(context: Context) -> SCNView {
+        let scnView = SCNView()
+        scnView.scene = scene
+        scnView.backgroundColor = .clear
+        scnView.allowsCameraControl = false
+        scnView.autoenablesDefaultLighting = false
+        scnView.antialiasingMode = .multisampling4X
+        scnView.isPlaying = true
+
+        // Add tap gesture
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        scnView.addGestureRecognizer(tapGesture)
+        context.coordinator.scnView = scnView
+
+        return scnView
+    }
+
+    func updateUIView(_ uiView: SCNView, context: Context) {
+        context.coordinator.onOrbitTap = onOrbitTap
+    }
+
+    class Coordinator: NSObject {
+        var onOrbitTap: ((String) -> Void)?
+        weak var scnView: SCNView?
+
+        // Orbit radii for distance-based detection (matching setupGlobeScene)
+        let orbitData: [(String, CGFloat)] = [
+            ("moon", 0.55),
+            ("venus", 0.72),
+            ("mars", 0.90),
+            ("jupiter", 1.10),
+            ("saturn", 1.32),
+            ("neptune", 1.56),
+        ]
+
+        init(onOrbitTap: ((String) -> Void)?) {
+            self.onOrbitTap = onOrbitTap
+        }
+
+        @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+            guard let scnView = scnView else { return }
+            let location = gesture.location(in: scnView)
+
+            // Get the center of the view (where sun is)
+            let centerX = scnView.bounds.width / 2
+            let centerY = scnView.bounds.height / 2
+
+            // Calculate distance from center in screen coordinates
+            let tapDistanceFromCenter = hypot(location.x - centerX, location.y - centerY)
+
+            // Convert screen distance to scene units (approximate based on orthographic scale)
+            // The camera orthographicScale is 2.0 and view shows ~4.0 units across
+            let viewSize = min(scnView.bounds.width, scnView.bounds.height)
+            let sceneUnitsPerPoint = 4.0 / viewSize
+
+            let tapRadiusInScene = tapDistanceFromCenter * sceneUnitsPerPoint
+
+            // Find which orbit is closest to the tap
+            var closestOrbit: String? = nil
+            var closestDistance: CGFloat = .infinity
+
+            for (planetName, orbitRadius) in orbitData {
+                let distance = abs(tapRadiusInScene - orbitRadius)
+                // Allow 0.12 scene units tolerance (roughly 25-30 points)
+                if distance < 0.12 && distance < closestDistance {
+                    closestDistance = distance
+                    closestOrbit = planetName
+                }
+            }
+
+            if let orbit = closestOrbit {
+                onOrbitTap?(orbit)
+            }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#if DEBUG
+@available(iOS 17.0, *)
+#Preview("Sign In - Globe Background") {
+    SignInView(authClient: PreviewComposition.mockAuthClient())
+}
+#endif

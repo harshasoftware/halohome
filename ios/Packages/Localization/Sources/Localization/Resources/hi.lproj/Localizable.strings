@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Hindi)
+  AstroCarto
+
+  Hindi (hi) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "आपका ब्रह्मांडीय नक्शा";
+"auth.signIn.apple" = "Apple से साइन इन करें";
+"auth.signIn.google" = "Google से जारी रखें";
+"auth.useEmail" = "ईमेल का उपयोग करें";
+"auth.signIn" = "साइन इन";
+"auth.createAccount" = "खाता बनाएं";
+"auth.forgotPassword" = "पासवर्ड भूल गए?";
+"auth.signOut" = "साइन आउट";
+"auth.email" = "ईमेल";
+"auth.password" = "पासवर्ड";
+"auth.confirmPassword" = "पासवर्ड की पुष्टि करें";
+"auth.legalDisclaimer" = "जारी रखकर, आप हमारी [शर्तों](https://example.com) और [गोपनीयता नीति](https://example.com) से सहमत होते हैं";
+
+// MARK: - Chat
+"chat.placeholder" = "संदेश लिखें...";
+"chat.newChat" = "नई चैट";
+"chat.history" = "चैट इतिहास";
+"chat.deleteChat" = "चैट हटाएं";
+"chat.deleteAll" = "सभी चैट हटाएं";
+"chat.emptyState" = "अभी कोई संदेश नहीं";
+"chat.emptyStateSubtitle" = "संदेश देखने के लिए बातचीत शुरू करें";
+"chat.thinking" = "सोच रहा है...";
+"chat.copy" = "कॉपी";
+"chat.copied" = "कॉपी हो गया!";
+"chat.retry" = "पुनः प्रयास";
+"chat.messagesRemaining %lld" = "%lld संदेश शेष";
+"chat.today" = "आज";
+"chat.yesterday" = "कल";
+
+// MARK: - Settings
+"settings.title" = "सेटिंग्स";
+"settings.appearance" = "दिखावट";
+"settings.theme" = "थीम";
+"settings.notifications" = "सूचनाएं";
+"settings.pushNotifications" = "पुश सूचनाएं";
+"settings.privacy" = "गोपनीयता";
+"settings.shareDiagnostics" = "डायग्नोस्टिक्स साझा करें";
+"settings.shareDiagnosticsSubtitle" = "क्रैश रिपोर्ट साझा करके ऐप को बेहतर बनाने में मदद करें";
+"settings.account" = "खाता";
+"settings.deleteAccount" = "खाता हटाएं";
+"settings.legal" = "कानूनी";
+"settings.termsOfService" = "सेवा की शर्तें";
+"settings.privacyPolicy" = "गोपनीयता नीति";
+"settings.about" = "ऐप के बारे में";
+"settings.version" = "संस्करण";
+"settings.language" = "भाषा";
+"settings.languageFooter" = "ऐप की भाषा चुनें। डिवाइस की भाषा उपयोग करने के लिए 'सिस्टम' चुनें।";
+
+// MARK: - Languages
+"language.system" = "सिस्टम";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "सिस्टम";
+"theme.light" = "लाइट";
+"theme.dark" = "डार्क";
+"theme.aurora" = "ऑरोरा";
+"theme.obsidian" = "ऑब्सीडियन";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Pro में अपग्रेड करें";
+"payments.restore" = "खरीदारी पुनर्स्थापित करें";
+"payments.subscribe" = "सदस्यता लें";
+"payments.freeTrial" = "मुफ्त ट्रायल";
+"payments.perMonth" = "प्रति माह";
+"payments.perYear" = "प्रति वर्ष";
+"payments.bestValue" = "सर्वोत्तम मूल्य";
+"payments.cancelAnytime" = "कभी भी रद्द करें";
+"payments.subscribed" = "सदस्य";
+"payments.manageSubscription" = "सदस्यता प्रबंधित करें";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "स्वागत है";
+"onboarding.getStarted" = "शुरू करें";
+"onboarding.continue" = "जारी रखें";
+"onboarding.skip" = "छोड़ें";
+"onboarding.next" = "अगला";
+
+// MARK: - Profile
+"profile.title" = "प्रोफ़ाइल";
+"profile.edit" = "प्रोफ़ाइल संपादित करें";
+"profile.changePhoto" = "फोटो बदलें";
+"profile.displayName" = "प्रदर्शित नाम";
+
+// MARK: - Common
+"common.ok" = "ठीक है";
+"common.cancel" = "रद्द करें";
+"common.done" = "हो गया";
+"common.save" = "सहेजें";
+"common.delete" = "हटाएं";
+"common.edit" = "संपादित करें";
+"common.close" = "बंद करें";
+"common.loading" = "लोड हो रहा है...";
+"common.tryAgain" = "पुनः प्रयास करें";
+"common.learnMore" = "और जानें";
+
+// MARK: - Errors
+"error.generic" = "कुछ गलत हो गया। कृपया पुनः प्रयास करें।";
+"error.networkOffline" = "आप ऑफ़लाइन हैं। कृपया अपना इंटरनेट कनेक्शन जांचें।";
+"error.timeout" = "अनुरोध का समय समाप्त हो गया। कृपया पुनः प्रयास करें।";
+"error.invalidEmail" = "कृपया एक मान्य ईमेल पता दर्ज करें";
+"error.passwordTooShort" = "पासवर्ड कम से कम 8 अक्षरों का होना चाहिए";
+"error.passwordMismatch" = "पासवर्ड मेल नहीं खाते";
+"error.authFailed" = "प्रमाणीकरण विफल";
+"error.purchaseFailed" = "खरीदारी विफल";
+"error.loadFailed" = "डेटा लोड करने में विफल";
+"error.saveFailed" = "परिवर्तन सहेजने में विफल";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "संदेश भेजें";
+"a11y.sendMessageHint" = "संदेश भेजने के लिए दो बार टैप करें";
+"a11y.userMessage" = "आपका संदेश";
+"a11y.assistantMessage" = "सहायक का संदेश";
+"a11y.copyMessageHint" = "संदेश कॉपी करने के लिए दो बार टैप करें";
+"a11y.themeSelector" = "थीम चयनकर्ता";
+"a11y.signInAppleHint" = "Apple ID से साइन इन करने के लिए दो बार टैप करें";
+"a11y.profilePhoto" = "प्रोफ़ाइल फोटो";
+"a11y.profilePhotoHint" = "प्रोफ़ाइल फोटो बदलने के लिए दो बार टैप करें";

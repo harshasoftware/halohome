@@ -1,0 +1,146 @@
+/*
+  Localizable.strings (Simplified Chinese)
+  AstroCarto
+
+  Simplified Chinese (zh-Hans) translations
+  Audience: Mainland China, Singapore, Malaysia
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "你的星象地图";
+"auth.signIn.apple" = "通过 Apple 登录";
+"auth.signIn.google" = "通过 Google 继续";
+"auth.useEmail" = "使用电子邮件";
+"auth.signIn" = "登录";
+"auth.createAccount" = "创建账户";
+"auth.forgotPassword" = "忘记密码？";
+"auth.signOut" = "退出登录";
+"auth.email" = "电子邮件";
+"auth.password" = "密码";
+"auth.confirmPassword" = "确认密码";
+"auth.legalDisclaimer" = "继续即表示您同意我们的[服务条款](https://example.com)和[隐私政策](https://example.com)";
+
+// MARK: - Chat
+"chat.placeholder" = "输入消息...";
+"chat.newChat" = "新对话";
+"chat.history" = "对话记录";
+"chat.deleteChat" = "删除对话";
+"chat.deleteAll" = "删除所有对话";
+"chat.emptyState" = "暂无消息";
+"chat.emptyStateSubtitle" = "开始对话后消息将显示在这里";
+"chat.thinking" = "思考中...";
+"chat.copy" = "复制";
+"chat.copied" = "已复制！";
+"chat.retry" = "重试";
+"chat.messagesRemaining %lld" = "剩余 %lld 条消息";
+"chat.today" = "今天";
+"chat.yesterday" = "昨天";
+
+// MARK: - Settings
+"settings.title" = "设置";
+"settings.appearance" = "外观";
+"settings.theme" = "主题";
+"settings.notifications" = "通知";
+"settings.pushNotifications" = "推送通知";
+"settings.privacy" = "隐私";
+"settings.shareDiagnostics" = "共享诊断数据";
+"settings.shareDiagnosticsSubtitle" = "通过分享崩溃报告帮助我们改进应用";
+"settings.account" = "账户";
+"settings.deleteAccount" = "删除账户";
+"settings.legal" = "法律信息";
+"settings.termsOfService" = "服务条款";
+"settings.privacyPolicy" = "隐私政策";
+"settings.about" = "关于";
+"settings.version" = "版本";
+"settings.language" = "语言";
+"settings.languageFooter" = "选择应用语言。选择"系统"以使用设备语言。";
+
+// MARK: - Languages
+"language.system" = "系统";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "系统";
+"theme.light" = "浅色";
+"theme.dark" = "深色";
+"theme.aurora" = "极光";
+"theme.obsidian" = "黑曜石";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "升级到 Pro";
+"payments.restore" = "恢复购买";
+"payments.subscribe" = "订阅";
+"payments.freeTrial" = "免费试用";
+"payments.perMonth" = "每月";
+"payments.perYear" = "每年";
+"payments.bestValue" = "最超值";
+"payments.cancelAnytime" = "随时取消";
+"payments.subscribed" = "已订阅";
+"payments.manageSubscription" = "管理订阅";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "欢迎";
+"onboarding.getStarted" = "开始使用";
+"onboarding.continue" = "继续";
+"onboarding.skip" = "跳过";
+"onboarding.next" = "下一步";
+
+// MARK: - Profile
+"profile.title" = "个人资料";
+"profile.edit" = "编辑资料";
+"profile.changePhoto" = "更换照片";
+"profile.displayName" = "显示名称";
+
+// MARK: - Common
+"common.ok" = "好的";
+"common.cancel" = "取消";
+"common.done" = "完成";
+"common.save" = "保存";
+"common.delete" = "删除";
+"common.edit" = "编辑";
+"common.close" = "关闭";
+"common.loading" = "加载中...";
+"common.tryAgain" = "重试";
+"common.learnMore" = "了解更多";
+
+// MARK: - Errors
+"error.generic" = "出了点问题，请重试。";
+"error.networkOffline" = "您已离线，请检查网络连接。";
+"error.timeout" = "请求超时，请重试。";
+"error.invalidEmail" = "请输入有效的电子邮件地址";
+"error.passwordTooShort" = "密码至少需要8个字符";
+"error.passwordMismatch" = "密码不一致";
+"error.authFailed" = "认证失败";
+"error.purchaseFailed" = "购买失败";
+"error.loadFailed" = "数据加载失败";
+"error.saveFailed" = "保存更改失败";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "发送消息";
+"a11y.sendMessageHint" = "双击发送您的消息";
+"a11y.userMessage" = "您的消息";
+"a11y.assistantMessage" = "助手的消息";
+"a11y.copyMessageHint" = "双击复制消息";
+"a11y.themeSelector" = "主题选择";
+"a11y.signInAppleHint" = "双击使用 Apple ID 登录";
+"a11y.profilePhoto" = "头像";
+"a11y.profilePhotoHint" = "双击更换头像";

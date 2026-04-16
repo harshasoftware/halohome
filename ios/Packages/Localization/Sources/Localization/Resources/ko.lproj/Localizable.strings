@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Korean)
+  AstroCarto
+
+  Korean (ko) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "나만의 우주 지도";
+"auth.signIn.apple" = "Apple로 로그인";
+"auth.signIn.google" = "Google로 계속하기";
+"auth.useEmail" = "이메일 사용";
+"auth.signIn" = "로그인";
+"auth.createAccount" = "계정 만들기";
+"auth.forgotPassword" = "비밀번호를 잊으셨나요?";
+"auth.signOut" = "로그아웃";
+"auth.email" = "이메일";
+"auth.password" = "비밀번호";
+"auth.confirmPassword" = "비밀번호 확인";
+"auth.legalDisclaimer" = "계속하면 [이용약관](https://example.com) 및 [개인정보처리방침](https://example.com)에 동의하게 됩니다";
+
+// MARK: - Chat
+"chat.placeholder" = "메시지 입력...";
+"chat.newChat" = "새 채팅";
+"chat.history" = "채팅 기록";
+"chat.deleteChat" = "채팅 삭제";
+"chat.deleteAll" = "모든 채팅 삭제";
+"chat.emptyState" = "아직 메시지가 없습니다";
+"chat.emptyStateSubtitle" = "대화를 시작하면 메시지가 여기에 표시됩니다";
+"chat.thinking" = "생각 중...";
+"chat.copy" = "복사";
+"chat.copied" = "복사됨!";
+"chat.retry" = "다시 시도";
+"chat.messagesRemaining %lld" = "남은 메시지 %lld개";
+"chat.today" = "오늘";
+"chat.yesterday" = "어제";
+
+// MARK: - Settings
+"settings.title" = "설정";
+"settings.appearance" = "외관";
+"settings.theme" = "테마";
+"settings.notifications" = "알림";
+"settings.pushNotifications" = "푸시 알림";
+"settings.privacy" = "개인정보";
+"settings.shareDiagnostics" = "진단 데이터 공유";
+"settings.shareDiagnosticsSubtitle" = "충돌 보고서를 공유하여 앱 개선에 도움을 주세요";
+"settings.account" = "계정";
+"settings.deleteAccount" = "계정 삭제";
+"settings.legal" = "법적 정보";
+"settings.termsOfService" = "이용약관";
+"settings.privacyPolicy" = "개인정보처리방침";
+"settings.about" = "정보";
+"settings.version" = "버전";
+"settings.language" = "언어";
+"settings.languageFooter" = "앱 언어를 선택하세요. 기기 언어를 사용하려면 '시스템'을 선택하세요.";
+
+// MARK: - Languages
+"language.system" = "시스템";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "시스템";
+"theme.light" = "라이트";
+"theme.dark" = "다크";
+"theme.aurora" = "오로라";
+"theme.obsidian" = "옵시디언";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Pro로 업그레이드";
+"payments.restore" = "구매 복원";
+"payments.subscribe" = "구독하기";
+"payments.freeTrial" = "무료 체험";
+"payments.perMonth" = "월";
+"payments.perYear" = "연";
+"payments.bestValue" = "최고 혜택";
+"payments.cancelAnytime" = "언제든 해지 가능";
+"payments.subscribed" = "구독 중";
+"payments.manageSubscription" = "구독 관리";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "환영합니다";
+"onboarding.getStarted" = "시작하기";
+"onboarding.continue" = "계속";
+"onboarding.skip" = "건너뛰기";
+"onboarding.next" = "다음";
+
+// MARK: - Profile
+"profile.title" = "프로필";
+"profile.edit" = "프로필 편집";
+"profile.changePhoto" = "사진 변경";
+"profile.displayName" = "표시 이름";
+
+// MARK: - Common
+"common.ok" = "확인";
+"common.cancel" = "취소";
+"common.done" = "완료";
+"common.save" = "저장";
+"common.delete" = "삭제";
+"common.edit" = "편집";
+"common.close" = "닫기";
+"common.loading" = "로딩 중...";
+"common.tryAgain" = "다시 시도";
+"common.learnMore" = "자세히 보기";
+
+// MARK: - Errors
+"error.generic" = "문제가 발생했습니다. 다시 시도해 주세요.";
+"error.networkOffline" = "오프라인 상태입니다. 인터넷 연결을 확인해 주세요.";
+"error.timeout" = "요청 시간이 초과되었습니다. 다시 시도해 주세요.";
+"error.invalidEmail" = "유효한 이메일 주소를 입력해 주세요";
+"error.passwordTooShort" = "비밀번호는 8자 이상이어야 합니다";
+"error.passwordMismatch" = "비밀번호가 일치하지 않습니다";
+"error.authFailed" = "인증 실패";
+"error.purchaseFailed" = "구매 실패";
+"error.loadFailed" = "데이터를 불러오지 못했습니다";
+"error.saveFailed" = "변경사항을 저장하지 못했습니다";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "메시지 보내기";
+"a11y.sendMessageHint" = "이중 탭하여 메시지를 보냅니다";
+"a11y.userMessage" = "내 메시지";
+"a11y.assistantMessage" = "어시스턴트 메시지";
+"a11y.copyMessageHint" = "이중 탭하여 메시지를 복사합니다";
+"a11y.themeSelector" = "테마 선택";
+"a11y.signInAppleHint" = "이중 탭하여 Apple ID로 로그인합니다";
+"a11y.profilePhoto" = "프로필 사진";
+"a11y.profilePhotoHint" = "이중 탭하여 프로필 사진을 변경합니다";

@@ -1,0 +1,138 @@
+{
+  "project": {
+    "name": "AstroCarto",
+    "type": "ios",
+    "framework": "swiftui",
+    "version": "1.2.1",
+    "language": "swift",
+    "packageManager": "spm",
+    "xcodeProject": "AstroCarto.xcodeproj"
+  },
+  "bolt": {
+    "version": "0.8.x",
+    "aiModel": "claude-3.5-sonnet",
+    "context": {
+      "rulesPath": ".cursor/rules/",
+      "docsPath": "docs/",
+      "configPath": ".bolt/config.json"
+    },
+    "features": {
+      "codeGeneration": true,
+      "fileManagement": true,
+      "terminalCommands": true,
+      "packageManagement": false,
+      "gitIntegration": true,
+      "livePreview": false
+    }
+  },
+  "workspace": {
+    "rootDirectory": "./",
+    "appDirectory": "AstroCarto/",
+    "packagesDirectory": "Packages/",
+    "configDirectory": "Config/",
+    "docsDirectory": "docs/",
+    "testsDirectory": "AstroCartoTests/",
+    "configFiles": [
+      "AstroCarto.xcodeproj",
+      "Config/App.xcconfig",
+      "Config/Secrets.xcconfig",
+      "Packages/**/Package.swift"
+    ]
+  },
+  "development": {
+    "xcode": {
+      "version": "15.0+",
+      "simulator": "iPhone 15 Pro",
+      "deployment": "iOS 17.0+"
+    },
+    "buildConfiguration": "Debug",
+    "simulatorTesting": true,
+    "deviceTesting": true,
+    "hotReload": true
+  },
+  "build": {
+    "configuration": "Release",
+    "optimization": "speed",
+    "bitcode": false,
+    "swiftOptimization": "-O",
+    "debugSymbols": true
+  },
+  "environment": {
+    "swift": "5.9+",
+    "xcode": "15.0+",
+    "ios": "17.0+",
+    "macos": "14.0+",
+    "variables": {
+      "CONFIGURATION_BUILD_DIR": "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"
+    }
+  },
+  "ai": {
+    "codeStyle": {
+      "indentation": 2,
+      "lineLength": 120,
+      "trailingCommas": false,
+      "swiftFormatting": "default"
+    },
+    "preferences": {
+      "architecture": "mvvm",
+      "stateManagement": "observable-objects",
+      "dataLayer": "repository-pattern",
+      "dependencyInjection": "protocol-based",
+      "concurrency": "async-await",
+      "errorHandling": "result-type-and-throws"
+    },
+    "patterns": {
+      "views": "small-and-composed",
+      "viewModels": "mainactor-observable",
+      "repositories": "protocol-based",
+      "services": "dependency-injected",
+      "testing": "mock-protocols",
+      "logging": "oslog-structured"
+    }
+  },
+  "testing": {
+    "unitTests": true,
+    "snapshotTests": false,
+    "uiTests": true,
+    "integrationTests": true,
+    "coverage": {
+      "enabled": true,
+      "target": 70
+    }
+  },
+  "deployment": {
+    "platform": "ios",
+    "minimumVersion": "17.0",
+    "devices": ["iPhone", "iPad"],
+    "distribution": "app-store",
+    "signing": "automatic",
+    "provisioning": "automatic"
+  },
+  "integrations": {
+    "supabase": {
+      "enabled": true,
+      "features": ["auth", "database", "storage"]
+    },
+    "revenuecat": {
+      "enabled": true,
+      "features": ["subscriptions", "offerings"]
+    },
+    "firebase": {
+      "enabled": true,
+      "features": ["crashlytics"]
+    }
+  },
+  "monitoring": {
+    "crashReporting": "firebase-crashlytics",
+    "analytics": "optional",
+    "performance": "xcode-instruments",
+    "logging": "oslog"
+  },
+  "security": {
+    "keychain": "enabled",
+    "appTransportSecurity": "default",
+    "dataProtection": "complete-until-first-user-auth",
+    "encryption": "keychain-for-secrets"
+  }
+}
+

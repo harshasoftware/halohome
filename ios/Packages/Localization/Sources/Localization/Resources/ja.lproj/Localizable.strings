@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Japanese)
+  AstroCarto
+
+  Japanese (ja) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "あなたの宇宙地図";
+"auth.signIn.apple" = "Appleでサインイン";
+"auth.signIn.google" = "Googleで続ける";
+"auth.useEmail" = "メールアドレスを使用";
+"auth.signIn" = "サインイン";
+"auth.createAccount" = "アカウント作成";
+"auth.forgotPassword" = "パスワードをお忘れですか？";
+"auth.signOut" = "サインアウト";
+"auth.email" = "メールアドレス";
+"auth.password" = "パスワード";
+"auth.confirmPassword" = "パスワード確認";
+"auth.legalDisclaimer" = "続行すると、[利用規約](https://example.com)と[プライバシーポリシー](https://example.com)に同意したことになります";
+
+// MARK: - Chat
+"chat.placeholder" = "メッセージを入力...";
+"chat.newChat" = "新しいチャット";
+"chat.history" = "チャット履歴";
+"chat.deleteChat" = "チャットを削除";
+"chat.deleteAll" = "すべてのチャットを削除";
+"chat.emptyState" = "メッセージはまだありません";
+"chat.emptyStateSubtitle" = "会話を始めるとメッセージがここに表示されます";
+"chat.thinking" = "考え中...";
+"chat.copy" = "コピー";
+"chat.copied" = "コピーしました！";
+"chat.retry" = "再試行";
+"chat.messagesRemaining %lld" = "残りメッセージ %lld件";
+"chat.today" = "今日";
+"chat.yesterday" = "昨日";
+
+// MARK: - Settings
+"settings.title" = "設定";
+"settings.appearance" = "外観";
+"settings.theme" = "テーマ";
+"settings.notifications" = "通知";
+"settings.pushNotifications" = "プッシュ通知";
+"settings.privacy" = "プライバシー";
+"settings.shareDiagnostics" = "診断データを共有";
+"settings.shareDiagnosticsSubtitle" = "クラッシュレポートを共有してアプリの改善にご協力ください";
+"settings.account" = "アカウント";
+"settings.deleteAccount" = "アカウントを削除";
+"settings.legal" = "法的情報";
+"settings.termsOfService" = "利用規約";
+"settings.privacyPolicy" = "プライバシーポリシー";
+"settings.about" = "このアプリについて";
+"settings.version" = "バージョン";
+"settings.language" = "言語";
+"settings.languageFooter" = "アプリの言語を選択します。「システム」を選ぶとデバイスの言語が使用されます。";
+
+// MARK: - Languages
+"language.system" = "システム";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "システム";
+"theme.light" = "ライト";
+"theme.dark" = "ダーク";
+"theme.aurora" = "オーロラ";
+"theme.obsidian" = "オブシディアン";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Proにアップグレード";
+"payments.restore" = "購入を復元";
+"payments.subscribe" = "登録する";
+"payments.freeTrial" = "無料トライアル";
+"payments.perMonth" = "月額";
+"payments.perYear" = "年額";
+"payments.bestValue" = "お得なプラン";
+"payments.cancelAnytime" = "いつでもキャンセル可能";
+"payments.subscribed" = "登録済み";
+"payments.manageSubscription" = "サブスクリプション管理";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "ようこそ";
+"onboarding.getStarted" = "始める";
+"onboarding.continue" = "続ける";
+"onboarding.skip" = "スキップ";
+"onboarding.next" = "次へ";
+
+// MARK: - Profile
+"profile.title" = "プロフィール";
+"profile.edit" = "プロフィール編集";
+"profile.changePhoto" = "写真を変更";
+"profile.displayName" = "表示名";
+
+// MARK: - Common
+"common.ok" = "OK";
+"common.cancel" = "キャンセル";
+"common.done" = "完了";
+"common.save" = "保存";
+"common.delete" = "削除";
+"common.edit" = "編集";
+"common.close" = "閉じる";
+"common.loading" = "読み込み中...";
+"common.tryAgain" = "再試行";
+"common.learnMore" = "詳しく見る";
+
+// MARK: - Errors
+"error.generic" = "問題が発生しました。もう一度お試しください。";
+"error.networkOffline" = "オフラインです。インターネット接続を確認してください。";
+"error.timeout" = "リクエストがタイムアウトしました。もう一度お試しください。";
+"error.invalidEmail" = "有効なメールアドレスを入力してください";
+"error.passwordTooShort" = "パスワードは8文字以上で入力してください";
+"error.passwordMismatch" = "パスワードが一致しません";
+"error.authFailed" = "認証に失敗しました";
+"error.purchaseFailed" = "購入に失敗しました";
+"error.loadFailed" = "データの読み込みに失敗しました";
+"error.saveFailed" = "変更の保存に失敗しました";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "メッセージを送信";
+"a11y.sendMessageHint" = "ダブルタップでメッセージを送信します";
+"a11y.userMessage" = "あなたのメッセージ";
+"a11y.assistantMessage" = "アシスタントのメッセージ";
+"a11y.copyMessageHint" = "ダブルタップでメッセージをコピーします";
+"a11y.themeSelector" = "テーマ選択";
+"a11y.signInAppleHint" = "ダブルタップでApple IDを使ってサインインします";
+"a11y.profilePhoto" = "プロフィール写真";
+"a11y.profilePhotoHint" = "ダブルタップでプロフィール写真を変更します";

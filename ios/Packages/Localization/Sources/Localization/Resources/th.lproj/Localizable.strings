@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Thai)
+  AstroCarto
+
+  Thai (th) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "แผนที่จักรวาลของคุณ";
+"auth.signIn.apple" = "ลงชื่อเข้าใช้ด้วย Apple";
+"auth.signIn.google" = "ดำเนินการต่อด้วย Google";
+"auth.useEmail" = "ใช้อีเมล";
+"auth.signIn" = "ลงชื่อเข้าใช้";
+"auth.createAccount" = "สร้างบัญชี";
+"auth.forgotPassword" = "ลืมรหัสผ่าน?";
+"auth.signOut" = "ออกจากระบบ";
+"auth.email" = "อีเมล";
+"auth.password" = "รหัสผ่าน";
+"auth.confirmPassword" = "ยืนยันรหัสผ่าน";
+"auth.legalDisclaimer" = "เมื่อดำเนินการต่อ คุณยอมรับ[ข้อกำหนด](https://example.com)และ[นโยบายความเป็นส่วนตัว](https://example.com)ของเรา";
+
+// MARK: - Chat
+"chat.placeholder" = "พิมพ์ข้อความ...";
+"chat.newChat" = "แชทใหม่";
+"chat.history" = "ประวัติแชท";
+"chat.deleteChat" = "ลบแชท";
+"chat.deleteAll" = "ลบแชททั้งหมด";
+"chat.emptyState" = "ยังไม่มีข้อความ";
+"chat.emptyStateSubtitle" = "เริ่มการสนทนาเพื่อดูข้อความที่นี่";
+"chat.thinking" = "กำลังคิด...";
+"chat.copy" = "คัดลอก";
+"chat.copied" = "คัดลอกแล้ว!";
+"chat.retry" = "ลองอีกครั้ง";
+"chat.messagesRemaining %lld" = "เหลือข้อความ %lld ข้อความ";
+"chat.today" = "วันนี้";
+"chat.yesterday" = "เมื่อวาน";
+
+// MARK: - Settings
+"settings.title" = "การตั้งค่า";
+"settings.appearance" = "รูปลักษณ์";
+"settings.theme" = "ธีม";
+"settings.notifications" = "การแจ้งเตือน";
+"settings.pushNotifications" = "การแจ้งเตือนแบบพุช";
+"settings.privacy" = "ความเป็นส่วนตัว";
+"settings.shareDiagnostics" = "แชร์ข้อมูลการวินิจฉัย";
+"settings.shareDiagnosticsSubtitle" = "ช่วยเราปรับปรุงโดยแชร์รายงานข้อผิดพลาด";
+"settings.account" = "บัญชี";
+"settings.deleteAccount" = "ลบบัญชี";
+"settings.legal" = "ข้อกฎหมาย";
+"settings.termsOfService" = "ข้อกำหนดการใช้บริการ";
+"settings.privacyPolicy" = "นโยบายความเป็นส่วนตัว";
+"settings.about" = "เกี่ยวกับ";
+"settings.version" = "เวอร์ชัน";
+"settings.language" = "ภาษา";
+"settings.languageFooter" = "เลือกภาษาของแอป เลือก 'ระบบ' เพื่อใช้ภาษาของอุปกรณ์";
+
+// MARK: - Languages
+"language.system" = "ระบบ";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "ระบบ";
+"theme.light" = "สว่าง";
+"theme.dark" = "มืด";
+"theme.aurora" = "ออโรร่า";
+"theme.obsidian" = "ออบซิเดียน";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "อัปเกรดเป็น Pro";
+"payments.restore" = "กู้คืนการซื้อ";
+"payments.subscribe" = "สมัครสมาชิก";
+"payments.freeTrial" = "ทดลองใช้ฟรี";
+"payments.perMonth" = "ต่อเดือน";
+"payments.perYear" = "ต่อปี";
+"payments.bestValue" = "คุ้มค่าที่สุด";
+"payments.cancelAnytime" = "ยกเลิกได้ทุกเมื่อ";
+"payments.subscribed" = "สมัครแล้ว";
+"payments.manageSubscription" = "จัดการการสมัครสมาชิก";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "ยินดีต้อนรับ";
+"onboarding.getStarted" = "เริ่มต้น";
+"onboarding.continue" = "ดำเนินการต่อ";
+"onboarding.skip" = "ข้าม";
+"onboarding.next" = "ถัดไป";
+
+// MARK: - Profile
+"profile.title" = "โปรไฟล์";
+"profile.edit" = "แก้ไขโปรไฟล์";
+"profile.changePhoto" = "เปลี่ยนรูปภาพ";
+"profile.displayName" = "ชื่อที่แสดง";
+
+// MARK: - Common
+"common.ok" = "ตกลง";
+"common.cancel" = "ยกเลิก";
+"common.done" = "เสร็จ";
+"common.save" = "บันทึก";
+"common.delete" = "ลบ";
+"common.edit" = "แก้ไข";
+"common.close" = "ปิด";
+"common.loading" = "กำลังโหลด...";
+"common.tryAgain" = "ลองอีกครั้ง";
+"common.learnMore" = "เรียนรู้เพิ่มเติม";
+
+// MARK: - Errors
+"error.generic" = "เกิดข้อผิดพลาด กรุณาลองอีกครั้ง";
+"error.networkOffline" = "คุณออฟไลน์อยู่ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
+"error.timeout" = "หมดเวลาร้องขอ กรุณาลองอีกครั้ง";
+"error.invalidEmail" = "กรุณากรอกอีเมลที่ถูกต้อง";
+"error.passwordTooShort" = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
+"error.passwordMismatch" = "รหัสผ่านไม่ตรงกัน";
+"error.authFailed" = "การยืนยันตัวตนล้มเหลว";
+"error.purchaseFailed" = "การซื้อล้มเหลว";
+"error.loadFailed" = "ไม่สามารถโหลดข้อมูลได้";
+"error.saveFailed" = "ไม่สามารถบันทึกการเปลี่ยนแปลงได้";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "ส่งข้อความ";
+"a11y.sendMessageHint" = "แตะสองครั้งเพื่อส่งข้อความ";
+"a11y.userMessage" = "ข้อความของคุณ";
+"a11y.assistantMessage" = "ข้อความจากผู้ช่วย";
+"a11y.copyMessageHint" = "แตะสองครั้งเพื่อคัดลอกข้อความ";
+"a11y.themeSelector" = "ตัวเลือกธีม";
+"a11y.signInAppleHint" = "แตะสองครั้งเพื่อลงชื่อเข้าใช้ด้วย Apple ID";
+"a11y.profilePhoto" = "รูปโปรไฟล์";
+"a11y.profilePhotoHint" = "แตะสองครั้งเพื่อเปลี่ยนรูปโปรไฟล์";

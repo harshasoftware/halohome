@@ -1,0 +1,4 @@
+// App.xcconfig — Base configuration for CartoStar
+// Includes secrets (API keys, tokens) from Secrets.xcconfig
+
+#include "Secrets.xcconfig"

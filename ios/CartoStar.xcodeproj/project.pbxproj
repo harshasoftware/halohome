@@ -1,0 +1,1315 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0402836D19E10F8E31A8F852 /* CartoStarCore in Frameworks */ = {isa = PBXBuildFile; productRef = 970DF1FD6EABFBC21E72130B /* CartoStarCore */; };
+		190888DD2F6869DE00104895 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 190888DC2F6869DE00104895 /* FirebaseAnalyticsCore */; };
+		190888DF2F6869DE00104895 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 190888DE2F6869DE00104895 /* FirebaseCore */; };
+		190888E12F6869DE00104895 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 190888E02F6869DE00104895 /* FirebaseCrashlytics */; };
+		190888E32F6869DE00104895 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 190888E22F6869DE00104895 /* FirebaseAnalytics */; };
+		190888E52F6869DE00104895 /* FirebasePerformance in Frameworks */ = {isa = PBXBuildFile; productRef = 190888E42F6869DE00104895 /* FirebasePerformance */; };
+		192D73052F7524FF0006F1B9 /* Singular in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B00A /* Singular */; };
+		192D73F22F7527650006F1B9 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 192D73F12F7527650006F1B9 /* PostHog */; };
+		1A8223F2392003AB16118973 /* FeatureGlobe in Frameworks */ = {isa = PBXBuildFile; productRef = 011A14033953BCB880C8311E /* FeatureGlobe */; };
+		2648954FF536CDFCEA0D5D9C /* FeatureScout in Frameworks */ = {isa = PBXBuildFile; productRef = 9EA45367DA0879864918140B /* FeatureScout */; };
+		2F000E1C283249EB2E0E3A1E /* FeatureBirthData in Frameworks */ = {isa = PBXBuildFile; productRef = 8760964A60047F6FE395EDC7 /* FeatureBirthData */; };
+		4A7007332F0BC245087A3356 /* FeatureOnboarding in Frameworks */ = {isa = PBXBuildFile; productRef = 764653AAD6B02E4194E74FD8 /* FeatureOnboarding */; };
+		9433050E2E662BC0008485E6 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 9433050D2E662BBB008485E6 /* .gitignore */; };
+		9433051F2E663366008485E6 /* CartoStar.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 9433051E2E663366008485E6 /* CartoStar.xctestplan */; };
+		943F04B02EE5E1500062A816 /* OneSignalFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 943F04AF2EE5E1500062A816 /* OneSignalFramework */; };
+		94A03A4B2E8B173B003E6915 /* AI in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A4A2E8B173B003E6915 /* AI */; };
+		94A03A4D2E8B173B003E6915 /* CartoAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A4C2E8B173B003E6915 /* CartoAuth */; };
+		94A03A4F2E8B173B003E6915 /* Core in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A4E2E8B173B003E6915 /* Core */; };
+		94A03A512E8B173B003E6915 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A502E8B173B003E6915 /* DesignSystem */; };
+		94A03A532E8B173B003E6915 /* FeatureChat in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A522E8B173B003E6915 /* FeatureChat */; };
+		94A03A552E8B173B003E6915 /* FeatureSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A542E8B173B003E6915 /* FeatureSettings */; };
+		94A03A572E8B173B003E6915 /* Networking in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A562E8B173B003E6915 /* Networking */; };
+		94A03A592E8B173B003E6915 /* Payments in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A582E8B173B003E6915 /* Payments */; };
+		94A03A5B2E8B173B003E6915 /* CartoStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 94A03A5A2E8B173B003E6915 /* CartoStorage */; };
+		A1B2C3D4E5F601020304C001 /* Adapty in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B001 /* Adapty */; };
+		A1B2C3D4E5F601020304C002 /* AdaptyUI in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B002 /* AdaptyUI */; };
+		A1B2C3D4E5F601020304C003 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B003 /* GoogleSignIn */; };
+		A1B2C3D4E5F601020304C004 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B004 /* Supabase */; };
+		A1B2C3D4E5F601020304C005 /* MapboxMaps in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B005 /* MapboxMaps */; };
+		A1B2C3D4E5F601020304C006 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B006 /* Lottie */; };
+		A1B2C3D4E5F601020304C007 /* ConcentricOnboarding in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B007 /* ConcentricOnboarding */; };
+		A1B2C3D4E5F601020304C008 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B008 /* ConfettiSwiftUI */; };
+		A1B2C3D4E5F601020304C009 /* FeatureJournaling in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F601020304B009 /* FeatureJournaling */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		943304E92E6628CA008485E6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 943304D12E6628C8008485E6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 943304D82E6628C8008485E6;
+			remoteInfo = CartoStar;
+		};
+		943304F32E6628CA008485E6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 943304D12E6628C8008485E6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 943304D82E6628C8008485E6;
+			remoteInfo = CartoStar;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		943F04AA2EE46FC10062A816 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		943304D92E6628C8008485E6 /* CartoStar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CartoStar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		943304E82E6628CA008485E6 /* CartoStarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartoStarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		943304F22E6628CA008485E6 /* CartoStarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartoStarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		943305052E662910008485E6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		943305072E662940008485E6 /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
+		9433050D2E662BBB008485E6 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		9433051E2E663366008485E6 /* CartoStar.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CartoStar.xctestplan; sourceTree = "<group>"; };
+		949AD49F2EA3B3F9007FE07E /* Architecture.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Architecture.md; sourceTree = "<group>"; };
+		949AD4A02EA3B3F9007FE07E /* Composition.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Composition.md; sourceTree = "<group>"; };
+		949AD4A12EA3B3F9007FE07E /* DesignSystem.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DesignSystem.md; sourceTree = "<group>"; };
+		949AD4A22EA3B3F9007FE07E /* TestingStrategy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TestingStrategy.md; sourceTree = "<group>"; };
+		949AD4A52EA3B3F9007FE07E /* ChatSync.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ChatSync.md; sourceTree = "<group>"; };
+		949AD4A62EA3B3F9007FE07E /* Crashlytics.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Crashlytics.md; sourceTree = "<group>"; };
+		949AD4A72EA3B3F9007FE07E /* ProfilePhotos.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ProfilePhotos.md; sourceTree = "<group>"; };
+		949AD4A82EA3B3F9007FE07E /* RevenueCat.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = RevenueCat.md; sourceTree = "<group>"; };
+		949AD4A92EA3B3F9007FE07E /* Supabase.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Supabase.md; sourceTree = "<group>"; };
+		949AD4AB2EA3B3F9007FE07E /* Changelog.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Changelog.md; sourceTree = "<group>"; };
+		949AD4AC2EA3B3F9007FE07E /* README_PRUNE_PLAN.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README_PRUNE_PLAN.md; sourceTree = "<group>"; };
+		949AD4AD2EA3B3F9007FE07E /* ReleaseProcess.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ReleaseProcess.md; sourceTree = "<group>"; };
+		949AD4AF2EA3B3F9007FE07E /* 1.0.0.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = 1.0.0.md; sourceTree = "<group>"; };
+		949AD4B12EA3B3F9007FE07E /* _TEMPLATE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = _TEMPLATE.md; sourceTree = "<group>"; };
+		949AD4B22EA3B3F9007FE07E /* AI.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI.md; sourceTree = "<group>"; };
+		949AD4B32EA3B3F9007FE07E /* Auth.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Auth.md; sourceTree = "<group>"; };
+		949AD4B42EA3B3F9007FE07E /* Core.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Core.md; sourceTree = "<group>"; };
+		949AD4B52EA3B3F9007FE07E /* DesignSystem.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DesignSystem.md; sourceTree = "<group>"; };
+		949AD4B62EA3B3F9007FE07E /* Feature.Chat.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Feature.Chat.md; sourceTree = "<group>"; };
+		949AD4B72EA3B3F9007FE07E /* Feature.Settings.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Feature.Settings.md; sourceTree = "<group>"; };
+		949AD4B82EA3B3F9007FE07E /* HomeViewModule.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HomeViewModule.md; sourceTree = "<group>"; };
+		949AD4B92EA3B3F9007FE07E /* Networking.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Networking.md; sourceTree = "<group>"; };
+		949AD4BA2EA3B3F9007FE07E /* OnboardingModule.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = OnboardingModule.md; sourceTree = "<group>"; };
+		949AD4BB2EA3B3F9007FE07E /* Payments.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Payments.md; sourceTree = "<group>"; };
+		949AD4BC2EA3B3F9007FE07E /* Storage.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Storage.md; sourceTree = "<group>"; };
+		949AD4BE2EA3B3F9007FE07E /* Feature.Chat.prompts.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Feature.Chat.prompts.md; sourceTree = "<group>"; };
+		949AD4BF2EA3B3F9007FE07E /* Feature.Payments.prompts.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Feature.Payments.prompts.md; sourceTree = "<group>"; };
+		949AD4C02EA3B3F9007FE07E /* Feature.Settings.prompts.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Feature.Settings.prompts.md; sourceTree = "<group>"; };
+		949AD4C12EA3B3F9007FE07E /* HomeViewModule.prompts.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = HomeViewModule.prompts.md; sourceTree = "<group>"; };
+		949AD4C22EA3B3F9007FE07E /* OnboardingModule.prompts.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = OnboardingModule.prompts.md; sourceTree = "<group>"; };
+		949AD4C32EA3B3F9007FE07E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		949AD4C52EA3B3F9007FE07E /* AppIconsAndBranding.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppIconsAndBranding.md; sourceTree = "<group>"; };
+		949AD4C62EA3B3F9007FE07E /* DeepLinks.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DeepLinks.md; sourceTree = "<group>"; };
+		949AD4C72EA3B3F9007FE07E /* Theming.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Theming.md; sourceTree = "<group>"; };
+		949AD4C82EA3B3F9007FE07E /* WhiteLabeling.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = WhiteLabeling.md; sourceTree = "<group>"; };
+		949AD4CA2EA3B3F9007FE07E /* INDEX.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = INDEX.md; sourceTree = "<group>"; };
+		94AE02FE2EA14C5A00BF72F7 /* BUILDING_YOUR_APP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = BUILDING_YOUR_APP.md; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		94A03A5C2E8B1A44003E6915 /* Exceptions for "Config" folder in "CartoStar" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				App.xcconfig,
+				Secrets.example.xcconfig,
+				Secrets.xcconfig,
+			);
+			target = 943304D82E6628C8008485E6 /* CartoStar */;
+		};
+		94A03A5D2E8B1A44003E6916 /* Exceptions for "CartoStar" folder in "CartoStar" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 943304D82E6628C8008485E6 /* CartoStar */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		943304DB2E6628C8008485E6 /* CartoStar */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				94A03A5D2E8B1A44003E6916 /* Exceptions for "CartoStar" folder in "CartoStar" target */,
+			);
+			path = CartoStar;
+			sourceTree = "<group>";
+		};
+		943304EB2E6628CA008485E6 /* CartoStarTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CartoStarTests;
+			sourceTree = "<group>";
+		};
+		943304F52E6628CA008485E6 /* CartoStarUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CartoStarUITests;
+			sourceTree = "<group>";
+		};
+		943305122E663026008485E6 /* Config */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				94A03A5C2E8B1A44003E6915 /* Exceptions for "Config" folder in "CartoStar" target */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		943305202E6634C1008485E6 /* Packages */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		943F049F2EE46FC10062A816 /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OneSignalNotificationServiceExtension;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		943304D62E6628C8008485E6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				192D73052F7524FF0006F1B9 /* Singular in Frameworks */,
+				94A03A532E8B173B003E6915 /* FeatureChat in Frameworks */,
+				94A03A592E8B173B003E6915 /* Payments in Frameworks */,
+				190888DD2F6869DE00104895 /* FirebaseAnalyticsCore in Frameworks */,
+				94A03A4D2E8B173B003E6915 /* CartoAuth in Frameworks */,
+				94A03A552E8B173B003E6915 /* FeatureSettings in Frameworks */,
+				943F04B02EE5E1500062A816 /* OneSignalFramework in Frameworks */,
+				94A03A4B2E8B173B003E6915 /* AI in Frameworks */,
+				94A03A4F2E8B173B003E6915 /* Core in Frameworks */,
+				190888DF2F6869DE00104895 /* FirebaseCore in Frameworks */,
+				94A03A5B2E8B173B003E6915 /* CartoStorage in Frameworks */,
+				192D73F22F7527650006F1B9 /* PostHog in Frameworks */,
+				94A03A572E8B173B003E6915 /* Networking in Frameworks */,
+				94A03A512E8B173B003E6915 /* DesignSystem in Frameworks */,
+				1A8223F2392003AB16118973 /* FeatureGlobe in Frameworks */,
+				2F000E1C283249EB2E0E3A1E /* FeatureBirthData in Frameworks */,
+				2648954FF536CDFCEA0D5D9C /* FeatureScout in Frameworks */,
+				0402836D19E10F8E31A8F852 /* CartoStarCore in Frameworks */,
+				4A7007332F0BC245087A3356 /* FeatureOnboarding in Frameworks */,
+				A1B2C3D4E5F601020304C001 /* Adapty in Frameworks */,
+				A1B2C3D4E5F601020304C002 /* AdaptyUI in Frameworks */,
+				A1B2C3D4E5F601020304C003 /* GoogleSignIn in Frameworks */,
+				A1B2C3D4E5F601020304C004 /* Supabase in Frameworks */,
+				A1B2C3D4E5F601020304C005 /* MapboxMaps in Frameworks */,
+				A1B2C3D4E5F601020304C006 /* Lottie in Frameworks */,
+				A1B2C3D4E5F601020304C007 /* ConcentricOnboarding in Frameworks */,
+				190888E12F6869DE00104895 /* FirebaseCrashlytics in Frameworks */,
+				190888E32F6869DE00104895 /* FirebaseAnalytics in Frameworks */,
+				190888E52F6869DE00104895 /* FirebasePerformance in Frameworks */,
+				A1B2C3D4E5F601020304C008 /* ConfettiSwiftUI in Frameworks */,
+				A1B2C3D4E5F601020304C009 /* FeatureJournaling in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		943304E52E6628CA008485E6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		943304EF2E6628CA008485E6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		943304D02E6628C8008485E6 = {
+			isa = PBXGroup;
+			children = (
+				9433051E2E663366008485E6 /* CartoStar.xctestplan */,
+				943305122E663026008485E6 /* Config */,
+				943305202E6634C1008485E6 /* Packages */,
+				9433050D2E662BBB008485E6 /* .gitignore */,
+				949AD4CB2EA3B3F9007FE07E /* docs */,
+				943305052E662910008485E6 /* README.md */,
+				943304DB2E6628C8008485E6 /* CartoStar */,
+				943304EB2E6628CA008485E6 /* CartoStarTests */,
+				943304F52E6628CA008485E6 /* CartoStarUITests */,
+				943F049F2EE46FC10062A816 /* OneSignalNotificationServiceExtension */,
+				945DFD6A2E6769750048EEE2 /* Frameworks */,
+				943304DA2E6628C8008485E6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		943304DA2E6628C8008485E6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				943304D92E6628C8008485E6 /* CartoStar.app */,
+				943304E82E6628CA008485E6 /* CartoStarTests.xctest */,
+				943304F22E6628CA008485E6 /* CartoStarUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		945DFD6A2E6769750048EEE2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		949AD4A32EA3B3F9007FE07E /* foundations */ = {
+			isa = PBXGroup;
+			children = (
+				949AD49F2EA3B3F9007FE07E /* Architecture.md */,
+				949AD4A02EA3B3F9007FE07E /* Composition.md */,
+				949AD4A12EA3B3F9007FE07E /* DesignSystem.md */,
+				949AD4A22EA3B3F9007FE07E /* TestingStrategy.md */,
+			);
+			path = foundations;
+			sourceTree = "<group>";
+		};
+		949AD4AA2EA3B3F9007FE07E /* integrations */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4A52EA3B3F9007FE07E /* ChatSync.md */,
+				949AD4A62EA3B3F9007FE07E /* Crashlytics.md */,
+				949AD4A72EA3B3F9007FE07E /* ProfilePhotos.md */,
+				949AD4A82EA3B3F9007FE07E /* RevenueCat.md */,
+				949AD4A92EA3B3F9007FE07E /* Supabase.md */,
+			);
+			path = integrations;
+			sourceTree = "<group>";
+		};
+		949AD4AE2EA3B3F9007FE07E /* maintenance */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4AB2EA3B3F9007FE07E /* Changelog.md */,
+				949AD4AC2EA3B3F9007FE07E /* README_PRUNE_PLAN.md */,
+				949AD4AD2EA3B3F9007FE07E /* ReleaseProcess.md */,
+			);
+			path = maintenance;
+			sourceTree = "<group>";
+		};
+		949AD4B02EA3B3F9007FE07E /* migrations */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4AF2EA3B3F9007FE07E /* 1.0.0.md */,
+			);
+			path = migrations;
+			sourceTree = "<group>";
+		};
+		949AD4BD2EA3B3F9007FE07E /* modules */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4B12EA3B3F9007FE07E /* _TEMPLATE.md */,
+				949AD4B22EA3B3F9007FE07E /* AI.md */,
+				949AD4B32EA3B3F9007FE07E /* Auth.md */,
+				949AD4B42EA3B3F9007FE07E /* Core.md */,
+				949AD4B52EA3B3F9007FE07E /* DesignSystem.md */,
+				949AD4B62EA3B3F9007FE07E /* Feature.Chat.md */,
+				949AD4B72EA3B3F9007FE07E /* Feature.Settings.md */,
+				949AD4B82EA3B3F9007FE07E /* HomeViewModule.md */,
+				949AD4B92EA3B3F9007FE07E /* Networking.md */,
+				949AD4BA2EA3B3F9007FE07E /* OnboardingModule.md */,
+				949AD4BB2EA3B3F9007FE07E /* Payments.md */,
+				949AD4BC2EA3B3F9007FE07E /* Storage.md */,
+			);
+			path = modules;
+			sourceTree = "<group>";
+		};
+		949AD4C42EA3B3F9007FE07E /* prompts */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4BE2EA3B3F9007FE07E /* Feature.Chat.prompts.md */,
+				949AD4BF2EA3B3F9007FE07E /* Feature.Payments.prompts.md */,
+				949AD4C02EA3B3F9007FE07E /* Feature.Settings.prompts.md */,
+				949AD4C12EA3B3F9007FE07E /* HomeViewModule.prompts.md */,
+				949AD4C22EA3B3F9007FE07E /* OnboardingModule.prompts.md */,
+				949AD4C32EA3B3F9007FE07E /* README.md */,
+			);
+			path = prompts;
+			sourceTree = "<group>";
+		};
+		949AD4C92EA3B3F9007FE07E /* recipes */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4C52EA3B3F9007FE07E /* AppIconsAndBranding.md */,
+				949AD4C62EA3B3F9007FE07E /* DeepLinks.md */,
+				949AD4C72EA3B3F9007FE07E /* Theming.md */,
+				949AD4C82EA3B3F9007FE07E /* WhiteLabeling.md */,
+			);
+			path = recipes;
+			sourceTree = "<group>";
+		};
+		949AD4CB2EA3B3F9007FE07E /* docs */ = {
+			isa = PBXGroup;
+			children = (
+				949AD4A32EA3B3F9007FE07E /* foundations */,
+				949AD4AA2EA3B3F9007FE07E /* integrations */,
+				949AD4AE2EA3B3F9007FE07E /* maintenance */,
+				949AD4B02EA3B3F9007FE07E /* migrations */,
+				949AD4BD2EA3B3F9007FE07E /* modules */,
+				949AD4C42EA3B3F9007FE07E /* prompts */,
+				949AD4C92EA3B3F9007FE07E /* recipes */,
+				949AD4CA2EA3B3F9007FE07E /* INDEX.md */,
+				943305072E662940008485E6 /* CLAUDE.md */,
+				94AE02FE2EA14C5A00BF72F7 /* BUILDING_YOUR_APP.md */,
+			);
+			path = docs;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		943304D82E6628C8008485E6 /* CartoStar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 943304FC2E6628CA008485E6 /* Build configuration list for PBXNativeTarget "CartoStar" */;
+			buildPhases = (
+				943304D52E6628C8008485E6 /* Sources */,
+				943304D62E6628C8008485E6 /* Frameworks */,
+				943304D72E6628C8008485E6 /* Resources */,
+				943F04AA2EE46FC10062A816 /* Embed Foundation Extensions */,
+				AC1B2C3D4E5F607080910A11 /* Strip Bundle Package Artifacts */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				943304DB2E6628C8008485E6 /* CartoStar */,
+				943305122E663026008485E6 /* Config */,
+				943305202E6634C1008485E6 /* Packages */,
+			);
+			name = CartoStar;
+			packageProductDependencies = (
+				94A03A4A2E8B173B003E6915 /* AI */,
+				94A03A4C2E8B173B003E6915 /* CartoAuth */,
+				94A03A4E2E8B173B003E6915 /* Core */,
+				94A03A502E8B173B003E6915 /* DesignSystem */,
+				94A03A522E8B173B003E6915 /* FeatureChat */,
+				94A03A542E8B173B003E6915 /* FeatureSettings */,
+				94A03A562E8B173B003E6915 /* Networking */,
+				94A03A582E8B173B003E6915 /* Payments */,
+				94A03A5A2E8B173B003E6915 /* CartoStorage */,
+				943F04AF2EE5E1500062A816 /* OneSignalFramework */,
+				011A14033953BCB880C8311E /* FeatureGlobe */,
+				8760964A60047F6FE395EDC7 /* FeatureBirthData */,
+				9EA45367DA0879864918140B /* FeatureScout */,
+				970DF1FD6EABFBC21E72130B /* CartoStarCore */,
+				764653AAD6B02E4194E74FD8 /* FeatureOnboarding */,
+				A1B2C3D4E5F601020304B001 /* Adapty */,
+				A1B2C3D4E5F601020304B002 /* AdaptyUI */,
+				A1B2C3D4E5F601020304B003 /* GoogleSignIn */,
+				A1B2C3D4E5F601020304B004 /* Supabase */,
+				A1B2C3D4E5F601020304B005 /* MapboxMaps */,
+				A1B2C3D4E5F601020304B006 /* Lottie */,
+				A1B2C3D4E5F601020304B007 /* ConcentricOnboarding */,
+				A1B2C3D4E5F601020304B008 /* ConfettiSwiftUI */,
+				A1B2C3D4E5F601020304B009 /* FeatureJournaling */,
+				190888DC2F6869DE00104895 /* FirebaseAnalyticsCore */,
+				190888DE2F6869DE00104895 /* FirebaseCore */,
+				190888E02F6869DE00104895 /* FirebaseCrashlytics */,
+				190888E22F6869DE00104895 /* FirebaseAnalytics */,
+				190888E42F6869DE00104895 /* FirebasePerformance */,
+				A1B2C3D4E5F601020304B00A /* Singular */,
+				192D73F12F7527650006F1B9 /* PostHog */,
+			);
+			productName = CartoStar;
+			productReference = 943304D92E6628C8008485E6 /* CartoStar.app */;
+			productType = "com.apple.product-type.application";
+		};
+		943304E72E6628CA008485E6 /* CartoStarTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 943304FF2E6628CA008485E6 /* Build configuration list for PBXNativeTarget "CartoStarTests" */;
+			buildPhases = (
+				943304E42E6628CA008485E6 /* Sources */,
+				943304E52E6628CA008485E6 /* Frameworks */,
+				943304E62E6628CA008485E6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				943304EA2E6628CA008485E6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				943304EB2E6628CA008485E6 /* CartoStarTests */,
+			);
+			name = CartoStarTests;
+			packageProductDependencies = (
+			);
+			productName = CartoStarTests;
+			productReference = 943304E82E6628CA008485E6 /* CartoStarTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		943304F12E6628CA008485E6 /* CartoStarUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 943305022E6628CA008485E6 /* Build configuration list for PBXNativeTarget "CartoStarUITests" */;
+			buildPhases = (
+				943304EE2E6628CA008485E6 /* Sources */,
+				943304EF2E6628CA008485E6 /* Frameworks */,
+				943304F02E6628CA008485E6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				943304F42E6628CA008485E6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				943304F52E6628CA008485E6 /* CartoStarUITests */,
+			);
+			name = CartoStarUITests;
+			packageProductDependencies = (
+			);
+			productName = CartoStarUITests;
+			productReference = 943304F22E6628CA008485E6 /* CartoStarUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		943304D12E6628C8008485E6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					943304D82E6628C8008485E6 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					943304E72E6628CA008485E6 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 943304D82E6628C8008485E6;
+					};
+					943304F12E6628CA008485E6 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 943304D82E6628C8008485E6;
+					};
+				};
+			};
+			buildConfigurationList = 943304D42E6628C8008485E6 /* Build configuration list for PBXProject "CartoStar" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				es,
+			);
+			mainGroup = 943304D02E6628C8008485E6;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				943F04AC2EE5E1500062A816 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */,
+				A1B2C3D4E5F601020304A001 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */,
+				A1B2C3D4E5F601020304A002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				A1B2C3D4E5F601020304A003 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				A1B2C3D4E5F601020304A004 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */,
+				A1B2C3D4E5F601020304A005 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				A1B2C3D4E5F601020304A006 /* XCRemoteSwiftPackageReference "ConcentricOnboarding" */,
+				A1B2C3D4E5F601020304A007 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
+				AA0000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AI" */,
+				AA0000000000000000000002 /* XCLocalSwiftPackageReference "Packages/Auth" */,
+				AA0000000000000000000003 /* XCLocalSwiftPackageReference "Packages/CartoStarCore" */,
+				AA0000000000000000000004 /* XCLocalSwiftPackageReference "Packages/Core" */,
+				AA0000000000000000000005 /* XCLocalSwiftPackageReference "Packages/DesignSystem" */,
+				AA0000000000000000000006 /* XCLocalSwiftPackageReference "Packages/FeatureBirthData" */,
+				AA0000000000000000000007 /* XCLocalSwiftPackageReference "Packages/FeatureChat" */,
+				AA0000000000000000000008 /* XCLocalSwiftPackageReference "Packages/FeatureGlobe" */,
+				AA0000000000000000000009 /* XCLocalSwiftPackageReference "Packages/FeatureJournaling" */,
+				AA000000000000000000000A /* XCLocalSwiftPackageReference "Packages/FeatureOnboarding" */,
+				AA000000000000000000000B /* XCLocalSwiftPackageReference "Packages/FeatureScout" */,
+				AA000000000000000000000C /* XCLocalSwiftPackageReference "Packages/FeatureSettings" */,
+				AA000000000000000000000D /* XCLocalSwiftPackageReference "Packages/Networking" */,
+				AA000000000000000000000E /* XCLocalSwiftPackageReference "Packages/Payments" */,
+				AA000000000000000000000F /* XCLocalSwiftPackageReference "Packages/Storage" */,
+				190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1B2C3D4E5F601020304A008 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */,
+				192D73F02F7527650006F1B9 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 943304DA2E6628C8008485E6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				943304D82E6628C8008485E6 /* CartoStar */,
+				943304E72E6628CA008485E6 /* CartoStarTests */,
+				943304F12E6628CA008485E6 /* CartoStarUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		943304D72E6628C8008485E6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9433051F2E663366008485E6 /* CartoStar.xctestplan in Resources */,
+				9433050E2E662BC0008485E6 /* .gitignore in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		943304E62E6628CA008485E6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		943304F02E6628CA008485E6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AC1B2C3D4E5F607080910A11 /* Strip Bundle Package Artifacts */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip Bundle Package Artifacts";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\nset -euo pipefail\n# CODESIGNING_FOLDER_PATH is the actual bundle path for both build and archive\nAPP=\"${CODESIGNING_FOLDER_PATH}\"\n[ -z \"$APP\" ] && APP=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\nfor pkg in AI Auth CartoStarCore Core DesignSystem FeatureBirthData FeatureChat FeatureGlobe FeatureJournaling FeatureOnboarding FeatureScout FeatureSettings Localization Networking Payments Storage; do\n  [ -d \"$APP/$pkg\" ] && echo \"Removing bundled package: $pkg\" && rm -rf \"$APP/$pkg\" || true\ndone\nfind \"$APP\" -name \"*.a\" -not -path \"*/Frameworks/*\" -delete 2>/dev/null || true\nfind \"$APP\" -name \"*.pcm\" -delete 2>/dev/null || true\necho \"Bundle artifact cleanup done.\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		943304D52E6628C8008485E6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		943304E42E6628CA008485E6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		943304EE2E6628CA008485E6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		943304EA2E6628CA008485E6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 943304D82E6628C8008485E6 /* CartoStar */;
+			targetProxy = 943304E92E6628CA008485E6 /* PBXContainerItemProxy */;
+		};
+		943304F42E6628CA008485E6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 943304D82E6628C8008485E6 /* CartoStar */;
+			targetProxy = 943304F32E6628CA008485E6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		943304FA2E6628CA008485E6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = LL4Y637Z4Y;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		943304FB2E6628CA008485E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = LL4Y637Z4Y;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		943304FD2E6628CA008485E6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = CartoStar/CartoStar.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = DU7Z9CNV79;
+				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "**/.build/**";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CartoStar/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HaloHome;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "CartoStar uses your location to show your current position on the astrocartography map and identify nearby planetary lines.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				"INFOPLIST_KEY_UILaunchScreen_UIColorName[sdk=*]" = Background;
+				"INFOPLIST_KEY_UILaunchScreen_UIImageName[sdk=*]" = LaunchLogo;
+				INFOPLIST_KEY_UILaunchScreen_UIImageRespectsSafeAreaInsets = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.5.9;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-l\"sqlite3.0\"",
+					"-l\"z\"",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = llc.teamchai.halohome;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		943304FE2E6628CA008485E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = CartoStar/CartoStar.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = DU7Z9CNV79;
+				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = "**/.build/**";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CartoStar/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HaloHome;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "CartoStar uses your location to show your current position on the astrocartography map and identify nearby planetary lines.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				"INFOPLIST_KEY_UILaunchScreen_UIColorName[sdk=*]" = Background;
+				"INFOPLIST_KEY_UILaunchScreen_UIImageName[sdk=*]" = LaunchLogo;
+				INFOPLIST_KEY_UILaunchScreen_UIImageRespectsSafeAreaInsets = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen";
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.5.9;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-l\"sqlite3.0\"",
+					"-l\"z\"",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = llc.teamchai.halohome;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = app2cartostardistprofile;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		943305002E6628CA008485E6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = LL4Y637Z4Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.5.9;
+				PRODUCT_BUNDLE_IDENTIFIER = llc.teamchai.halohome.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CartoStar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CartoStar";
+			};
+			name = Debug;
+		};
+		943305012E6628CA008485E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = LL4Y637Z4Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.5.9;
+				PRODUCT_BUNDLE_IDENTIFIER = llc.teamchai.halohome.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CartoStar.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CartoStar";
+			};
+			name = Release;
+		};
+		943305032E6628CA008485E6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = LL4Y637Z4Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.5.9;
+				PRODUCT_BUNDLE_IDENTIFIER = llc.teamchai.halohome.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = CartoStar;
+			};
+			name = Debug;
+		};
+		943305042E6628CA008485E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 943305122E663026008485E6 /* Config */;
+			baseConfigurationReferenceRelativePath = App.xcconfig;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = LL4Y637Z4Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.5.9;
+				PRODUCT_BUNDLE_IDENTIFIER = llc.teamchai.halohome.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = CartoStar;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		943304D42E6628C8008485E6 /* Build configuration list for PBXProject "CartoStar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				943304FA2E6628CA008485E6 /* Debug */,
+				943304FB2E6628CA008485E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		943304FC2E6628CA008485E6 /* Build configuration list for PBXNativeTarget "CartoStar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				943304FD2E6628CA008485E6 /* Debug */,
+				943304FE2E6628CA008485E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		943304FF2E6628CA008485E6 /* Build configuration list for PBXNativeTarget "CartoStarTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				943305002E6628CA008485E6 /* Debug */,
+				943305012E6628CA008485E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		943305022E6628CA008485E6 /* Build configuration list for PBXNativeTarget "CartoStarUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				943305032E6628CA008485E6 /* Debug */,
+				943305042E6628CA008485E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AA0000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AI;
+		};
+		AA0000000000000000000002 /* XCLocalSwiftPackageReference "Packages/Auth" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Auth;
+		};
+		AA0000000000000000000003 /* XCLocalSwiftPackageReference "Packages/CartoStarCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/CartoStarCore;
+		};
+		AA0000000000000000000004 /* XCLocalSwiftPackageReference "Packages/Core" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Core;
+		};
+		AA0000000000000000000005 /* XCLocalSwiftPackageReference "Packages/DesignSystem" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DesignSystem;
+		};
+		AA0000000000000000000006 /* XCLocalSwiftPackageReference "Packages/FeatureBirthData" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureBirthData;
+		};
+		AA0000000000000000000007 /* XCLocalSwiftPackageReference "Packages/FeatureChat" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureChat;
+		};
+		AA0000000000000000000008 /* XCLocalSwiftPackageReference "Packages/FeatureGlobe" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureGlobe;
+		};
+		AA0000000000000000000009 /* XCLocalSwiftPackageReference "Packages/FeatureJournaling" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureJournaling;
+		};
+		AA000000000000000000000A /* XCLocalSwiftPackageReference "Packages/FeatureOnboarding" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureOnboarding;
+		};
+		AA000000000000000000000B /* XCLocalSwiftPackageReference "Packages/FeatureScout" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureScout;
+		};
+		AA000000000000000000000C /* XCLocalSwiftPackageReference "Packages/FeatureSettings" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FeatureSettings;
+		};
+		AA000000000000000000000D /* XCLocalSwiftPackageReference "Packages/Networking" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Networking;
+		};
+		AA000000000000000000000E /* XCLocalSwiftPackageReference "Packages/Payments" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Payments;
+		};
+		AA000000000000000000000F /* XCLocalSwiftPackageReference "Packages/Storage" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Storage;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
+		192D73F02F7527650006F1B9 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.48.2;
+			};
+		};
+		943F04AC2EE5E1500062A816 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/OneSignal/OneSignal-iOS-SDK";
+			requirement = {
+				kind = exactVersion;
+				version = 5.4.1;
+			};
+		};
+		A1B2C3D4E5F601020304A001 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/adaptyteam/AdaptySDK-iOS.git";
+			requirement = {
+				kind = exactVersion;
+				version = 3.15.5;
+			};
+		};
+		A1B2C3D4E5F601020304A002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = exactVersion;
+				version = 8.0.0;
+			};
+		};
+		A1B2C3D4E5F601020304A003 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = exactVersion;
+				version = 2.41.1;
+			};
+		};
+		A1B2C3D4E5F601020304A004 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mapbox/mapbox-maps-ios.git";
+			requirement = {
+				kind = exactVersion;
+				version = 11.18.2;
+			};
+		};
+		A1B2C3D4E5F601020304A005 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = exactVersion;
+				version = 4.6.0;
+			};
+		};
+		A1B2C3D4E5F601020304A006 /* XCRemoteSwiftPackageReference "ConcentricOnboarding" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/exyte/ConcentricOnboarding.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.1.1;
+			};
+		};
+		A1B2C3D4E5F601020304A007 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simibac/ConfettiSwiftUI.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.1.0;
+			};
+		};
+		A1B2C3D4E5F601020304A008 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/singular-labs/Singular-iOS-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		011A14033953BCB880C8311E /* FeatureGlobe */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000008 /* XCLocalSwiftPackageReference "Packages/FeatureGlobe" */;
+			productName = FeatureGlobe;
+		};
+		190888DC2F6869DE00104895 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		190888DE2F6869DE00104895 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		190888E02F6869DE00104895 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		190888E22F6869DE00104895 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		190888E42F6869DE00104895 /* FirebasePerformance */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 190888DB2F6869DE00104895 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebasePerformance;
+		};
+		192D73F12F7527650006F1B9 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 192D73F02F7527650006F1B9 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+		764653AAD6B02E4194E74FD8 /* FeatureOnboarding */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000A /* XCLocalSwiftPackageReference "Packages/FeatureOnboarding" */;
+			productName = FeatureOnboarding;
+		};
+		8760964A60047F6FE395EDC7 /* FeatureBirthData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000006 /* XCLocalSwiftPackageReference "Packages/FeatureBirthData" */;
+			productName = FeatureBirthData;
+		};
+		943F04AF2EE5E1500062A816 /* OneSignalFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 943F04AC2EE5E1500062A816 /* XCRemoteSwiftPackageReference "OneSignal-iOS-SDK" */;
+			productName = OneSignalFramework;
+		};
+		94A03A4A2E8B173B003E6915 /* AI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000001 /* XCLocalSwiftPackageReference "Packages/AI" */;
+			productName = AI;
+		};
+		94A03A4C2E8B173B003E6915 /* CartoAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000002 /* XCLocalSwiftPackageReference "Packages/Auth" */;
+			productName = CartoAuth;
+		};
+		94A03A4E2E8B173B003E6915 /* Core */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000004 /* XCLocalSwiftPackageReference "Packages/Core" */;
+			productName = Core;
+		};
+		94A03A502E8B173B003E6915 /* DesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000005 /* XCLocalSwiftPackageReference "Packages/DesignSystem" */;
+			productName = DesignSystem;
+		};
+		94A03A522E8B173B003E6915 /* FeatureChat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000007 /* XCLocalSwiftPackageReference "Packages/FeatureChat" */;
+			productName = FeatureChat;
+		};
+		94A03A542E8B173B003E6915 /* FeatureSettings */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000C /* XCLocalSwiftPackageReference "Packages/FeatureSettings" */;
+			productName = FeatureSettings;
+		};
+		94A03A562E8B173B003E6915 /* Networking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000D /* XCLocalSwiftPackageReference "Packages/Networking" */;
+			productName = Networking;
+		};
+		94A03A582E8B173B003E6915 /* Payments */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000E /* XCLocalSwiftPackageReference "Packages/Payments" */;
+			productName = Payments;
+		};
+		94A03A5A2E8B173B003E6915 /* CartoStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000F /* XCLocalSwiftPackageReference "Packages/Storage" */;
+			productName = CartoStorage;
+		};
+		970DF1FD6EABFBC21E72130B /* CartoStarCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000003 /* XCLocalSwiftPackageReference "Packages/CartoStarCore" */;
+			productName = CartoStarCore;
+		};
+		9EA45367DA0879864918140B /* FeatureScout */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000B /* XCLocalSwiftPackageReference "Packages/FeatureScout" */;
+			productName = FeatureScout;
+		};
+		A1B2C3D4E5F601020304B001 /* Adapty */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A001 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */;
+			productName = Adapty;
+		};
+		A1B2C3D4E5F601020304B002 /* AdaptyUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A001 /* XCRemoteSwiftPackageReference "AdaptySDK-iOS" */;
+			productName = AdaptyUI;
+		};
+		A1B2C3D4E5F601020304B003 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A1B2C3D4E5F601020304B004 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A003 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		A1B2C3D4E5F601020304B005 /* MapboxMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A004 /* XCRemoteSwiftPackageReference "mapbox-maps-ios" */;
+			productName = MapboxMaps;
+		};
+		A1B2C3D4E5F601020304B006 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A005 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		A1B2C3D4E5F601020304B007 /* ConcentricOnboarding */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A006 /* XCRemoteSwiftPackageReference "ConcentricOnboarding" */;
+			productName = ConcentricOnboarding;
+		};
+		A1B2C3D4E5F601020304B008 /* ConfettiSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A007 /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
+			productName = ConfettiSwiftUI;
+		};
+		A1B2C3D4E5F601020304B009 /* FeatureJournaling */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000009 /* XCLocalSwiftPackageReference "Packages/FeatureJournaling" */;
+			productName = FeatureJournaling;
+		};
+		A1B2C3D4E5F601020304B00A /* Singular */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F601020304A008 /* XCRemoteSwiftPackageReference "Singular-iOS-SDK" */;
+			productName = Singular;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 943304D12E6628C8008485E6 /* Project object */;
+}

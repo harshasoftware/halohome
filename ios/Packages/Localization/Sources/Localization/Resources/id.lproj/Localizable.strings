@@ -1,0 +1,145 @@
+/*
+  Localizable.strings (Indonesian)
+  AstroCarto
+
+  Indonesian (id) translations
+  Note: "CartoStar" is a brand name and should NOT be translated.
+*/
+
+// MARK: - Auth
+"auth.tagline" = "Peta Kosmis Anda";
+"auth.signIn.apple" = "Masuk dengan Apple";
+"auth.signIn.google" = "Lanjutkan dengan Google";
+"auth.useEmail" = "Gunakan email";
+"auth.signIn" = "Masuk";
+"auth.createAccount" = "Buat Akun";
+"auth.forgotPassword" = "Lupa kata sandi?";
+"auth.signOut" = "Keluar";
+"auth.email" = "Email";
+"auth.password" = "Kata Sandi";
+"auth.confirmPassword" = "Konfirmasi Kata Sandi";
+"auth.legalDisclaimer" = "Dengan melanjutkan, Anda menyetujui [Ketentuan](https://example.com) dan [Kebijakan Privasi](https://example.com) kami";
+
+// MARK: - Chat
+"chat.placeholder" = "Ketik pesan...";
+"chat.newChat" = "Chat Baru";
+"chat.history" = "Riwayat Chat";
+"chat.deleteChat" = "Hapus Chat";
+"chat.deleteAll" = "Hapus semua chat";
+"chat.emptyState" = "Belum ada pesan";
+"chat.emptyStateSubtitle" = "Mulai percakapan untuk melihat pesan di sini";
+"chat.thinking" = "Sedang berpikir...";
+"chat.copy" = "Salin";
+"chat.copied" = "Disalin!";
+"chat.retry" = "Coba Lagi";
+"chat.messagesRemaining %lld" = "%lld pesan tersisa";
+"chat.today" = "Hari ini";
+"chat.yesterday" = "Kemarin";
+
+// MARK: - Settings
+"settings.title" = "Pengaturan";
+"settings.appearance" = "Tampilan";
+"settings.theme" = "Tema";
+"settings.notifications" = "Notifikasi";
+"settings.pushNotifications" = "Notifikasi Push";
+"settings.privacy" = "Privasi";
+"settings.shareDiagnostics" = "Bagikan Diagnostik";
+"settings.shareDiagnosticsSubtitle" = "Bantu kami meningkatkan aplikasi dengan membagikan laporan error";
+"settings.account" = "Akun";
+"settings.deleteAccount" = "Hapus Akun";
+"settings.legal" = "Hukum";
+"settings.termsOfService" = "Ketentuan Layanan";
+"settings.privacyPolicy" = "Kebijakan Privasi";
+"settings.about" = "Tentang";
+"settings.version" = "Versi";
+"settings.language" = "Bahasa";
+"settings.languageFooter" = "Pilih bahasa aplikasi. Pilih 'Sistem' untuk menggunakan bahasa perangkat Anda.";
+
+// MARK: - Languages
+"language.system" = "Sistem";
+"language.en" = "English";
+"language.es" = "Español";
+"language.pt-BR" = "Português (Brasil)";
+"language.ja" = "日本語";
+"language.de" = "Deutsch";
+"language.fr" = "Français";
+"language.it" = "Italiano";
+"language.hi" = "हिन्दी";
+"language.ar" = "العربية";
+"language.tr" = "Türkçe";
+"language.uk" = "Українська";
+"language.ru" = "Русский";
+"language.th" = "ไทย";
+"language.id" = "Bahasa Indonesia";
+"language.ko" = "한국어";
+"language.zh-Hans" = "简体中文";
+"language.zh-Hant" = "繁體中文";
+"language.ms" = "Bahasa Melayu";
+"language.el" = "Ελληνικά";
+
+// MARK: - Themes
+"theme.system" = "Sistem";
+"theme.light" = "Terang";
+"theme.dark" = "Gelap";
+"theme.aurora" = "Aurora";
+"theme.obsidian" = "Obsidian";
+
+// MARK: - Payments
+"payments.upgradeToPro" = "Upgrade ke Pro";
+"payments.restore" = "Pulihkan Pembelian";
+"payments.subscribe" = "Berlangganan";
+"payments.freeTrial" = "Uji Coba Gratis";
+"payments.perMonth" = "per bulan";
+"payments.perYear" = "per tahun";
+"payments.bestValue" = "Nilai Terbaik";
+"payments.cancelAnytime" = "Batalkan kapan saja";
+"payments.subscribed" = "Berlangganan";
+"payments.manageSubscription" = "Kelola Langganan";
+
+// MARK: - Onboarding
+"onboarding.welcome" = "Selamat Datang";
+"onboarding.getStarted" = "Mulai";
+"onboarding.continue" = "Lanjutkan";
+"onboarding.skip" = "Lewati";
+"onboarding.next" = "Berikutnya";
+
+// MARK: - Profile
+"profile.title" = "Profil";
+"profile.edit" = "Edit Profil";
+"profile.changePhoto" = "Ganti Foto";
+"profile.displayName" = "Nama Tampilan";
+
+// MARK: - Common
+"common.ok" = "OK";
+"common.cancel" = "Batal";
+"common.done" = "Selesai";
+"common.save" = "Simpan";
+"common.delete" = "Hapus";
+"common.edit" = "Edit";
+"common.close" = "Tutup";
+"common.loading" = "Memuat...";
+"common.tryAgain" = "Coba Lagi";
+"common.learnMore" = "Pelajari Lebih";
+
+// MARK: - Errors
+"error.generic" = "Terjadi kesalahan. Silakan coba lagi.";
+"error.networkOffline" = "Anda sedang offline. Periksa koneksi internet Anda.";
+"error.timeout" = "Waktu permintaan habis. Silakan coba lagi.";
+"error.invalidEmail" = "Masukkan alamat email yang valid";
+"error.passwordTooShort" = "Kata sandi harus minimal 8 karakter";
+"error.passwordMismatch" = "Kata sandi tidak cocok";
+"error.authFailed" = "Autentikasi gagal";
+"error.purchaseFailed" = "Pembelian gagal";
+"error.loadFailed" = "Gagal memuat data";
+"error.saveFailed" = "Gagal menyimpan perubahan";
+
+// MARK: - Accessibility
+"a11y.sendMessage" = "Kirim pesan";
+"a11y.sendMessageHint" = "Ketuk dua kali untuk mengirim pesan";
+"a11y.userMessage" = "Pesan Anda";
+"a11y.assistantMessage" = "Pesan dari asisten";
+"a11y.copyMessageHint" = "Ketuk dua kali untuk menyalin pesan";
+"a11y.themeSelector" = "Pemilih tema";
+"a11y.signInAppleHint" = "Ketuk dua kali untuk masuk dengan Apple ID";
+"a11y.profilePhoto" = "Foto profil";
+"a11y.profilePhotoHint" = "Ketuk dua kali untuk mengubah foto profil";
